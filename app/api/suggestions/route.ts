@@ -15,7 +15,11 @@ export async function GET(req: NextRequest) {
       ? { createdAt: "desc" as const }
       : [{ votes: "desc" as const }, { createdAt: "desc" as const }];
 
+  // Public view only shows non-private suggestions
+  const where = session ? {} : { private: false };
+
   const items = await prisma.suggestion.findMany({
+    where,
     include: { club: true },
     orderBy,
   });
@@ -39,6 +43,7 @@ export async function GET(req: NextRequest) {
     votes: s.votes,
     createdAt: s.createdAt,
     voted: votedSet.has(s.id),
+    private: s.private,
     contact: session ? s.contact : null,
     read: session ? s.read : undefined,
   }));
@@ -48,7 +53,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const data = await req.json();
-  const { body, category, contact, target, clubId } = data || {};
+  const { body, category, contact, target, clubId, private: isPrivate } = data || {};
   if (!body || typeof body !== "string" || !body.trim()) {
     return NextResponse.json({ error: "body required" }, { status: 400 });
   }
@@ -74,17 +79,21 @@ export async function POST(req: NextRequest) {
       contact: typeof contact === "string" && contact.trim() ? contact.trim() : null,
       target: finalTarget,
       clubId: finalClubId,
+      private: isPrivate === true,
     },
   });
 
-  // Auto-upvote your own suggestion
-  const voterId = ensureVoterId();
-  await prisma.suggestionVote.create({ data: { suggestionId: created.id, voterId } });
-  await prisma.suggestion.update({
-    where: { id: created.id },
-    data: { votes: { increment: 1 } },
-  });
-  return NextResponse.json({ id: created.id }, { status: 201 });
+  // Private suggestions don't get an auto-upvote (no vote count on private items)
+  if (!isPrivate) {
+    const voterId = ensureVoterId();
+    await prisma.suggestionVote.create({ data: { suggestionId: created.id, voterId } });
+    await prisma.suggestion.update({
+      where: { id: created.id },
+      data: { votes: { increment: 1 } },
+    });
+  }
+
+  return NextResponse.json({ id: created.id, private: created.private }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {

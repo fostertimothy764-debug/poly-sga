@@ -57,6 +57,41 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(created, { status: 201 });
 }
 
+export async function PATCH(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const data = await req.json();
+  const { id, title, description, location, startsAt, endsAt } = data || {};
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const existing = await prisma.event.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Re-use same permission check as delete
+  if (existing.audience === "club") {
+    if (!existing.clubId || !canPostToClub(session, existing.clubId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  } else {
+    if (!canPostAudience(session, existing.audience)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  const updated = await prisma.event.update({
+    where: { id },
+    data: {
+      ...(title && { title }),
+      ...(description && { description }),
+      ...(location && { location }),
+      ...(startsAt && { startsAt: new Date(startsAt) }),
+      endsAt: endsAt ? new Date(endsAt) : null,
+    },
+  });
+  return NextResponse.json(updated);
+}
+
 export async function DELETE(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -96,6 +96,7 @@ type Suggestion = {
   category: string;
   contact: string | null;
   read: boolean;
+  private: boolean;
   votes: number;
   target: string;
   clubId: string | null;
@@ -595,6 +596,16 @@ function EventsTab({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Inline editing
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    title?: string;
+    description?: string;
+    location?: string;
+    startsAt?: string;
+    endsAt?: string;
+  }>({});
+
   async function create() {
     if (!form.title || !form.description || !form.location || !form.startsAt) return;
     setBusy(true);
@@ -630,6 +641,19 @@ function EventsTab({
   async function remove(id: string) {
     if (!confirm("Delete this event?")) return;
     await fetch(`/api/events?id=${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  async function saveEdit(id: string) {
+    setBusy(true);
+    await fetch("/api/events", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...editForm }),
+    });
+    setBusy(false);
+    setEditingId(null);
+    setEditForm({});
     onChange();
   }
 
@@ -757,37 +781,106 @@ function EventsTab({
       ) : (
         <div className="space-y-2">
           {items.map((e) => (
-            <div key={e.id} className="card flex items-start gap-4">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1.5 text-xs">
-                  <span
-                    className={`chip ${
-                      e.audience === "all"
-                        ? "border-ink-300 bg-ink-100 text-ink-700"
-                        : e.audience === "club"
-                          ? "border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark"
-                          : "border-poly-navy/30 bg-poly-navy/5 text-poly-navy"
-                    }`}
-                  >
-                    {audienceLabel(e)}
-                  </span>
+            <div key={e.id} className="card">
+              {editingId === e.id ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">Title</label>
+                      <input
+                        className="input"
+                        defaultValue={e.title}
+                        onChange={(ev) => setEditForm((p) => ({ ...p, title: ev.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Location</label>
+                      <input
+                        className="input"
+                        defaultValue={e.location}
+                        onChange={(ev) => setEditForm((p) => ({ ...p, location: ev.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Description</label>
+                    <textarea
+                      className="input resize-none"
+                      rows={2}
+                      defaultValue={e.description}
+                      onChange={(ev) => setEditForm((p) => ({ ...p, description: ev.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">Starts at</label>
+                      <input
+                        type="datetime-local"
+                        className="input"
+                        defaultValue={new Date(e.startsAt).toISOString().slice(0, 16)}
+                        onChange={(ev) => setEditForm((p) => ({ ...p, startsAt: ev.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Ends at (optional)</label>
+                      <input
+                        type="datetime-local"
+                        className="input"
+                        defaultValue={e.endsAt ? new Date(e.endsAt).toISOString().slice(0, 16) : ""}
+                        onChange={(ev) => setEditForm((p) => ({ ...p, endsAt: ev.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(e.id)} disabled={busy} className="btn-accent">
+                      {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                      Save
+                    </button>
+                    <button onClick={() => { setEditingId(null); setEditForm({}); }} className="btn-ghost">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <h3 className="font-display text-lg mb-1">{e.title}</h3>
-                <p className="text-sm text-ink-600 line-clamp-2 mb-2">
-                  {e.description}
-                </p>
-                <div className="text-xs text-ink-500">
-                  {formatDate(e.startsAt)} · {formatTime(e.startsAt)} · {e.location}
-                </div>
-              </div>
-              {canEdit(e) ? (
-                <IconBtn onClick={() => remove(e.id)} title="Delete" danger>
-                  <Trash2 size={14} />
-                </IconBtn>
               ) : (
-                <span className="text-[10px] uppercase tracking-wider text-ink-400 self-center">
-                  Read-only
-                </span>
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5 text-xs">
+                      <span
+                        className={`chip ${
+                          e.audience === "all"
+                            ? "border-ink-300 bg-ink-100 text-ink-700"
+                            : e.audience === "club"
+                              ? "border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark"
+                              : "border-poly-navy/30 bg-poly-navy/5 text-poly-navy"
+                        }`}
+                      >
+                        {audienceLabel(e)}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-lg mb-1">{e.title}</h3>
+                    <p className="text-sm text-ink-600 line-clamp-2 mb-2">{e.description}</p>
+                    <div className="text-xs text-ink-500">
+                      {formatDate(e.startsAt)} · {formatTime(e.startsAt)} · {e.location}
+                    </div>
+                  </div>
+                  {canEdit(e) ? (
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <IconBtn
+                        onClick={() => { setEditingId(e.id); setEditForm({}); }}
+                        title="Edit"
+                      >
+                        <Settings size={14} />
+                      </IconBtn>
+                      <IconBtn onClick={() => remove(e.id)} title="Delete" danger>
+                        <Trash2 size={14} />
+                      </IconBtn>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] uppercase tracking-wider text-ink-400 self-center">
+                      Read-only
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           ))}
@@ -1713,11 +1806,16 @@ function SuggestionRow({
       <div className="flex items-start gap-4">
         <div className="flex flex-col items-center text-center min-w-[2.5rem]">
           <div className="text-[10px] uppercase tracking-wider text-ink-500">votes</div>
-          <div className="font-display text-2xl text-ink-900">{s.votes}</div>
+          <div className="font-display text-2xl text-ink-900">{s.private ? "—" : s.votes}</div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2 text-xs">
             {!s.read && <span className="h-2 w-2 rounded-full bg-poly-orange" />}
+            {s.private && (
+              <span className="chip border-poly-navy/40 bg-poly-navy/5 text-poly-navy">
+                <KeyRound size={9} /> Private
+              </span>
+            )}
             <span
               className={`chip ${
                 s.target === "sga"

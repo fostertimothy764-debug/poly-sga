@@ -14,69 +14,137 @@ async function main() {
   await prisma.club.deleteMany();
   await prisma.clubRequest.deleteMany();
 
-  /* ---------- Clubs ---------- */
-  const robotics = await prisma.club.create({
+  /* ---------- Clubs (generic placeholders) ---------- */
+  const club1 = await prisma.club.create({
     data: {
-      slug: "robotics",
-      name: "Robotics Team",
-      description:
-        "Poly's award-winning FRC team. Open to all grades, no experience needed. We build a competition robot every January.",
-      meetingTime: "Tuesdays & Thursdays, 3:30 PM",
-      location: "Room 312 (Engineering Wing)",
+      slug: "club-1",
+      name: "Club 1",
+      description: "Add a description for Club 1 from the admin dashboard.",
+      meetingTime: "TBD",
+      location: "TBD",
     },
   });
-  const debate = await prisma.club.create({
+  const club2 = await prisma.club.create({
     data: {
-      slug: "debate",
-      name: "Debate Team",
-      description:
-        "Compete in policy and Lincoln-Douglas debate at MD state tournaments. We meet to research, drill, and run practice rounds.",
-      meetingTime: "Mondays, 3:15 PM",
-      location: "Room 207",
+      slug: "club-2",
+      name: "Club 2",
+      description: "Add a description for Club 2 from the admin dashboard.",
+      meetingTime: "TBD",
+      location: "TBD",
     },
   });
-  const bsu = await prisma.club.create({
+  const club3 = await prisma.club.create({
     data: {
-      slug: "bsu",
-      name: "Black Student Union",
-      description:
-        "A space for community, advocacy, and celebrating Black culture at Poly. All allies welcome.",
-      meetingTime: "Wednesdays, 3:15 PM",
-      location: "Room 118",
+      slug: "club-3",
+      name: "Club 3",
+      description: "Add a description for Club 3 from the admin dashboard.",
+      meetingTime: "TBD",
+      location: "TBD",
     },
   });
-  const mathTeam = await prisma.club.create({
+  const club4 = await prisma.club.create({
     data: {
-      slug: "math-team",
-      name: "Math Team",
-      description:
-        "Train for AMC, ARML, and the Maryland Math League. We solve cool problems and eat snacks.",
-      meetingTime: "Fridays, 3:15 PM",
-      location: "Room 205",
+      slug: "club-4",
+      name: "Club 4",
+      description: "Add a description for Club 4 from the admin dashboard.",
+      meetingTime: "TBD",
+      location: "TBD",
     },
   });
-  const nhs = await prisma.club.create({
+  const club5 = await prisma.club.create({
     data: {
-      slug: "nhs",
-      name: "National Honor Society",
-      description:
-        "Service, leadership, scholarship, character. Tutor, volunteer, and lead chapter projects.",
-      meetingTime: "First Wednesday of the month",
-      location: "Auditorium",
+      slug: "club-5",
+      name: "Club 5",
+      description: "Add a description for Club 5 from the admin dashboard.",
+      meetingTime: "TBD",
+      location: "TBD",
     },
   });
 
-  /* ---------- Team members + linked SGA admins ---------- */
+  /* ---------- SGA team + linked admin accounts ---------- */
   const team = [
-    { username: "maya", name: "Maya Thompson", role: "President", grade: "Class of 2027", bio: "Three-year SGA member. Big on transparency and bringing back the Poly–Western rivalry events.", order: 1, adminRole: "sga_admin", password: "maya2026" },
-    { username: "jordan", name: "Jordan Reyes", role: "Chief of Staff", grade: "Class of 2027", bio: "Runs internal ops and the suggestion box. Coffee snob.", order: 2, adminRole: "sga_admin", password: "jordan2026" },
-    { username: "aisha", name: "Aisha Patel", role: "Vice President", grade: "Class of 2028", bio: "Math team captain, also kind of an Excel wizard.", order: 3, adminRole: "sga_member", password: "aisha2026" },
-    { username: "devon", name: "Devon Carter", role: "Treasurer", grade: "Class of 2028", bio: "Tracks every dollar of SGA's budget. Don't try to slip something past him.", order: 4, adminRole: "sga_member", password: "devon2026" },
-    { username: "luke", name: "Luke Morrison", role: "Secretary", grade: "Class of 2027", bio: "Takes the meeting notes that actually get read.", order: 5, adminRole: "sga_member", password: "luke2026" },
-    { username: "sofia", name: "Sofia Garcia", role: "Communications Director", grade: "Class of 2028", bio: "Runs the @polysga Instagram. If you saw it on the gram, blame her.", order: 6, adminRole: "sga_member", password: "sofia2026" },
+    {
+      username: "president",
+      password: "president2026",
+      name: "President",
+      role: "President",
+      grade: "Class of 2027",
+      bio: "SGA President.",
+      order: 1,
+      adminRole: "sga_admin",
+    },
+    {
+      username: "chiefofstaff",
+      password: "chief2026",
+      name: "Chief of Staff",
+      role: "Chief of Staff",
+      grade: "Class of 2027",
+      bio: "Manages internal SGA operations.",
+      order: 2,
+      adminRole: "sga_admin",
+    },
+    {
+      username: "uppervp",
+      password: "uppervp2026",
+      name: "Upper Vice President",
+      role: "Upper Vice President",
+      grade: "Class of 2028",
+      bio: "Upper Vice President.",
+      order: 3,
+      adminRole: "sga_member",
+    },
+    {
+      username: "lowervp",
+      password: "lowervp2026",
+      name: "Lower Vice President",
+      role: "Lower Vice President",
+      grade: "Class of 2028",
+      bio: "Lower Vice President.",
+      order: 4,
+      adminRole: "sga_member",
+    },
+    {
+      username: "secretary",
+      password: "secretary2026",
+      name: "Secretary",
+      role: "Secretary",
+      grade: "Class of 2027",
+      bio: "Keeps meeting records and official correspondence.",
+      order: 5,
+      adminRole: "sga_member",
+    },
+    {
+      username: "treasurer",
+      password: "treasurer2026",
+      name: "Treasurer",
+      role: "Treasurer",
+      grade: "Class of 2028",
+      bio: "Manages the SGA budget.",
+      order: 6,
+      adminRole: "sga_member",
+    },
+    {
+      username: "historian1",
+      password: "historian12026",
+      name: "Historian I",
+      role: "Historian",
+      grade: "Class of 2029",
+      bio: "Documents SGA events and history.",
+      order: 7,
+      adminRole: "sga_member",
+    },
+    {
+      username: "historian2",
+      password: "historian22026",
+      name: "Historian II",
+      role: "Historian",
+      grade: "Class of 2030",
+      bio: "Documents SGA events and history.",
+      order: 8,
+      adminRole: "sga_member",
+    },
   ];
 
-  const linkedAdmins: { username: string; password: string }[] = [];
   for (const m of team) {
     const member = await prisma.teamMember.create({
       data: {
@@ -85,7 +153,7 @@ async function main() {
         grade: m.grade,
         bio: m.bio,
         order: m.order,
-        // photoUrl intentionally left null — add real photos from /admin/profile
+        // photoUrl intentionally null — add real photos from /admin/profile
       },
     });
     await prisma.admin.create({
@@ -97,18 +165,7 @@ async function main() {
         teamMemberId: member.id,
       },
     });
-    linkedAdmins.push({ username: m.username, password: m.password });
   }
-
-  // Class reps (no individual login — handled by class<year> account below)
-  await prisma.teamMember.createMany({
-    data: [
-      { name: "Sam Kim", role: "Class of 2027 President", grade: "Class of 2027", order: 10 },
-      { name: "Riley Brooks", role: "Class of 2028 President", grade: "Class of 2028", order: 11 },
-      { name: "Chris Nguyen", role: "Class of 2029 President", grade: "Class of 2029", order: 12 },
-      { name: "Taylor Adams", role: "Class of 2030 President", grade: "Class of 2030", order: 13 },
-    ],
-  });
 
   /* ---------- Site admin (you) ---------- */
   const siteAdminUser = process.env.ADMIN_USERNAME || "admin";
@@ -143,8 +200,8 @@ async function main() {
 
   /* ---------- Club officer logins ---------- */
   const clubAccounts = [
-    { username: "robotics_admin", password: "robotics", clubId: robotics.id, name: "Robotics Captain" },
-    { username: "debate_admin", password: "debate", clubId: debate.id, name: "Debate Captain" },
+    { username: "club1_admin", password: "club1", clubId: club1.id, name: "Club 1 Officer" },
+    { username: "club2_admin", password: "club2", clubId: club2.id, name: "Club 2 Officer" },
   ];
   for (const c of clubAccounts) {
     await prisma.admin.create({
@@ -158,7 +215,7 @@ async function main() {
     });
   }
 
-  /* ---------- Content ---------- */
+  /* ---------- Sample content ---------- */
   const now = new Date();
   const inDays = (n: number, h = 15, m = 0) => {
     const d = new Date(now);
@@ -169,109 +226,83 @@ async function main() {
 
   await prisma.announcement.createMany({
     data: [
-      { title: "Spring spirit week is here", body: "Theme days run all next week — pajama Monday, jersey Tuesday, decade day Wednesday, class colors Thursday, and orange-and-blue Friday for the pep rally.", pinned: true, audience: "all", authorName: "Maya Thompson" },
-      { title: "Open exec board meetings", body: "Every other Wednesday in Room 213, 3:15–4:00 PM. All Poly students welcome.", audience: "all", authorName: "SGA Exec" },
-      { title: "Senior cap & gown deadline", body: "Order your cap and gown by next Friday. Late orders cost extra and may not arrive in time.", pinned: true, audience: "27", authorName: "Class of 2027 Officers" },
-      { title: "Junior prom committee signups", body: "We need volunteers for decorations, tickets, and DJ liaison. Sign up sheet outside Room 204.", audience: "28", authorName: "Class of 2028 Officers" },
-      { title: "Sophomore ring ceremony details", body: "Ceremony is in three weeks. Dress code is business casual.", audience: "29", authorName: "Class of 2029 Officers" },
-      { title: "Freshman orientation recap", body: "Thanks to everyone who came to the welcome breakfast! The class group chat is up.", audience: "30", authorName: "Class of 2030 Officers" },
+      {
+        title: "Welcome to the 2026–2027 school year",
+        body: "SGA is excited to kick off a great year. Stay tuned for events, announcements, and ways to get involved.",
+        pinned: true,
+        audience: "all",
+        authorName: "SGA President",
+      },
+      {
+        title: "Open exec board meetings",
+        body: "All students are welcome to attend our open exec meetings. Check the Events tab for the next date.",
+        audience: "all",
+        authorName: "SGA",
+      },
+      {
+        title: "Senior info update",
+        body: "Important deadlines are coming up for the Class of 2027. Stay tuned for more details.",
+        pinned: true,
+        audience: "27",
+        authorName: "Class of 2027 Officer",
+      },
+      {
+        title: "Junior class update",
+        body: "Check back soon for updates from your class officers.",
+        audience: "28",
+        authorName: "Class of 2028 Officer",
+      },
     ],
-  });
-
-  await prisma.announcement.create({
-    data: {
-      title: "Robotics build season kickoff",
-      body: "FRC kickoff is this Saturday at 9 AM in the engineering wing. We'll watch the game reveal, eat bagels, and start brainstorming.",
-      pinned: true,
-      audience: "club",
-      clubId: robotics.id,
-      authorName: "Robotics Captain",
-    },
-  });
-  await prisma.announcement.create({
-    data: {
-      title: "State qualifier next weekend",
-      body: "Three rounds, then break to elims. Carpool list pinned in our group chat.",
-      audience: "club",
-      clubId: debate.id,
-      authorName: "Debate Captain",
-    },
   });
 
   await prisma.event.createMany({
     data: [
-      { title: "Spring pep rally", description: "Class competitions, performances, and the unveiling of this year's homecoming court.", location: "Main gym", audience: "all", startsAt: inDays(5, 14, 0), endsAt: inDays(5, 15, 30) },
-      { title: "SGA general meeting", description: "Open to all students. Reviewing this month's suggestions and planning the spring fundraiser.", location: "Room 213", audience: "all", startsAt: inDays(10, 15, 15), endsAt: inDays(10, 16, 0) },
-      { title: "Charity bake sale", description: "Proceeds go to the Maryland Food Bank.", location: "Front lobby", audience: "all", startsAt: inDays(14, 11, 0), endsAt: inDays(14, 14, 0) },
-      { title: "Senior class trip info night", description: "Senior trip itinerary, payment plans, FAQ. Parents welcome.", location: "Auditorium", audience: "27", startsAt: inDays(21, 18, 30), endsAt: inDays(21, 20, 0) },
-      { title: "Junior PSAT prep", description: "Free practice session run by NHS tutors.", location: "Library", audience: "28", startsAt: inDays(7, 16, 0), endsAt: inDays(7, 17, 30) },
-      { title: "Sophomore class breakfast", description: "Free bagels and donuts before first period.", location: "Cafeteria", audience: "29", startsAt: inDays(3, 7, 30), endsAt: inDays(3, 8, 15) },
-      { title: "Freshman game night", description: "Smash, Mario Kart, board games. Pizza included.", location: "Cafeteria", audience: "30", startsAt: inDays(12, 17, 0), endsAt: inDays(12, 20, 0) },
+      {
+        title: "SGA General Meeting",
+        description: "Open to all students. Reviewing suggestions and planning upcoming events.",
+        location: "TBD",
+        audience: "all",
+        startsAt: inDays(7, 15, 15),
+        endsAt: inDays(7, 16, 0),
+      },
+      {
+        title: "Senior class event",
+        description: "Details to be announced by class officers.",
+        location: "TBD",
+        audience: "27",
+        startsAt: inDays(14, 16, 0),
+      },
     ],
   });
 
-  await prisma.event.create({
+  await prisma.suggestion.create({
     data: {
-      title: "Robotics scrimmage at Dulaney",
-      description: "Bus leaves at 7 AM. Bring snacks and team gear.",
-      location: "Dulaney HS",
-      audience: "club",
-      clubId: robotics.id,
-      startsAt: inDays(9, 7, 0),
-      endsAt: inDays(9, 18, 0),
+      body: "Can we get a covered area for outside lunch? When it rains there's nowhere to sit.",
+      category: "facilities",
+      target: "sga",
+      votes: 12,
     },
   });
 
-  /* ---------- Suggestions ---------- */
-  const suggestions = await Promise.all([
-    prisma.suggestion.create({
-      data: { body: "Can we get a covered area for outside lunch? When it rains there's nowhere to sit.", category: "facilities", target: "sga", votes: 24 },
-    }),
-    prisma.suggestion.create({
-      data: { body: "Bring back the senior–faculty basketball game!! That was the best part of last year.", category: "events", target: "27", contact: "@polysenior2027", votes: 41 },
-    }),
-    prisma.suggestion.create({
-      data: { body: "Wifi in the library is super slow during 5th period.", category: "facilities", target: "sga", votes: 18 },
-    }),
-    prisma.suggestion.create({
-      data: { body: "Robotics needs a bigger tool chest. We keep losing wrenches.", category: "facilities", target: "club", clubId: robotics.id, votes: 8 },
-    }),
-    prisma.suggestion.create({
-      data: { body: "Can we have a school-wide outdoor movie night before finals?", category: "events", target: "sga", votes: 33 },
-    }),
-    prisma.suggestion.create({
-      data: { body: "More vegetarian options at lunch please.", category: "general", target: "sga", votes: 12 },
-    }),
-  ]);
-
-  for (const s of suggestions) {
-    const fakeVotes = Array.from({ length: s.votes }, (_, i) => ({
-      suggestionId: s.id,
-      voterId: `seed_${s.id}_${i}`,
-    }));
-    if (fakeVotes.length) {
-      await prisma.suggestionVote.createMany({ data: fakeVotes });
-    }
-  }
-
   /* ---------- Print logins ---------- */
   console.log("\n✓ Seed complete\n");
-  console.log("  SGA Admins (full access):");
-  console.log(`    ${siteAdminUser.padEnd(16)} / ${siteAdminPass}   (site admin)`);
+  console.log("  Site admin:");
+  console.log(`    ${siteAdminUser.padEnd(20)} / ${siteAdminPass}`);
+  console.log("\n  SGA Admins:");
   for (const m of team.filter((t) => t.adminRole === "sga_admin")) {
-    console.log(`    ${m.username.padEnd(16)} / ${m.password}   (${m.role})`);
+    console.log(`    ${m.username.padEnd(20)} / ${m.password}`);
   }
-  console.log("\n  SGA Officers (post schoolwide, edit own profile only):");
+  console.log("\n  SGA Officers:");
   for (const m of team.filter((t) => t.adminRole === "sga_member")) {
-    console.log(`    ${m.username.padEnd(16)} / ${m.password}   (${m.role})`);
+    console.log(`    ${m.username.padEnd(20)} / ${m.password}`);
   }
   console.log("\n  Class Officers:");
   for (const c of classAccounts) {
-    console.log(`    ${c.username.padEnd(16)} / ${c.password}   (Class of 20${c.year})`);
+    console.log(`    ${c.username.padEnd(20)} / ${c.password}   (Class of 20${c.year})`);
   }
   console.log("\n  Club Officers:");
   for (const c of clubAccounts) {
-    console.log(`    ${c.username.padEnd(16)} / ${c.password}   (${c.name})`);
+    console.log(`    ${c.username.padEnd(20)} / ${c.password}   (${c.name})`);
   }
   console.log("");
 }

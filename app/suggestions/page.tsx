@@ -15,6 +15,7 @@ export default async function SuggestionsPage({
 }) {
   const [items, clubs] = await Promise.all([
     prisma.suggestion.findMany({
+      where: { private: false },
       include: { club: true },
       orderBy: [{ votes: "desc" }, { createdAt: "desc" }],
     }),

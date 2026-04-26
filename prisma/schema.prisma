@@ -99,6 +99,7 @@ model Suggestion {
   clubId    String?
   contact   String?
   read      Boolean  @default(false)
+  private   Boolean  @default(false)
   votes     Int      @default(0)
   createdAt DateTime @default(now())
 

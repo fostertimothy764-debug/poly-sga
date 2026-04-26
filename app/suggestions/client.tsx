@@ -6,6 +6,7 @@ import {
   ArrowUp,
   Check,
   ChevronDown,
+  EyeOff,
   Loader2,
   Lock,
   Plus,
@@ -70,7 +71,6 @@ export default function SuggestionsClient({
   const [targetFilter, setTargetFilter] = useState<string>("all");
   const [sort, setSort] = useState<Sort>("top");
 
-  // Open the form automatically when a preset target arrives via URL (e.g. from a club page)
   useEffect(() => {
     if (preset?.target) setShowForm(true);
   }, [preset?.target]);
@@ -85,8 +85,9 @@ export default function SuggestionsClient({
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-  function onCreated(item: Item) {
-    setItems((prev) => [item, ...prev]);
+  function onCreated(item: Item | null) {
+    // Private suggestions don't go on the public board
+    if (item) setItems((prev) => [item, ...prev]);
     setShowForm(false);
     router.refresh();
   }
@@ -125,23 +126,26 @@ export default function SuggestionsClient({
             Ideas, voted by you.
           </h1>
           <p className="text-ink-600 leading-relaxed max-w-lg">
-            See what other Poly students want to change. Upvote what you like.
-            The most-voted ideas land on our weekly meeting agenda.
+            See what other Poly students want to change. Upvote what you agree
+            with. The most-voted ideas land on our weekly meeting agenda. Want
+            to send something directly without posting publicly?{" "}
+            <button
+              onClick={() => setShowForm(true)}
+              className="text-poly-orange underline underline-offset-2 hover:text-poly-orangeDark"
+            >
+              Use the private form.
+            </button>
           </p>
         </div>
         <div className="grid grid-cols-3 gap-3 lg:max-w-md lg:ml-auto">
           <Stat icon={<Lock size={14} />} label="Anonymous" value="Always" />
-          <Stat icon={<Users size={14} />} label="Sent to" value="The right inbox" />
+          <Stat icon={<Users size={14} />} label="Sent to" value="Right inbox" />
           <Stat icon={<Sparkles size={14} />} label="Top ideas" value="On agenda" />
         </div>
       </header>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <Pills
-          options={categories}
-          value={filter}
-          onChange={setFilter}
-        />
+        <Pills options={categories} value={filter} onChange={setFilter} />
 
         <select
           value={targetFilter}
@@ -251,13 +255,7 @@ function Stat({
   );
 }
 
-function SuggestionRow({
-  item,
-  onVote,
-}: {
-  item: Item;
-  onVote: () => void;
-}) {
+function SuggestionRow({ item, onVote }: { item: Item; onVote: () => void }) {
   return (
     <div className="card flex items-start gap-4 transition-all">
       <button
@@ -278,9 +276,7 @@ function SuggestionRow({
             For {targetLabel(item)}
           </span>
           <span className="chip capitalize">{item.category}</span>
-          <span className="text-xs text-ink-500">
-            {relativeTime(item.createdAt)}
-          </span>
+          <span className="text-xs text-ink-500">{relativeTime(item.createdAt)}</span>
         </div>
         <p className="text-sm text-ink-800 leading-relaxed whitespace-pre-line">
           {item.body}
@@ -299,21 +295,24 @@ function SubmitModal({
   clubs: Club[];
   preset?: { target?: string; clubId?: string };
   onClose: () => void;
-  onCreated: (item: Item) => void;
+  onCreated: (item: Item | null) => void;
 }) {
   const [body, setBody] = useState("");
   const [category, setCategory] = useState("general");
   const [contact, setContact] = useState("");
   const [target, setTarget] = useState<string>(preset?.target || "sga");
   const [clubId, setClubId] = useState<string>(preset?.clubId || clubs[0]?.id || "");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [wasPrivate, setWasPrivate] = useState(false);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
     setError(null);
+    const submittingPrivate = isPrivate;
     start(async () => {
       try {
         const res = await fetch("/api/suggestions", {
@@ -325,6 +324,7 @@ function SubmitModal({
             contact: contact.trim() || null,
             target,
             clubId: target === "club" ? clubId : null,
+            private: isPrivate,
           }),
         });
         if (!res.ok) {
@@ -332,21 +332,28 @@ function SubmitModal({
           throw new Error(data.error || "Failed to submit");
         }
         const data = await res.json();
-        const club = clubs.find((c) => c.id === clubId);
-        const newItem: Item = {
-          id: data.id,
-          body: body.trim(),
-          category,
-          target,
-          clubId: target === "club" ? clubId : null,
-          clubName: target === "club" ? (club?.name ?? null) : null,
-          clubSlug: null,
-          votes: 1,
-          createdAt: new Date().toISOString(),
-          voted: true,
-        };
+        setWasPrivate(submittingPrivate);
         setDone(true);
-        setTimeout(() => onCreated(newItem), 700);
+
+        if (!submittingPrivate) {
+          const club = clubs.find((c) => c.id === clubId);
+          const newItem: Item = {
+            id: data.id,
+            body: body.trim(),
+            category,
+            target,
+            clubId: target === "club" ? clubId : null,
+            clubName: target === "club" ? (club?.name ?? null) : null,
+            clubSlug: null,
+            votes: 1,
+            createdAt: new Date().toISOString(),
+            voted: true,
+          };
+          setTimeout(() => onCreated(newItem), 700);
+        } else {
+          // Private — don't add to board
+          setTimeout(() => onCreated(null), 700);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
       }
@@ -354,13 +361,20 @@ function SubmitModal({
   }
 
   const targetOptions = [
-    { value: "sga", label: "SGA (the whole school govt.)" },
+    { value: "sga", label: "SGA (school government)" },
     { value: "27", label: "Class of 2027 officers" },
     { value: "28", label: "Class of 2028 officers" },
     { value: "29", label: "Class of 2029 officers" },
     { value: "30", label: "Class of 2030 officers" },
     { value: "club", label: "A specific club…" },
   ];
+
+  const inboxDesc =
+    target === "sga"
+      ? "Sent to the SGA inbox only."
+      : target === "club"
+        ? "Sent to the club's inbox AND the SGA inbox."
+        : "Sent to that class's inbox AND the SGA inbox.";
 
   return (
     <div
@@ -373,21 +387,35 @@ function SubmitModal({
       >
         {done ? (
           <div className="p-10 text-center">
-            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-poly-orange/10 text-poly-orange">
-              <Check size={20} />
+            <div
+              className={`mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full ${
+                wasPrivate
+                  ? "bg-poly-navy/10 text-poly-navy"
+                  : "bg-poly-orange/10 text-poly-orange"
+              }`}
+            >
+              {wasPrivate ? <EyeOff size={20} /> : <Check size={20} />}
             </div>
-            <h3 className="font-display text-2xl mb-1">Posted.</h3>
+            <h3 className="font-display text-2xl mb-1">
+              {wasPrivate ? "Sent privately." : "Posted."}
+            </h3>
             <p className="text-sm text-ink-500">
-              Your idea is live for everyone to vote on.
+              {wasPrivate
+                ? "Your message went straight to the selected inbox — it won't appear on the public board."
+                : "Your idea is live for everyone to vote on."}
             </p>
           </div>
         ) : (
           <form onSubmit={submit} className="p-6 sm:p-7 space-y-5">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-display text-2xl">Share an idea</h3>
+                <h3 className="font-display text-2xl">
+                  {isPrivate ? "Private message" : "Share an idea"}
+                </h3>
                 <p className="text-xs text-ink-500 mt-1">
-                  Posted anonymously. Your idea starts with one upvote (yours).
+                  {isPrivate
+                    ? "Goes directly to the selected inbox. Never shown publicly."
+                    : "Posted anonymously. Your idea starts with one upvote (yours)."}
                 </p>
               </div>
               <button
@@ -400,15 +428,62 @@ function SubmitModal({
               </button>
             </div>
 
+            {/* Private toggle */}
+            <div
+              className={`flex items-center justify-between rounded-2xl border p-4 cursor-pointer transition-all ${
+                isPrivate
+                  ? "border-poly-navy/40 bg-poly-navy/5"
+                  : "border-ink-200 bg-ink-50 hover:border-ink-300"
+              }`}
+              onClick={() => setIsPrivate((p) => !p)}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                    isPrivate ? "bg-poly-navy text-white" : "bg-ink-200 text-ink-500"
+                  }`}
+                >
+                  <EyeOff size={14} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium">
+                    {isPrivate ? "Private message" : "Keep private"}
+                  </div>
+                  <div className="text-xs text-ink-500">
+                    {isPrivate
+                      ? "Won't appear on the public board"
+                      : "Send directly without posting publicly"}
+                  </div>
+                </div>
+              </div>
+              <div
+                className={`w-10 h-6 rounded-full transition-colors relative ${
+                  isPrivate ? "bg-poly-navy" : "bg-ink-200"
+                }`}
+              >
+                <div
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                    isPrivate ? "translate-x-5" : "translate-x-1"
+                  }`}
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="label">Idea</label>
+              <label className="label">
+                {isPrivate ? "Message" : "Idea"}
+              </label>
               <textarea
                 required
                 rows={4}
                 maxLength={2000}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Bring back the senior–faculty basketball game..."
+                placeholder={
+                  isPrivate
+                    ? "Write your private message here…"
+                    : "Bring back the senior–faculty basketball game..."
+                }
                 className="input resize-none"
               />
               <div className="mt-1 text-right text-[11px] text-ink-400">
@@ -435,13 +510,7 @@ function SubmitModal({
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none"
                 />
               </div>
-              <p className="text-xs text-ink-500 mt-2">
-                {target === "sga"
-                  ? "Goes to the SGA inbox only."
-                  : target === "club"
-                    ? "Goes to the club's inbox AND the SGA inbox."
-                    : "Goes to that class's inbox AND the SGA inbox."}
-              </p>
+              <p className="text-xs text-ink-500 mt-2">{inboxDesc}</p>
             </div>
 
             {target === "club" && (
@@ -471,31 +540,33 @@ function SubmitModal({
               </div>
             )}
 
-            <div>
-              <label className="label">Category</label>
-              <div className="flex flex-wrap gap-2">
-                {categories.slice(1).map((c) => (
-                  <button
-                    key={c.value}
-                    type="button"
-                    onClick={() => setCategory(c.value)}
-                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
-                      category === c.value
-                        ? "bg-ink-900 text-ink-50"
-                        : "bg-ink-100 text-ink-600 hover:bg-ink-200"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
+            {!isPrivate && (
+              <div>
+                <label className="label">Category</label>
+                <div className="flex flex-wrap gap-2">
+                  {categories.slice(1).map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setCategory(c.value)}
+                      className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                        category === c.value
+                          ? "bg-ink-900 text-ink-50"
+                          : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="label">
                 Contact{" "}
                 <span className="font-normal text-ink-400">
-                  (optional, only officers see this)
+                  (optional — only officers see this)
                 </span>
               </label>
               <input
@@ -517,12 +588,17 @@ function SubmitModal({
             <button
               type="submit"
               disabled={pending || !body.trim()}
-              className="btn-accent w-full"
+              className={`w-full ${isPrivate ? "btn bg-poly-navy text-white hover:bg-poly-navy/90" : "btn-accent"}`}
             >
               {pending ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Posting
+                  Sending…
+                </>
+              ) : isPrivate ? (
+                <>
+                  <EyeOff size={14} />
+                  Send privately
                 </>
               ) : (
                 <>
