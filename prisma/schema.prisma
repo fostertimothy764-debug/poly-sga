@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// role: "sga_admin" | "sga_member" | "class" | "club"
+//   sga_admin   = President / Chief of Staff / site admin (full access)
+//   sga_member  = other SGA exec (post schoolwide, edit OWN team profile only)
+//   class       = class officer (post to own class only); classYear set
+//   club        = club officer (post to own club only); clubId set
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("sga_member")
+  classYear    String?
+  clubId       String?
+  teamMemberId String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  club       Club?       @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  teamMember TeamMember? @relation(fields: [teamMemberId], references: [id], onDelete: SetNull)
+}
+
+model Club {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  meetingTime String?
+  location    String?
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+
+  admins        Admin[]
+  announcements Announcement[]
+  events        Event[]
+  suggestions   Suggestion[]
+}
+
+// audience: "all" | "27" | "28" | "29" | "30" | "club"
+model Announcement {
+  id         String   @id @default(cuid())
+  title      String
+  body       String
+  pinned     Boolean  @default(false)
+  audience   String   @default("all")
+  clubId     String?
+  authorName String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  club Club? @relation(fields: [clubId], references: [id], onDelete: SetNull)
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  location    String
+  audience    String    @default("all")
+  clubId      String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  club Club? @relation(fields: [clubId], references: [id], onDelete: SetNull)
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  grade     String
+  bio       String?
+  photoUrl  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  admin Admin?
+}
+
+// target: "sga" | "27" | "28" | "29" | "30" | "club"
+//   sga    = SGA inbox only (default; not specified)
+//   class  = class inbox + SGA inbox
+//   club   = club inbox + SGA inbox
+model Suggestion {
+  id        String   @id @default(cuid())
+  body      String
+  category  String   @default("general")
+  target    String   @default("sga")
+  clubId    String?
+  contact   String?
+  read      Boolean  @default(false)
+  votes     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  club      Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
+  votesList SuggestionVote[]
+}
+
+model SuggestionVote {
+  id           String   @id @default(cuid())
+  suggestionId String
+  voterId      String
+  createdAt    DateTime @default(now())
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+
+  @@unique([suggestionId, voterId])
+}
+
+// Public form on /clubs — NOT a club creation form; just a request for SGA to consider
+// status: "pending" | "reviewed" | "declined"
+model ClubRequest {
+  id          String   @id @default(cuid())
+  clubName    String
+  description String
+  contactName String?
+  contactInfo String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
