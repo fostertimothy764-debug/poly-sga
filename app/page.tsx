@@ -282,8 +282,9 @@ export default async function Home() {
                 <em className="text-ink-300">Poly student.</em>
               </h2>
               <p className="text-ink-400 leading-relaxed mb-6">
-                SGA meetings are open to all students — bring questions, ideas, or
-                just curiosity. Your input drives what we work on next.
+                SGA works for every Poly student. Share your ideas, stay up to
+                date on what&apos;s happening, and connect with the people
+                representing you.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -317,7 +318,7 @@ export default async function Home() {
                   <Calendar size={16} />
                 </div>
                 <div>
-                  <div className="text-xs text-ink-400 mb-0.5">Next open meeting</div>
+                  <div className="text-xs text-ink-400 mb-0.5">Coming up</div>
                   <div className="text-sm text-ink-200">
                     {events[0]?.title ?? "Check the Events tab for dates"}
                   </div>

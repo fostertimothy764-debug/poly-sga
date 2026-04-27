@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     username: admin.username,
     name: admin.name,
     role: admin.role as AdminRole,
+    isSiteAdmin: admin.siteAdmin,
     classYear: admin.classYear,
     clubId: admin.clubId,
     teamMemberId: admin.teamMemberId,

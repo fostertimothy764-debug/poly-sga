@@ -85,6 +85,7 @@ export async function PATCH(req: NextRequest) {
     username: updated.username,
     name: updated.name,
     role: updated.role as AdminRole,
+    isSiteAdmin: updated.siteAdmin,
     classYear: updated.classYear,
     clubId: updated.clubId,
     teamMemberId: updated.teamMemberId,

@@ -8,8 +8,13 @@ import {
   Calendar,
   ChevronDown,
   Check,
+  Edit2,
+  ExternalLink,
+  File,
+  FileText,
   Inbox,
   KeyRound,
+  Link2,
   Loader2,
   LogOut,
   Megaphone,
@@ -104,14 +109,29 @@ type Suggestion = {
   createdAt: Date | string;
 };
 
+type ResourceLink = {
+  id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  category: string;
+  audience: string;
+  clubId: string | null;
+  club: { name: string; slug: string } | null;
+  pinned: boolean;
+  authorName: string | null;
+  createdAt: Date | string;
+};
+
 type Capabilities = {
   canManageTeam: boolean;
   canManageClubs: boolean;
   canRedirect: boolean;
   canManageAccounts: boolean;
+  isSiteAdmin: boolean;
 };
 
-type Tab = "announcements" | "events" | "clubs" | "team" | "inbox" | "accounts";
+type Tab = "announcements" | "events" | "links" | "clubs" | "team" | "inbox" | "accounts";
 
 const SCHOOL_AUDIENCES = [
   { value: "all", label: "Schoolwide" },
@@ -171,6 +191,7 @@ export default function AdminDashboard({
     clubs: Club[];
     accounts: Account[];
     clubRequests: ClubRequest[];
+    links: ResourceLink[];
   };
 }) {
   const router = useRouter();
@@ -223,6 +244,12 @@ export default function AdminDashboard({
           icon={<Calendar size={14} />}
           label="Events"
         />
+        <TabBtn
+          active={tab === "links"}
+          onClick={() => setTab("links")}
+          icon={<Link2 size={14} />}
+          label="Links"
+        />
         {capabilities.canManageClubs && (
           <TabBtn
             active={tab === "clubs"}
@@ -273,6 +300,15 @@ export default function AdminDashboard({
             onChange={refresh}
           />
         )}
+        {tab === "links" && (
+          <LinksTab
+            session={session}
+            clubs={initial.clubs}
+            items={initial.links}
+            canPin={capabilities.canRedirect}
+            onChange={refresh}
+          />
+        )}
         {tab === "clubs" && capabilities.canManageClubs && (
           <ClubsTab items={initial.clubs} clubRequests={initial.clubRequests} onChange={refresh} />
         )}
@@ -290,6 +326,7 @@ export default function AdminDashboard({
         {tab === "accounts" && capabilities.canManageAccounts && (
           <AccountsTab
             currentAdminId={session.adminId}
+            isSiteAdmin={capabilities.isSiteAdmin}
             accounts={initial.accounts}
             clubs={initial.clubs}
             clubRequests={initial.clubRequests}
@@ -1237,6 +1274,28 @@ function TeamTab({
     order: "0",
   });
   const [busy, setBusy] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    name?: string; role?: string; grade?: string; bio?: string; photoUrl?: string; order?: string;
+  }>({});
+
+  async function saveEdit(id: string) {
+    setBusy(true);
+    await fetch(`/api/team/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...editForm,
+        order: editForm.order !== undefined ? parseInt(editForm.order) || 0 : undefined,
+        bio: editForm.bio || null,
+        photoUrl: editForm.photoUrl || null,
+      }),
+    });
+    setBusy(false);
+    setEditingId(null);
+    setEditForm({});
+    onChange();
+  }
 
   async function create() {
     if (!form.name || !form.role || !form.grade) return;
@@ -1342,27 +1401,332 @@ function TeamTab({
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {items.map((m) => (
-            <div key={m.id} className="card flex items-start gap-3">
-              {m.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={m.photoUrl}
-                  alt={m.name}
-                  className="h-12 w-12 rounded-full object-cover flex-shrink-0"
-                />
+            <div key={m.id} className="card space-y-3">
+              {editingId === m.id ? (
+                <div className="space-y-3 animate-slide-up">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="label">Name</label>
+                      <input className="input" defaultValue={m.name}
+                        onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label">Role</label>
+                      <input className="input" defaultValue={m.role}
+                        onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label">Grade</label>
+                      <input className="input" defaultValue={m.grade}
+                        onChange={(e) => setEditForm((f) => ({ ...f, grade: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label">Order</label>
+                      <input className="input" type="number" defaultValue={m.order}
+                        onChange={(e) => setEditForm((f) => ({ ...f, order: e.target.value }))} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="label">Photo URL</label>
+                      <input className="input" defaultValue={m.photoUrl || ""}
+                        onChange={(e) => setEditForm((f) => ({ ...f, photoUrl: e.target.value }))} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="label">Bio</label>
+                      <textarea className="input resize-none" rows={2} defaultValue={m.bio || ""}
+                        onChange={(e) => setEditForm((f) => ({ ...f, bio: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(m.id)} disabled={busy} className="btn-primary">
+                      {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
+                    </button>
+                    <button onClick={() => { setEditingId(null); setEditForm({}); }} className="btn-ghost">
+                      <X size={13} /> Cancel
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <div className="h-12 w-12 rounded-full bg-ink-100 text-ink-700 flex items-center justify-center font-display flex-shrink-0">
-                  {m.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                <div className="flex items-start gap-3">
+                  {m.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={m.photoUrl} alt={m.name} className="h-12 w-12 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-ink-100 text-ink-700 flex items-center justify-center font-display flex-shrink-0">
+                      {m.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-sm text-ink-700">{m.role}</div>
+                    <div className="text-xs text-ink-500">{m.grade}</div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <IconBtn onClick={() => { setEditingId(m.id); setEditForm({}); }} title="Edit">
+                      <Edit2 size={14} />
+                    </IconBtn>
+                    <IconBtn onClick={() => remove(m.id)} title="Delete" danger>
+                      <Trash2 size={14} />
+                    </IconBtn>
+                  </div>
                 </div>
               )}
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{m.name}</div>
-                <div className="text-sm text-ink-700">{m.role}</div>
-                <div className="text-xs text-ink-500">{m.grade}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Links ---------- */
+
+const LINK_CATEGORIES = [
+  { value: "form", label: "Google Form" },
+  { value: "doc", label: "Document" },
+  { value: "link", label: "General Link" },
+];
+
+function linkCategoryIcon(cat: string) {
+  if (cat === "form") return <FileText size={13} className="text-blue-600" />;
+  if (cat === "doc") return <File size={13} className="text-violet-600" />;
+  return <Link2 size={13} className="text-ink-500" />;
+}
+
+function LinksTab({
+  session,
+  clubs,
+  items,
+  canPin,
+  onChange,
+}: {
+  session: SessionPayload;
+  clubs: Club[];
+  items: ResourceLink[];
+  canPin: boolean;
+  onChange: () => void;
+}) {
+  const opts = audienceOptions(session.role, session.classYear, session.clubId);
+  const initialAudience = session.role === "club" ? "club" : opts[0]?.value || "all";
+
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    url: "",
+    description: "",
+    category: "link",
+    audience: initialAudience,
+    clubId: session.clubId || clubs[0]?.id || "",
+    pinned: false,
+    authorName: "",
+  });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    title?: string; url?: string; description?: string; category?: string; pinned?: boolean;
+  }>({});
+
+  async function create() {
+    if (!form.title.trim() || !form.url.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...form,
+        description: form.description || null,
+        clubId: form.audience === "club" ? form.clubId : null,
+        authorName: form.authorName || null,
+      }),
+    });
+    setBusy(false);
+    if (!res.ok) { const d = await res.json().catch(() => ({})); setErr(d.error || "Failed"); return; }
+    setOpen(false);
+    setForm({ title: "", url: "", description: "", category: "link", audience: initialAudience, clubId: session.clubId || clubs[0]?.id || "", pinned: false, authorName: "" });
+    onChange();
+  }
+
+  async function saveEdit(id: string) {
+    setBusy(true);
+    const res = await fetch("/api/links", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...editForm }),
+    });
+    setBusy(false);
+    if (!res.ok) return;
+    setEditingId(null);
+    setEditForm({});
+    onChange();
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Remove this link?")) return;
+    await fetch(`/api/links?id=${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-xl">Links &amp; Resources</h2>
+        <button onClick={() => setOpen((o) => !o)} className="btn-primary">
+          <Plus size={14} /> {open ? "Cancel" : "Add link"}
+        </button>
+      </div>
+      <p className="text-xs text-ink-500 mb-4 max-w-lg">
+        Post Google Forms, sign-up sheets, documents, or any important URL. Students see these at{" "}
+        <a href="/links" className="underline hover:text-ink-900" target="_blank">/links</a>.
+      </p>
+
+      {err && <ErrorBox message={err} />}
+
+      {open && (
+        <div className="card mb-4 space-y-4 animate-slide-up">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label className="label">Title <span className="text-red-500">*</span></label>
+              <input className="input" placeholder="Senior Survey 2027" value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">URL <span className="text-red-500">*</span></label>
+              <input className="input font-mono text-sm" placeholder="https://forms.gle/…" value={form.url}
+                onChange={(e) => setForm({ ...form, url: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Description</label>
+              <input className="input" placeholder="Brief note for students (optional)" value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+            <div>
+              <label className="label">Type</label>
+              <div className="relative">
+                <select className="input appearance-none pr-10" value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  {LINK_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
               </div>
-              <IconBtn onClick={() => remove(m.id)} title="Delete" danger>
-                <Trash2 size={14} />
-              </IconBtn>
+            </div>
+            {session.role !== "club" && (
+              <div>
+                <label className="label">Audience</label>
+                <div className="relative">
+                  <select className="input appearance-none pr-10" value={form.audience}
+                    onChange={(e) => setForm({ ...form, audience: e.target.value })}>
+                    {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="label">Author name</label>
+              <input className="input" placeholder={session.name} value={form.authorName}
+                onChange={(e) => setForm({ ...form, authorName: e.target.value })} />
+            </div>
+            {canPin && (
+              <div className="flex items-center gap-3 pt-6">
+                <input id="link-pin" type="checkbox" checked={form.pinned}
+                  onChange={(e) => setForm({ ...form, pinned: e.target.checked })}
+                  className="h-4 w-4 rounded border-ink-300" />
+                <label htmlFor="link-pin" className="text-sm font-medium">Pin to top</label>
+              </div>
+            )}
+          </div>
+          <button onClick={create} disabled={busy || !form.title.trim() || !form.url.trim()} className="btn-primary">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Post link
+          </button>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <Empty>No links posted yet.</Empty>
+      ) : (
+        <div className="space-y-2">
+          {items.map((l) => (
+            <div key={l.id} className="card">
+              {editingId === l.id ? (
+                <div className="space-y-3 animate-slide-up">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-2">
+                      <label className="label">Title</label>
+                      <input className="input" defaultValue={l.title}
+                        onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="label">URL</label>
+                      <input className="input font-mono text-sm" defaultValue={l.url}
+                        onChange={(e) => setEditForm((f) => ({ ...f, url: e.target.value }))} />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="label">Description</label>
+                      <input className="input" defaultValue={l.description || ""}
+                        onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="label">Type</label>
+                      <div className="relative">
+                        <select className="input appearance-none pr-10" defaultValue={l.category}
+                          onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}>
+                          {LINK_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    {canPin && (
+                      <div className="flex items-center gap-2 pt-6">
+                        <input type="checkbox" defaultChecked={l.pinned}
+                          onChange={(e) => setEditForm((f) => ({ ...f, pinned: e.target.checked }))}
+                          className="h-4 w-4 rounded border-ink-300" />
+                        <span className="text-sm">Pinned</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(l.id)} disabled={busy} className="btn-primary">
+                      {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
+                    </button>
+                    <button onClick={() => { setEditingId(null); setEditForm({}); }} className="btn-ghost">
+                      <X size={13} /> Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-ink-100 mt-0.5">
+                    {linkCategoryIcon(l.category)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                      <span className="font-medium">{l.title}</span>
+                      {l.pinned && <Pin size={11} className="text-poly-orange" />}
+                    </div>
+                    <a href={l.url} target="_blank" rel="noopener noreferrer"
+                      className="text-xs font-mono text-ink-400 hover:text-poly-orange truncate block max-w-xs transition-colors">
+                      {l.url}
+                    </a>
+                    {l.description && <p className="text-xs text-ink-500 mt-0.5">{l.description}</p>}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <a href={l.url} target="_blank" rel="noopener noreferrer">
+                      <IconBtn onClick={() => {}} title="Open link">
+                        <ExternalLink size={14} />
+                      </IconBtn>
+                    </a>
+                    <IconBtn onClick={() => { setEditingId(l.id); setEditForm({}); }} title="Edit">
+                      <Edit2 size={14} />
+                    </IconBtn>
+                    <IconBtn onClick={() => remove(l.id)} title="Delete" danger>
+                      <Trash2 size={14} />
+                    </IconBtn>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -1389,12 +1753,14 @@ function roleBadge(role: string) {
 
 function AccountsTab({
   currentAdminId,
+  isSiteAdmin,
   accounts,
   clubs,
   clubRequests,
   onChange,
 }: {
   currentAdminId: string;
+  isSiteAdmin: boolean;
   accounts: Account[];
   clubs: Club[];
   clubRequests: ClubRequest[];
@@ -1681,9 +2047,11 @@ function AccountsTab({
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mt-0.5">
                       <span className="text-xs font-mono text-ink-500">@{a.username}</span>
-                      <span className={`chip text-[10px] ${roleBadge(a.role)}`}>
-                        {roleLabel(a.role, a.classYear)}
-                      </span>
+                      {isSiteAdmin && (
+                        <span className={`chip text-[10px] ${roleBadge(a.role)}`}>
+                          {roleLabel(a.role, a.classYear)}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">

@@ -13,6 +13,7 @@ export type SessionPayload = {
   username: string;
   name: string;
   role: AdminRole;
+  isSiteAdmin: boolean;
   classYear: string | null;
   clubId: string | null;
   teamMemberId: string | null;
@@ -48,6 +49,7 @@ export async function getSession(): Promise<SessionPayload | null> {
       username: payload.username as string,
       name: payload.name as string,
       role: (payload.role as AdminRole) || "sga_member",
+      isSiteAdmin: (payload.isSiteAdmin as boolean) ?? false,
       classYear: (payload.classYear as string | null) ?? null,
       clubId: (payload.clubId as string | null) ?? null,
       teamMemberId: (payload.teamMemberId as string | null) ?? null,
@@ -61,6 +63,10 @@ export async function getSession(): Promise<SessionPayload | null> {
 
 export function isSgaAdmin(s: SessionPayload | null) {
   return s?.role === "sga_admin";
+}
+
+export function isSiteAdmin(s: SessionPayload | null) {
+  return s?.isSiteAdmin === true;
 }
 
 export function isSga(s: SessionPayload | null) {

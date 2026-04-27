@@ -9,6 +9,7 @@ async function main() {
   await prisma.suggestion.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.event.deleteMany();
+  await prisma.resourceLink.deleteMany();
   await prisma.admin.deleteMany();
   await prisma.teamMember.deleteMany();
   await prisma.club.deleteMany();
@@ -190,6 +191,7 @@ async function main() {
       passwordHash: await bcrypt.hash(siteAdminPass, 10),
       name: "Site Admin",
       role: "sga_admin",
+      siteAdmin: true,
     },
   });
 

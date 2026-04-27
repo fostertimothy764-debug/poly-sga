@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession, isSga, isSgaAdmin } from "@/lib/auth";
+import { getSession, isSga, isSgaAdmin, isSiteAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import AdminDashboard from "./dashboard";
 
@@ -32,8 +32,9 @@ export default async function AdminPage() {
   // SGA roles see everything
 
   const isAdmin = isSgaAdmin(session);
+  const siteAdminUser = isSiteAdmin(session);
 
-  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests] =
+  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links] =
     await Promise.all([
       prisma.announcement.findMany({
         where: audienceWhere,
@@ -76,6 +77,11 @@ export default async function AdminPage() {
       isAdmin
         ? prisma.clubRequest.findMany({ orderBy: { createdAt: "desc" } })
         : Promise.resolve([]),
+      // Links — all officers can see/manage their own links
+      prisma.resourceLink.findMany({
+        include: { club: { select: { name: true, slug: true } } },
+        orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+      }),
     ]);
 
   return (
@@ -85,9 +91,10 @@ export default async function AdminPage() {
         canManageTeam: isAdmin,
         canManageClubs: isAdmin,
         canRedirect: isAdmin,
-        canManageAccounts: isAdmin,
+        canManageAccounts: siteAdminUser,
+        isSiteAdmin: siteAdminUser,
       }}
-      initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests }}
+      initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links }}
     />
   );
 }

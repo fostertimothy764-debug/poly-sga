@@ -19,6 +19,7 @@ model Admin {
   passwordHash String
   name         String
   role         String   @default("sga_member")
+  siteAdmin    Boolean  @default(false)
   classYear    String?
   clubId       String?
   teamMemberId String?  @unique
@@ -43,6 +44,7 @@ model Club {
   announcements Announcement[]
   events        Event[]
   suggestions   Suggestion[]
+  links         ResourceLink[]
 }
 
 // audience: "all" | "27" | "28" | "29" | "30" | "club"
@@ -115,6 +117,22 @@ model SuggestionVote {
   suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
 
   @@unique([suggestionId, voterId])
+}
+
+// category: "form" | "doc" | "link"
+model ResourceLink {
+  id          String   @id @default(cuid())
+  title       String
+  url         String
+  description String?
+  category    String   @default("link")
+  audience    String   @default("all")
+  clubId      String?
+  pinned      Boolean  @default(false)
+  authorName  String?
+  createdAt   DateTime @default(now())
+
+  club Club? @relation(fields: [clubId], references: [id], onDelete: SetNull)
 }
 
 // Public form on /clubs — NOT a club creation form; just a request for SGA to consider

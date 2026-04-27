@@ -12,6 +12,7 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/announcements", label: "Announcements" },
   { href: "/events", label: "Events" },
+  { href: "/links", label: "Links" },
   { href: "/clubs", label: "Clubs" },
   { href: "/team", label: "Team" },
   { href: "/suggestions", label: "Ideas" },
@@ -86,7 +87,7 @@ export default function Nav({
             className="h-8 w-8 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
           />
           <span className="font-display text-lg tracking-tight">
-            Poly <span className="text-ink-400">SGA</span>
+            Poly <span className="text-poly-orange">SGA</span>
           </span>
         </Link>
 
