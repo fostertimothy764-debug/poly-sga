@@ -6,6 +6,8 @@ import AudienceFilter from "../announcements/filter";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Events · Poly SGA" };
+
 export default async function EventsPage({
   searchParams,
 }: {
