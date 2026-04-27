@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatTime, relativeTime } from "@/lib/utils";
 import type { AdminRole, SessionPayload } from "@/lib/auth";
+import PhotoUpload from "@/components/photo-upload";
 
 type Club = {
   id: string;
@@ -1373,11 +1374,12 @@ function TeamTab({
             </div>
           </div>
           <div>
-            <label className="label">Photo URL</label>
-            <input
-              className="input"
-              value={form.photoUrl}
-              onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
+            <label className="label">Photo</label>
+            <PhotoUpload
+              currentUrl={form.photoUrl || null}
+              initials={form.name ? form.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("") : "?"}
+              onUpload={(url) => setForm({ ...form, photoUrl: url })}
+              size="sm"
             />
           </div>
           <div>
@@ -1426,9 +1428,13 @@ function TeamTab({
                         onChange={(e) => setEditForm((f) => ({ ...f, order: e.target.value }))} />
                     </div>
                     <div className="col-span-2">
-                      <label className="label">Photo URL</label>
-                      <input className="input" defaultValue={m.photoUrl || ""}
-                        onChange={(e) => setEditForm((f) => ({ ...f, photoUrl: e.target.value }))} />
+                      <label className="label">Photo</label>
+                      <PhotoUpload
+                        currentUrl={editForm.photoUrl !== undefined ? (editForm.photoUrl || null) : (m.photoUrl || null)}
+                        initials={m.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}
+                        onUpload={(url) => setEditForm((f) => ({ ...f, photoUrl: url }))}
+                        size="sm"
+                      />
                     </div>
                     <div className="col-span-2">
                       <label className="label">Bio</label>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
+import PhotoUpload from "@/components/photo-upload";
 
 export default function ProfileClient({
   account,
@@ -309,34 +310,15 @@ function TeamProfileForm({
     >
       <form onSubmit={save} className="space-y-4">
         <div className="flex items-start gap-4">
-          {form.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={form.photoUrl}
-              alt={form.name}
-              className="h-20 w-20 rounded-2xl object-cover flex-shrink-0 border border-ink-200"
-            />
-          ) : (
-            <div className="h-20 w-20 rounded-2xl bg-ink-100 flex items-center justify-center font-display text-2xl text-ink-500 flex-shrink-0">
-              {form.name
-                .split(" ")
-                .map((s) => s[0])
-                .slice(0, 2)
-                .join("")}
-            </div>
-          )}
-          <div className="flex-1">
-            <label className="label">Photo URL</label>
-            <input
-              value={form.photoUrl}
-              onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-              placeholder="https://..."
-              className="input"
-            />
-            <p className="text-xs text-ink-500 mt-1">
-              Paste a link to a hosted photo (Imgur, Drive public link, etc).
-            </p>
-          </div>
+          <PhotoUpload
+            currentUrl={form.photoUrl || null}
+            initials={form.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+            onUpload={(url) => setForm({ ...form, photoUrl: url })}
+            size="lg"
+          />
+          <p className="text-xs text-ink-500 pt-1 max-w-xs leading-relaxed">
+            Click your photo (or the circle) to upload a new one. JPG, PNG, or WEBP — any size, we&apos;ll compress it automatically.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
