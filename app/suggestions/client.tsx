@@ -117,7 +117,16 @@ export default function SuggestionsClient({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      <header className="grid lg:grid-cols-[1.1fr_1fr] gap-10 items-end mb-10">
+      <div className="relative">
+        <div
+          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none"
+          aria-hidden
+        />
+        <div
+          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-navy/5 blur-2xl pointer-events-none"
+          aria-hidden
+        />
+      <header className="relative grid lg:grid-cols-[1.1fr_1fr] gap-10 items-end mb-10">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
             Your voice
@@ -143,6 +152,7 @@ export default function SuggestionsClient({
           <Stat icon={<Sparkles size={14} />} label="Top ideas" value="On agenda" />
         </div>
       </header>
+      </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <Pills options={categories} value={filter} onChange={setFilter} />

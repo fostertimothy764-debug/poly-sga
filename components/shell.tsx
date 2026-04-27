@@ -28,6 +28,11 @@ export default function Shell({
     <>
       <Nav grade={grade} officerName={officerName} officerRole={officerRole} />
       <main className="min-h-[calc(100vh-200px)] pt-20">
+        {/* Thin gradient accent line just below nav */}
+        <div
+          className="h-px bg-gradient-to-r from-poly-orange/70 via-poly-navy/50 to-transparent"
+          aria-hidden
+        />
         <div key={pathname} className="animate-page-in">
           {children}
         </div>

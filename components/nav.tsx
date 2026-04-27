@@ -79,10 +79,12 @@ export default function Nav({
           className="flex items-center gap-2.5 group"
           aria-label="Poly SGA home"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 text-white text-[11px] font-bold tracking-wider transition-transform group-hover:scale-105">
-            <span className="absolute inset-0 rounded-lg bg-poly-orange opacity-0 transition-opacity group-hover:opacity-100" />
-            <span className="relative">P</span>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://cmsv2-assets.apptegy.net/uploads/17625/logo/20148/Polytechnic_logo.png"
+            alt="Baltimore Polytechnic Institute"
+            className="h-8 w-8 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+          />
           <span className="font-display text-lg tracking-tight">
             Poly <span className="text-ink-400">SGA</span>
           </span>

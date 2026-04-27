@@ -15,16 +15,27 @@ export default async function TeamPage() {
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      <header className="mb-12 max-w-2xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-          People
-        </p>
-        <h1 className="h-display text-5xl sm:text-6xl mb-4">Meet the SGA</h1>
-        <p className="text-ink-600 leading-relaxed">
-          Elected by you, working for you. Stop by and say hi — we&apos;re
-          easier to find than you think.
-        </p>
-      </header>
+      {/* Decorative header */}
+      <div className="relative mb-12">
+        <div
+          className="absolute -top-6 -right-8 h-72 w-72 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none"
+          aria-hidden
+        />
+        <div
+          className="absolute bottom-0 -left-4 h-40 w-40 rounded-full bg-poly-navy/5 blur-2xl pointer-events-none"
+          aria-hidden
+        />
+        <header className="relative max-w-2xl">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
+            People
+          </p>
+          <h1 className="h-display text-5xl sm:text-6xl mb-4">Meet the SGA</h1>
+          <p className="text-ink-600 leading-relaxed">
+            Elected by you, working for you. Stop by and say hi — we&apos;re
+            easier to find than you think.
+          </p>
+        </header>
+      </div>
 
       {exec.length > 0 && (
         <section className="mb-16">

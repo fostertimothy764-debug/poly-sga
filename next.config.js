@@ -5,6 +5,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "cmsv2-assets.apptegy.net" },
     ],
   },
 };

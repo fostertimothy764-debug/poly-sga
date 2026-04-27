@@ -227,9 +227,14 @@ export default async function Home() {
                       <span>{formatTime(e.startsAt)}</span>
                       <span>·</span>
                       <span>{e.location}</span>
-                      {e.audience !== "all" && (
+                      {e.audience !== "all" && e.audience !== "club" && (
                         <span className="text-poly-navy font-medium">
                           · Class of 20{e.audience}
+                        </span>
+                      )}
+                      {e.audience === "club" && (
+                        <span className="text-poly-orangeDark font-medium">
+                          · Club Event
                         </span>
                       )}
                     </div>
@@ -250,54 +255,72 @@ export default async function Home() {
         <div className="relative overflow-hidden rounded-3xl bg-ink-900 text-ink-50 px-10 py-12 sm:px-14 sm:py-16">
           {/* decorative blobs */}
           <div
-            className="absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-poly-orange/25 blur-3xl"
+            className="absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-poly-orange/20 blur-3xl"
             aria-hidden
           />
           <div
-            className="absolute -left-12 top-0 h-48 w-48 rounded-full bg-poly-navy/40 blur-3xl"
+            className="absolute -left-12 top-0 h-48 w-48 rounded-full bg-poly-navy/50 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="absolute left-1/2 bottom-0 h-32 w-64 -translate-x-1/2 rounded-full bg-poly-orange/10 blur-2xl"
             aria-hidden
           />
           {/* Stars */}
-          <StarIcon className="absolute top-6 right-[45%] text-poly-orange opacity-60" size={20} />
-          <StarIcon className="absolute bottom-8 left-[40%] text-white opacity-20" size={14} />
-          <SparkleIcon className="absolute top-10 right-10 text-poly-orange opacity-50" size={24} />
+          <StarIcon className="absolute top-6 right-[45%] text-poly-orange opacity-50" size={18} />
+          <StarIcon className="absolute bottom-10 left-[38%] text-white opacity-15" size={12} />
+          <SparkleIcon className="absolute top-10 right-10 text-poly-orange opacity-40" size={22} />
+          <SparkleIcon className="absolute bottom-6 right-[25%] text-white opacity-15" size={16} />
 
           <div className="relative grid sm:grid-cols-2 gap-8 items-center">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-poly-orange mb-4">
-                Get involved
+                Make an impact
               </p>
               <h2 className="h-display text-4xl sm:text-5xl mb-4">
-                Have an idea?{" "}
-                <em className="text-ink-300">We want it.</em>
+                Open to every{" "}
+                <em className="text-ink-300">Poly student.</em>
               </h2>
               <p className="text-ink-400 leading-relaxed mb-6">
-                Share it publicly, see what your classmates are voting for, and help
-                decide what SGA works on next.
+                SGA meetings are open to all students — bring questions, ideas, or
+                just curiosity. Your input drives what we work on next.
               </p>
-              <Link
-                href="/suggestions"
-                className="btn bg-poly-orange text-white hover:bg-poly-orangeDark"
-              >
-                Browse ideas
-                <ArrowRight size={16} />
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/team"
+                  className="btn bg-poly-orange text-white hover:bg-poly-orangeDark"
+                >
+                  Meet the team
+                  <ArrowRight size={16} />
+                </Link>
+                <Link
+                  href="/suggestions"
+                  className="btn border border-white/20 text-ink-300 hover:text-white hover:border-white/40 transition-colors"
+                >
+                  Submit an idea
+                </Link>
+              </div>
             </div>
 
-            {/* Mini stat cards */}
+            {/* Stat cards */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-                <div className="font-display text-4xl text-poly-orange mb-1">4</div>
-                <div className="text-sm text-ink-400">class years represented</div>
+                <div className="font-display text-4xl text-poly-orange mb-1">{teamCount}</div>
+                <div className="text-sm text-ink-400">elected officers</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
                 <div className="font-display text-4xl text-poly-orange mb-1">{clubCount}</div>
                 <div className="text-sm text-ink-400">clubs on campus</div>
               </div>
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5 col-span-2">
-                <div className="text-sm text-ink-400 mb-2">Latest from SGA</div>
-                <div className="text-sm text-ink-200 line-clamp-2">
-                  {announcements[0]?.title ?? "Stay tuned for updates"}
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5 col-span-2 flex items-center gap-3">
+                <div className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-poly-orange/20 text-poly-orange">
+                  <Calendar size={16} />
+                </div>
+                <div>
+                  <div className="text-xs text-ink-400 mb-0.5">Next open meeting</div>
+                  <div className="text-sm text-ink-200">
+                    {events[0]?.title ?? "Check the Events tab for dates"}
+                  </div>
                 </div>
               </div>
             </div>

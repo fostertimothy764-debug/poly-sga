@@ -41,16 +41,27 @@ export default async function EventsPage({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      <header className="mb-10 max-w-2xl">
-        <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-          Calendar
-        </p>
-        <h1 className="h-display text-5xl sm:text-6xl mb-4">Events</h1>
-        <p className="text-ink-600 leading-relaxed">
-          Spirit weeks, fundraisers, meetings, and everything else SGA and your
-          class officers are putting on.
-        </p>
-      </header>
+      {/* Decorative header */}
+      <div className="relative mb-10">
+        <div
+          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-navy/6 blur-3xl pointer-events-none"
+          aria-hidden
+        />
+        <div
+          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-orange/6 blur-2xl pointer-events-none"
+          aria-hidden
+        />
+        <header className="relative max-w-2xl">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
+            Calendar
+          </p>
+          <h1 className="h-display text-5xl sm:text-6xl mb-4">Events</h1>
+          <p className="text-ink-600 leading-relaxed">
+            Spirit weeks, fundraisers, meetings, and everything else SGA and your
+            class officers are putting on.
+          </p>
+        </header>
+      </div>
 
       <AudienceFilter
         currentView={view}

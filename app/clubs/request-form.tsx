@@ -61,9 +61,9 @@ export default function ClubRequestForm() {
       <div className="flex items-end justify-between mb-6">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-2">
-            Don&apos;t see yours?
+            Don&apos;t see your club?
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl">Request a club</h2>
+          <h2 className="font-display text-3xl sm:text-4xl">Request to add a club</h2>
         </div>
         <button
           onClick={() => setOpen((o) => !o)}
@@ -75,7 +75,7 @@ export default function ClubRequestForm() {
             </>
           ) : (
             <>
-              Make a request
+              Send a request
               <ArrowRight size={14} />
             </>
           )}
@@ -83,13 +83,16 @@ export default function ClubRequestForm() {
       </div>
 
       {!open && (
-        <p className="text-ink-600 leading-relaxed max-w-2xl">
-          Think Poly needs a new club? Submit a request below and SGA will look into it.{" "}
-          <strong className="text-ink-800">
-            This is not a club creation form — it&apos;s a request for SGA to consider adding the club to the official list.
-          </strong>{" "}
-          SGA may follow up with you to discuss next steps.
-        </p>
+        <div className="max-w-2xl space-y-3">
+          <p className="text-ink-600 leading-relaxed">
+            If your club already exists at Poly but isn&apos;t listed here, you can ask SGA to add it to the website.
+          </p>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <strong>⚠ This is not a form to start a new club.</strong> It only requests that an
+            existing club be added to this website&apos;s listing. SGA will review and may follow up with
+            you before anything appears.
+          </div>
+        </div>
       )}
 
       {open && (
@@ -97,9 +100,10 @@ export default function ClubRequestForm() {
           onSubmit={submit}
           className="card space-y-5 animate-slide-up"
         >
-          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-            <strong>Heads up:</strong> This is a request for SGA to consider adding a club to the official
-            list — not a way to instantly create one. SGA will review it and may reach out.
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+            <strong>⚠ Not a club creation form.</strong> This only requests that your club be
+            added to this website. It does <em>not</em> create, register, or officially start a
+            club at Poly. SGA will review and may reach out before approving.
           </div>
 
           <div>
@@ -118,7 +122,7 @@ export default function ClubRequestForm() {
 
           <div>
             <label className="label" htmlFor="description">
-              What would this club do? <span className="text-red-500">*</span>
+              What is your club? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="description"
@@ -134,7 +138,7 @@ export default function ClubRequestForm() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="contactName">
-                Your name (optional)
+                Your name 
               </label>
               <input
                 id="contactName"
@@ -146,7 +150,7 @@ export default function ClubRequestForm() {
             </div>
             <div>
               <label className="label" htmlFor="contactInfo">
-                How can SGA reach you? (optional)
+                How can SGA reach you? 
               </label>
               <input
                 id="contactInfo"
