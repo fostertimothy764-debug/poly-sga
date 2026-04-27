@@ -167,6 +167,20 @@ async function main() {
     });
   }
 
+  /* ---------- Class officer team members (public roster only, no login) ---------- */
+  await prisma.teamMember.createMany({
+    data: [
+      { name: "CO27 Class Officer 1", role: "Class Officer", grade: "Class of 2027", order: 20 },
+      { name: "CO27 Class Officer 2", role: "Class Officer", grade: "Class of 2027", order: 21 },
+      { name: "CO28 Class Officer 1", role: "Class Officer", grade: "Class of 2028", order: 22 },
+      { name: "CO28 Class Officer 2", role: "Class Officer", grade: "Class of 2028", order: 23 },
+      { name: "CO29 Class Officer 1", role: "Class Officer", grade: "Class of 2029", order: 24 },
+      { name: "CO29 Class Officer 2", role: "Class Officer", grade: "Class of 2029", order: 25 },
+      { name: "CO30 Class Officer 1", role: "Class Officer", grade: "Class of 2030", order: 26 },
+      { name: "CO30 Class Officer 2", role: "Class Officer", grade: "Class of 2030", order: 27 },
+    ],
+  });
+
   /* ---------- Site admin (you) ---------- */
   const siteAdminUser = process.env.ADMIN_USERNAME || "admin";
   const siteAdminPass = process.env.ADMIN_PASSWORD || "poly2026";

@@ -2,17 +2,16 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Team · Poly SGA" };
+
 export default async function TeamPage() {
   const members = await prisma.teamMember.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
   });
 
-  const exec = members.filter((m) =>
-    /^(president|vice president|treasurer|secretary)$/i.test(m.role)
-  );
-  const reps = members.filter(
-    (m) => !/^(president|vice president|treasurer|secretary)$/i.test(m.role)
-  );
+  // "Class Officer" role → Class Officers section; everything else → Exec Board
+  const exec = members.filter((m) => m.role !== "Class Officer");
+  const classOfficers = members.filter((m) => m.role === "Class Officer");
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
@@ -40,13 +39,13 @@ export default async function TeamPage() {
         </section>
       )}
 
-      {reps.length > 0 && (
+      {classOfficers.length > 0 && (
         <section>
           <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5">
-            Class Representatives
+            Class Officers
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {reps.map((m) => (
+            {classOfficers.map((m) => (
               <MemberCard key={m.id} member={m} />
             ))}
           </div>

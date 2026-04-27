@@ -10,7 +10,6 @@ const GRADES = [
   { value: "29", label: "Class of 2029", sub: "Sophomores" },
   { value: "28", label: "Class of 2028", sub: "Juniors" },
   { value: "27", label: "Class of 2027", sub: "Seniors" },
-  { value: "guest", label: "Just visiting", sub: "Show me everything" },
 ];
 
 export default function WelcomeClient() {

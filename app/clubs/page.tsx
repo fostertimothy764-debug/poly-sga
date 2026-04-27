@@ -36,8 +36,7 @@ export default async function ClubsPage() {
           )}
         </div>
         <p className="text-ink-600 leading-relaxed mt-4">
-          Find your people. From robotics to debate to BSU, there&apos;s a club
-          for every kind of Poly student.
+          Find your people. There&apos;s a club for every kind of Poly student.
         </p>
       </header>
 

@@ -43,7 +43,7 @@ export default function LoginPage() {
         </div>
         <h1 className="h-display text-3xl mb-2">Officer login</h1>
         <p className="text-sm text-ink-500">
-          For SGA, class, and club officers. You&apos;ll stay signed in for 30 days.
+          For SGA, class, and club officers.
         </p>
       </div>
 

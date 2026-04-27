@@ -22,15 +22,20 @@ export default async function EventsPage({
     audienceWhere = { audience: { in: ["all", grade] } };
   }
 
-  const [upcoming, past] = await Promise.all([
+  const [upcoming, past, clubEvents] = await Promise.all([
     prisma.event.findMany({
-      where: { ...audienceWhere, startsAt: { gte: now } },
+      where: { ...audienceWhere, startsAt: { gte: now }, NOT: { audience: "club" } },
       orderBy: { startsAt: "asc" },
     }),
     prisma.event.findMany({
-      where: { ...audienceWhere, startsAt: { lt: now } },
+      where: { ...audienceWhere, startsAt: { lt: now }, NOT: { audience: "club" } },
       orderBy: { startsAt: "desc" },
       take: 6,
+    }),
+    prisma.event.findMany({
+      where: { audience: "club", startsAt: { gte: now } },
+      include: { club: { select: { name: true } } },
+      orderBy: { startsAt: "asc" },
     }),
   ]);
 
@@ -68,12 +73,12 @@ export default async function EventsPage({
                   <DateBlock date={e.startsAt} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {e.audience !== "all" ? (
+                      {e.audience === "all" ? (
+                        <span className="chip">Schoolwide</span>
+                      ) : (
                         <span className="chip border-poly-navy/30 bg-poly-navy/5 text-poly-navy">
                           Class of 20{e.audience}
                         </span>
-                      ) : (
-                        <span className="chip">Schoolwide</span>
                       )}
                     </div>
                     <h3 className="font-display text-xl mb-2">{e.title}</h3>
@@ -99,6 +104,46 @@ export default async function EventsPage({
           </div>
         )}
       </section>
+
+      {clubEvents.length > 0 && (
+        <section className="mb-16">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5">
+            Club Events
+          </h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            {clubEvents.map((e) => (
+              <article key={e.id} className="card card-hover animate-slide-up">
+                <div className="flex items-start gap-5">
+                  <DateBlock date={e.startsAt} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      <span className="chip border-poly-orange/30 bg-poly-orange/5 text-poly-orangeDark">
+                        {e.club?.name ?? "Club Event"}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-xl mb-2">{e.title}</h3>
+                    <p className="text-sm text-ink-600 leading-relaxed mb-4">
+                      {e.description}
+                    </p>
+                    <div className="flex flex-col gap-1.5 text-xs text-ink-500">
+                      <span className="flex items-center gap-2">
+                        <Calendar size={12} /> {formatDate(e.startsAt)}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Clock size={12} /> {formatTime(e.startsAt)}
+                        {e.endsAt && ` — ${formatTime(e.endsAt)}`}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <MapPin size={12} /> {e.location}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {past.length > 0 && (
         <section>

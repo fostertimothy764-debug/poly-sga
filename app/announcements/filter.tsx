@@ -14,7 +14,7 @@ export default function AudienceFilter({
 
   const tabs = [
     { value: "mine", label: gradeLabel ? `For ${gradeLabel}` : "For me" },
-    { value: "school", label: "Schoolwide only" },
+    { value: "school", label: "SGA Announcements" },
     { value: "all", label: "Everything" },
   ];
 

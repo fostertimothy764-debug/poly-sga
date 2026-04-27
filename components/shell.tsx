@@ -28,7 +28,9 @@ export default function Shell({
     <>
       <Nav grade={grade} officerName={officerName} officerRole={officerRole} />
       <main className="min-h-[calc(100vh-200px)] pt-20">
-        {children}
+        <div key={pathname} className="animate-page-in">
+          {children}
+        </div>
       </main>
       <Footer />
     </>

@@ -32,6 +32,7 @@ const config: Config = {
       animation: {
         "fade-in": "fade-in 0.6s ease-out",
         "slide-up": "slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        "page-in": "page-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
       },
       keyframes: {
         "fade-in": {
@@ -40,6 +41,10 @@ const config: Config = {
         },
         "slide-up": {
           "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "page-in": {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
