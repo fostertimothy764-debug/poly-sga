@@ -207,7 +207,7 @@ export default async function Home() {
                 >
                   {/* Date block */}
                   <div className="flex-shrink-0 w-14 text-center">
-                    <div className="rounded-xl bg-ink-900 text-white py-2">
+                    <div className="rounded-xl bg-poly-navy text-white py-2">
                       <div className="font-display text-2xl leading-none">
                         {d.getDate()}
                       </div>
@@ -252,7 +252,7 @@ export default async function Home() {
 
       {/* ── CTA banner ── */}
       <section className="container-page pb-24">
-        <div className="relative overflow-hidden rounded-3xl bg-ink-900 text-ink-50 px-10 py-12 sm:px-14 sm:py-16">
+        <div className="relative overflow-hidden rounded-3xl bg-poly-navy text-white px-10 py-12 sm:px-14 sm:py-16">
           {/* decorative blobs */}
           <div
             className="absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-poly-orange/20 blur-3xl"
@@ -279,9 +279,9 @@ export default async function Home() {
               </p>
               <h2 className="h-display text-4xl sm:text-5xl mb-4">
                 Open to every{" "}
-                <em className="text-ink-300">Poly student.</em>
+                <em className="text-white/70">Poly student.</em>
               </h2>
-              <p className="text-ink-400 leading-relaxed mb-6">
+              <p className="text-white/60 leading-relaxed mb-6">
                 SGA works for every Poly student. Share your ideas, stay up to
                 date on what&apos;s happening, and connect with the people
                 representing you.
@@ -307,19 +307,19 @@ export default async function Home() {
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
                 <div className="font-display text-4xl text-poly-orange mb-1">{teamCount}</div>
-                <div className="text-sm text-ink-400">elected officers</div>
+                <div className="text-sm text-white/50">elected officers</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
                 <div className="font-display text-4xl text-poly-orange mb-1">{clubCount}</div>
-                <div className="text-sm text-ink-400">clubs on campus</div>
+                <div className="text-sm text-white/50">clubs on campus</div>
               </div>
               <div className="rounded-2xl bg-white/5 border border-white/10 p-5 col-span-2 flex items-center gap-3">
                 <div className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-poly-orange/20 text-poly-orange">
                   <Calendar size={16} />
                 </div>
                 <div>
-                  <div className="text-xs text-ink-400 mb-0.5">Coming up</div>
-                  <div className="text-sm text-ink-200">
+                  <div className="text-xs text-white/40 mb-0.5">Coming up</div>
+                  <div className="text-sm text-white/80">
                     {events[0]?.title ?? "Check the Events tab for dates"}
                   </div>
                 </div>

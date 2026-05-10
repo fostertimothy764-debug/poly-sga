@@ -495,7 +495,7 @@ function AnnouncementsTab({
                   disabled={opts.length === 1 && !canPostClub}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                     audience === o.value
-                      ? "bg-ink-900 text-ink-50"
+                      ? "bg-poly-navy text-white"
                       : "bg-ink-100 text-ink-600 hover:bg-ink-200"
                   }`}
                 >
@@ -508,7 +508,7 @@ function AnnouncementsTab({
                   onClick={() => setAudience("club")}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                     audience === "club"
-                      ? "bg-ink-900 text-ink-50"
+                      ? "bg-poly-navy text-white"
                       : "bg-ink-100 text-ink-600 hover:bg-ink-200"
                   }`}
                 >
@@ -771,7 +771,7 @@ function EventsTab({
                   onClick={() => setForm({ ...form, audience: o.value })}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                     form.audience === o.value
-                      ? "bg-ink-900 text-ink-50"
+                      ? "bg-poly-navy text-white"
                       : "bg-ink-100 text-ink-600 hover:bg-ink-200"
                   }`}
                 >
@@ -784,7 +784,7 @@ function EventsTab({
                   onClick={() => setForm({ ...form, audience: "club" })}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                     form.audience === "club"
-                      ? "bg-ink-900 text-ink-50"
+                      ? "bg-poly-navy text-white"
                       : "bg-ink-100 text-ink-600 hover:bg-ink-200"
                   }`}
                 >

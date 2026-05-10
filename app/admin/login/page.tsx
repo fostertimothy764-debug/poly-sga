@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className="container-page py-20 max-w-md animate-fade-in">
       <div className="text-center mb-10">
-        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-ink-900 text-ink-50">
+        <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-poly-navy text-white">
           <Lock size={18} />
         </div>
         <h1 className="h-display text-3xl mb-2">Officer login</h1>

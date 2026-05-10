@@ -31,16 +31,16 @@ export default async function ClubPage({ params }: { params: { slug: string } })
   return (
     <div className="animate-fade-in">
       {/* Header / hero */}
-      <section className="relative overflow-hidden bg-ink-900 text-white">
+      <section className="relative overflow-hidden bg-poly-navy text-white">
         {club.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={club.photoUrl}
             alt={club.name}
-            className="absolute inset-0 h-full w-full object-cover opacity-40"
+            className="absolute inset-0 h-full w-full object-cover opacity-30"
           />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-900/70 to-ink-900/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-poly-navyDark via-poly-navy/80 to-poly-navy/50" />
         <div className="container-page relative py-16 sm:py-24">
           <Link
             href="/clubs"

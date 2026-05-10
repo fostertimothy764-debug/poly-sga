@@ -186,7 +186,7 @@ export default async function EventsPage({
 function DateBlock({ date }: { date: Date }) {
   const d = new Date(date);
   return (
-    <div className="flex-shrink-0 w-14 rounded-xl bg-ink-900 text-ink-50 overflow-hidden text-center">
+    <div className="flex-shrink-0 w-14 rounded-xl bg-poly-navy text-white overflow-hidden text-center">
       <div className="bg-poly-orange text-white text-[9px] uppercase tracking-wider py-1 font-semibold">
         {d.toLocaleDateString("en-US", { month: "short" })}
       </div>

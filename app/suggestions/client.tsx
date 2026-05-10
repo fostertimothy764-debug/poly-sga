@@ -388,7 +388,7 @@ function SubmitModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-ink-900/40 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-poly-navy/40 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -561,7 +561,7 @@ function SubmitModal({
                       onClick={() => setCategory(c.value)}
                       className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
                         category === c.value
-                          ? "bg-ink-900 text-ink-50"
+                          ? "bg-poly-navy text-white"
                           : "bg-ink-100 text-ink-600 hover:bg-ink-200"
                       }`}
                     >

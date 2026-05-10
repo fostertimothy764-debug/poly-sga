@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import PhotoUpload from "@/components/photo-upload";
+import { useToast, Toast } from "@/components/toast";
 
 export default function ProfileClient({
   account,
@@ -28,8 +29,11 @@ export default function ProfileClient({
   } | null;
 }) {
   const router = useRouter();
+  const { toast, show: showToast, dismiss } = useToast();
 
   return (
+    <>
+    <Toast toast={toast} onDismiss={dismiss} />
     <div className="container-page py-10 animate-fade-in max-w-3xl">
       <Link
         href="/admin"
@@ -50,18 +54,20 @@ export default function ProfileClient({
 
       <AccountForm
         initial={{ username: account.username, name: account.name }}
-        onSaved={() => router.refresh()}
+        onSaved={() => { router.refresh(); showToast("Login info saved!"); }}
       />
 
-      <PasswordForm />
+      <PasswordForm onSaved={() => showToast("Password updated!")} onError={(e) => showToast(e, "error")} />
 
       {teamMember && (
         <TeamProfileForm
           initial={teamMember}
-          onSaved={() => router.refresh()}
+          onSaved={() => { router.refresh(); showToast("Profile saved!"); }}
+          onError={(e) => showToast(e, "error")}
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -95,25 +101,17 @@ function AccountForm({
   const [username, setUsername] = useState(initial.username);
   const [name, setName] = useState(initial.name);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setMsg(null);
     const res = await fetch("/api/auth/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, name }),
     });
     setBusy(false);
-    if (res.ok) {
-      setMsg({ type: "ok", text: "Saved." });
-      onSaved();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setMsg({ type: "err", text: data.error || "Failed" });
-    }
+    if (res.ok) onSaved();
   }
 
   return (
@@ -124,11 +122,7 @@ function AccountForm({
       <form onSubmit={save} className="space-y-4">
         <div>
           <label className="label">Display name</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="input"
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
         </div>
         <div>
           <label className="label">Username</label>
@@ -139,49 +133,27 @@ function AccountForm({
             pattern="[a-zA-Z0-9_-]{3,32}"
             required
           />
-          <p className="text-xs text-ink-500 mt-1">
-            3–32 chars. Letters, numbers, underscore, dash.
-          </p>
+          <p className="text-xs text-ink-500 mt-1">3–32 chars. Letters, numbers, underscore, dash.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={busy} className="btn-primary">
-            {busy ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Save size={14} />
-            )}
-            Save
-          </button>
-          {msg && (
-            <span
-              className={`text-xs ${
-                msg.type === "ok" ? "text-poly-orangeDark" : "text-red-600"
-              }`}
-            >
-              {msg.text}
-            </span>
-          )}
-        </div>
+        <button type="submit" disabled={busy} className="btn-primary">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Save
+        </button>
       </form>
     </Section>
   );
 }
 
-function PasswordForm() {
+function PasswordForm({ onSaved, onError }: { onSaved: () => void; onError: (e: string) => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (next.length < 6) {
-      setMsg({ type: "err", text: "New password must be at least 6 chars" });
-      return;
-    }
+    if (next.length < 6) { onError("New password must be at least 6 chars"); return; }
     setBusy(true);
-    setMsg(null);
     const res = await fetch("/api/auth/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -189,12 +161,11 @@ function PasswordForm() {
     });
     setBusy(false);
     if (res.ok) {
-      setMsg({ type: "ok", text: "Password updated." });
-      setCurrent("");
-      setNext("");
+      setCurrent(""); setNext("");
+      onSaved();
     } else {
       const data = await res.json().catch(() => ({}));
-      setMsg({ type: "err", text: data.error || "Failed" });
+      onError(data.error || "Failed");
     }
   }
 
@@ -232,25 +203,10 @@ function PasswordForm() {
             required
           />
         </div>
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={busy} className="btn-primary">
-            {busy ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Check size={14} />
-            )}
-            Update password
-          </button>
-          {msg && (
-            <span
-              className={`text-xs ${
-                msg.type === "ok" ? "text-poly-orangeDark" : "text-red-600"
-              }`}
-            >
-              {msg.text}
-            </span>
-          )}
-        </div>
+        <button type="submit" disabled={busy} className="btn-primary">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+          Update password
+        </button>
       </form>
     </Section>
   );
@@ -259,6 +215,7 @@ function PasswordForm() {
 function TeamProfileForm({
   initial,
   onSaved,
+  onError,
 }: {
   initial: {
     id: string;
@@ -269,6 +226,7 @@ function TeamProfileForm({
     photoUrl: string | null;
   };
   onSaved: () => void;
+  onError: (e: string) => void;
 }) {
   const [form, setForm] = useState({
     name: initial.name,
@@ -278,29 +236,18 @@ function TeamProfileForm({
     photoUrl: initial.photoUrl || "",
   });
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setMsg(null);
     const res = await fetch(`/api/team/${initial.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        bio: form.bio || null,
-        photoUrl: form.photoUrl || null,
-      }),
+      body: JSON.stringify({ ...form, bio: form.bio || null, photoUrl: form.photoUrl || null }),
     });
     setBusy(false);
-    if (res.ok) {
-      setMsg({ type: "ok", text: "Profile saved." });
-      onSaved();
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setMsg({ type: "err", text: data.error || "Failed" });
-    }
+    if (res.ok) onSaved();
+    else { const d = await res.json().catch(() => ({})); onError(d.error || "Failed"); }
   }
 
   return (
@@ -363,25 +310,10 @@ function TeamProfileForm({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={busy} className="btn-primary">
-            {busy ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Save size={14} />
-            )}
-            Save profile
-          </button>
-          {msg && (
-            <span
-              className={`text-xs ${
-                msg.type === "ok" ? "text-poly-orangeDark" : "text-red-600"
-              }`}
-            >
-              {msg.text}
-            </span>
-          )}
-        </div>
+        <button type="submit" disabled={busy} className="btn-primary">
+          {busy ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          Save profile
+        </button>
       </form>
     </Section>
   );

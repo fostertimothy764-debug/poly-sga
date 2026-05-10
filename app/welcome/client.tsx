@@ -37,7 +37,7 @@ export default function WelcomeClient() {
       <div className="absolute inset-0 dot-grid opacity-50 pointer-events-none" aria-hidden />
       <div className="relative w-full max-w-xl animate-slide-up">
         <div className="text-center mb-10">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-ink-900 text-poly-orange font-bold mb-6">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-poly-navy text-poly-orange font-bold mb-6">
             P
           </div>
           <h1 className="h-display text-4xl sm:text-5xl mb-3 leading-tight">
@@ -55,7 +55,7 @@ export default function WelcomeClient() {
               onClick={() => setPicked(g.value)}
               className={`group flex items-center justify-between rounded-2xl border p-4 sm:p-5 text-left transition-all ${
                 picked === g.value
-                  ? "border-ink-900 bg-white shadow-[0_4px_24px_-8px_rgba(0,0,0,0.12)]"
+                  ? "border-poly-navy bg-white shadow-[0_4px_24px_-8px_rgba(10,35,66,0.15)]"
                   : "border-ink-200 bg-white/60 hover:border-ink-300 hover:bg-white"
               }`}
             >
@@ -66,7 +66,7 @@ export default function WelcomeClient() {
               <div
                 className={`flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
                   picked === g.value
-                    ? "bg-poly-orange border-poly-orange text-white"
+                    ? "bg-poly-navy border-poly-navy text-white"
                     : "border-ink-200 group-hover:border-ink-400"
                 }`}
               >

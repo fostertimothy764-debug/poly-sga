@@ -103,12 +103,12 @@ export default function Nav({
                 className={cn(
                   "relative px-3.5 py-2 text-sm font-medium rounded-full transition-colors",
                   active
-                    ? "text-ink-900"
-                    : "text-ink-500 hover:text-ink-900"
+                    ? "text-poly-navy font-semibold"
+                    : "text-ink-500 hover:text-poly-navy"
                 )}
               >
                 {active && (
-                  <span className="absolute inset-0 rounded-full bg-ink-100" />
+                  <span className="absolute inset-0 rounded-full bg-poly-navy/8" />
                 )}
                 <span className="relative">{l.label}</span>
               </Link>
@@ -174,7 +174,7 @@ export default function Nav({
                   className={cn(
                     "px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                     active
-                      ? "bg-ink-900 text-ink-50"
+                      ? "bg-poly-navy text-white"
                       : "text-ink-700 hover:bg-ink-100"
                   )}
                 >
