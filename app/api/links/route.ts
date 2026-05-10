@@ -78,6 +78,13 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
+  // Only SGA or the original author (matched by name) can delete a link
+  const existing = await prisma.resourceLink.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!isSga(session) && existing.authorName !== session.name) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   await prisma.resourceLink.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

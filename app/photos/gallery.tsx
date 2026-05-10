@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 
 type Photo = {
@@ -40,6 +40,19 @@ export default function PhotoGallery({
     if (!lightbox) return;
     setLightbox({ ...lightbox, index: (lightbox.index + 1) % lightbox.photos.length });
   }
+
+  // Keyboard navigation: arrow keys to browse, Escape to close
+  useEffect(() => {
+    if (!lightbox) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+      else if (e.key === "Escape") close();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightbox]);
 
   const allPhotos = [...Object.values(labelled).flat(), ...unlabelled];
 

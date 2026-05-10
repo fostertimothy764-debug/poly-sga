@@ -6,7 +6,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Photos · Poly SGA" };
 
 export default async function PhotosPage() {
+  // Public page — only show photos meant for all students
   const photos = await prisma.photo.findMany({
+    where: { audience: "all" },
     orderBy: { createdAt: "desc" },
   });
 

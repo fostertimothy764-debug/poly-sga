@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { VALID_CLASS_YEARS } from "@/lib/grade";
 
 const SESSION_COOKIE = "poly_sga_session";
 const secret = new TextEncoder().encode(
@@ -98,7 +99,7 @@ export function canEditTeamMember(s: SessionPayload | null, memberId: string) {
 
 export function allowedAudiences(s: SessionPayload): string[] {
   if (s.role === "sga_admin" || s.role === "sga_member") {
-    return ["all", "27", "28", "29", "30"];
+    return ["all", ...VALID_CLASS_YEARS];
   }
   if (s.role === "class" && s.classYear) {
     return [s.classYear];

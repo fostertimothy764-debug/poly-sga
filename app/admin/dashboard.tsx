@@ -1,3 +1,29 @@
+/**
+ * Admin Dashboard — client component rendered after server-side auth in app/admin/page.tsx.
+ *
+ * ROLE SYSTEM:
+ *   sga_admin    — full access: announcements, events, links, photos, scoop, clubs, team, accounts
+ *   sga_member   — same as admin except cannot manage clubs/team/accounts; can manage scoop
+ *   class        — post announcements/events to their own class year only
+ *   club         — post announcements/events/links for their own club only
+ *
+ * CAPABILITIES prop (computed server-side, passed in):
+ *   canManageTeam      — edit TeamMember records (sga_admin only)
+ *   canManageClubs     — create/edit clubs and approve requests (sga_admin only)
+ *   canManageNewsletter — publish SGA Scoop issues (sga_admin + sga_member)
+ *   canRedirect        — reassign suggestions to other officers (sga_admin only)
+ *   canManageAccounts  — view/edit admin accounts (site admin only)
+ *   isSiteAdmin        — stored in JWT from Admin.siteAdmin DB field; grants account management
+ *
+ * TAB COMPONENTS are defined below in this file:
+ *   AnnouncementsTab, EventsTab, LinksTab, PhotosTab, NewsletterTab,
+ *   ClubsTab, TeamTab, InboxTab, AccountsTab
+ *
+ * DATA FLOW:
+ *   Server (page.tsx) fetches all data → passes as `initial` prop → tabs read from `initial`.
+ *   Mutations call the relevant /api/* route, then call onChange() which triggers router.refresh()
+ *   so Next.js re-fetches from the server and re-renders with fresh data.
+ */
 "use client";
 
 import { useState, useTransition } from "react";
@@ -152,6 +178,7 @@ type Newsletter = {
 type Capabilities = {
   canManageTeam: boolean;
   canManageClubs: boolean;
+  canManageNewsletter: boolean; // true for sga_admin and sga_member
   canRedirect: boolean;
   canManageAccounts: boolean;
   isSiteAdmin: boolean;
@@ -284,7 +311,7 @@ export default function AdminDashboard({
           icon={<ImageIcon size={14} />}
           label="Photos"
         />
-        {capabilities.canManageTeam && (
+        {capabilities.canManageNewsletter && (
           <TabBtn
             active={tab === "newsletter"}
             onClick={() => setTab("newsletter")}
@@ -358,7 +385,7 @@ export default function AdminDashboard({
             onChange={refresh}
           />
         )}
-        {tab === "newsletter" && capabilities.canManageTeam && (
+        {tab === "newsletter" && capabilities.canManageNewsletter && (
           <NewsletterTab
             items={initial.newsletters}
             onChange={refresh}
@@ -1835,6 +1862,11 @@ function PhotosTab({
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reject files over 20 MB before canvas processing
+    if (file.size > 20 * 1024 * 1024) {
+      setErr("File is too large. Please choose a photo under 20 MB.");
+      return;
+    }
     const canvas = document.createElement("canvas");
     const img = new Image();
     const reader = new FileReader();

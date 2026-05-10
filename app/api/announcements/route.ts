@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession, canPostAudience, canPostToClub } from "@/lib/auth";
+import { VALID_CLASS_YEARS } from "@/lib/grade";
 
 export async function GET() {
   const items = await prisma.announcement.findMany({
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
   } else {
     // Default audience for the role
     const audienceVal =
-      typeof audience === "string" && ["all", "27", "28", "29", "30"].includes(audience)
+      typeof audience === "string" && (["all", ...VALID_CLASS_YEARS] as string[]).includes(audience)
         ? audience
         : session.role === "class" && session.classYear
           ? session.classYear
@@ -90,12 +91,19 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { id, ...data } = await req.json();
+  const body = await req.json();
+  const { id } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const check = await checkEditPermission(id);
   if ("error" in check) return NextResponse.json({ error: check.error }, { status: check.status });
 
-  const updated = await prisma.announcement.update({ where: { id }, data });
+  // Explicit allowlist — never pass raw user data to Prisma
+  const updates: Record<string, unknown> = {};
+  if (typeof body.title === "string") updates.title = body.title.trim();
+  if (typeof body.body === "string") updates.body = body.body.trim();
+  if (typeof body.pinned === "boolean") updates.pinned = body.pinned;
+
+  const updated = await prisma.announcement.update({ where: { id }, data: updates });
   return NextResponse.json(updated);
 }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession, isSga } from "@/lib/auth";
 
+// Guard against extremely large cover image URLs / base64 strings
+const MAX_COVER_CHARS = 2_800_000;
+
 export async function GET() {
   const issues = await prisma.newsletter.findMany({
     orderBy: { publishedAt: "desc" },
@@ -20,6 +23,9 @@ export async function POST(req: NextRequest) {
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
+  }
+  if (coverUrl && coverUrl.length > MAX_COVER_CHARS) {
+    return NextResponse.json({ error: "Cover image is too large." }, { status: 413 });
   }
 
   const issue = await prisma.newsletter.create({
@@ -45,6 +51,9 @@ export async function PATCH(req: NextRequest) {
   const data = await req.json();
   const { id, title, issueLabel, description, body, externalUrl, coverUrl, publishedAt } = data;
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  if (coverUrl && coverUrl.length > MAX_COVER_CHARS) {
+    return NextResponse.json({ error: "Cover image is too large." }, { status: 413 });
+  }
 
   const updated = await prisma.newsletter.update({
     where: { id },

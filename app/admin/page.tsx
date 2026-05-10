@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession, isSga, isSgaAdmin, isSiteAdmin } from "@/lib/auth";
+// isSga covers both sga_admin and sga_member roles
 import { prisma } from "@/lib/db";
 import AdminDashboard from "./dashboard";
 
@@ -94,6 +95,7 @@ export default async function AdminPage() {
       capabilities={{
         canManageTeam: isAdmin,
         canManageClubs: isAdmin,
+        canManageNewsletter: isSga(session), // sga_admin + sga_member can manage the Scoop
         canRedirect: isAdmin,
         canManageAccounts: siteAdminUser,
         isSiteAdmin: siteAdminUser,

@@ -3,6 +3,9 @@ import { cookies } from "next/headers";
 export const GRADE_COOKIE = "poly_grade";
 export const VOTER_COOKIE = "poly_voter";
 
+// Two-digit class years currently enrolled at Poly. Update each year.
+export const VALID_CLASS_YEARS = ["27", "28", "29", "30"] as const;
+
 export type Grade = "27" | "28" | "29" | "30" | "guest";
 
 export const GRADES: { value: Grade; label: string; sub: string }[] = [
@@ -29,7 +32,7 @@ export function ensureVoterId(): string {
   const store = cookies();
   const existing = store.get(VOTER_COOKIE)?.value;
   if (existing) return existing;
-  const id = `v_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+  const id = `v_${crypto.randomUUID()}`;
   store.set(VOTER_COOKIE, id, {
     httpOnly: true,
     sameSite: "lax",
