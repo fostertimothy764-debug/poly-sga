@@ -34,7 +34,7 @@ export default async function AdminPage() {
   const isAdmin = isSgaAdmin(session);
   const siteAdminUser = isSiteAdmin(session);
 
-  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links] =
+  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters] =
     await Promise.all([
       prisma.announcement.findMany({
         where: audienceWhere,
@@ -82,6 +82,10 @@ export default async function AdminPage() {
         include: { club: { select: { name: true, slug: true } } },
         orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
       }),
+      // Photos — all officers can upload
+      prisma.photo.findMany({ orderBy: { createdAt: "desc" } }),
+      // Newsletter — SGA only manages, but all see
+      prisma.newsletter.findMany({ orderBy: { publishedAt: "desc" } }),
     ]);
 
   return (
@@ -94,7 +98,7 @@ export default async function AdminPage() {
         canManageAccounts: siteAdminUser,
         isSiteAdmin: siteAdminUser,
       }}
-      initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links }}
+      initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters }}
     />
   );
 }

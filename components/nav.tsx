@@ -14,6 +14,8 @@ const links = [
   { href: "/events", label: "Events" },
   { href: "/links", label: "Links" },
   { href: "/clubs", label: "Clubs" },
+  { href: "/photos", label: "Photos" },
+  { href: "/scoop", label: "Scoop" },
   { href: "/team", label: "Team" },
   { href: "/suggestions", label: "Ideas" },
 ];

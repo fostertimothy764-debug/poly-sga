@@ -119,6 +119,29 @@ model SuggestionVote {
   @@unique([suggestionId, voterId])
 }
 
+model Photo {
+  id         String   @id @default(cuid())
+  title      String?
+  caption    String?
+  url        String   // base64 data-URL or external https URL
+  audience   String   @default("all")
+  authorName String?
+  eventLabel String?  // e.g. "Homecoming 2026", "Spirit Week"
+  createdAt  DateTime @default(now())
+}
+
+model Newsletter {
+  id          String   @id @default(cuid())
+  title       String
+  issueLabel  String?  // "Issue #3", "Spring 2026", etc.
+  description String?
+  body        String?  // plain-text body (optional)
+  externalUrl String?  // link to PDF / Canva / external version
+  coverUrl    String?  // base64 or https URL
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
 // category: "form" | "doc" | "link"
 model ResourceLink {
   id          String   @id @default(cuid())

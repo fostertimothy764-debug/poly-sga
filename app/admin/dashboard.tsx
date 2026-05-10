@@ -12,12 +12,14 @@ import {
   ExternalLink,
   File,
   FileText,
+  ImageIcon,
   Inbox,
   KeyRound,
   Link2,
   Loader2,
   LogOut,
   Megaphone,
+  Newspaper,
   Pin,
   PinOff,
   Plus,
@@ -124,6 +126,29 @@ type ResourceLink = {
   createdAt: Date | string;
 };
 
+type Photo = {
+  id: string;
+  title: string | null;
+  caption: string | null;
+  url: string;
+  audience: string;
+  authorName: string | null;
+  eventLabel: string | null;
+  createdAt: Date | string;
+};
+
+type Newsletter = {
+  id: string;
+  title: string;
+  issueLabel: string | null;
+  description: string | null;
+  body: string | null;
+  externalUrl: string | null;
+  coverUrl: string | null;
+  publishedAt: Date | string;
+  createdAt: Date | string;
+};
+
 type Capabilities = {
   canManageTeam: boolean;
   canManageClubs: boolean;
@@ -132,7 +157,7 @@ type Capabilities = {
   isSiteAdmin: boolean;
 };
 
-type Tab = "announcements" | "events" | "links" | "clubs" | "team" | "inbox" | "accounts";
+type Tab = "announcements" | "events" | "links" | "photos" | "newsletter" | "clubs" | "team" | "inbox" | "accounts";
 
 const SCHOOL_AUDIENCES = [
   { value: "all", label: "Schoolwide" },
@@ -193,6 +218,8 @@ export default function AdminDashboard({
     accounts: Account[];
     clubRequests: ClubRequest[];
     links: ResourceLink[];
+    photos: Photo[];
+    newsletters: Newsletter[];
   };
 }) {
   const router = useRouter();
@@ -251,6 +278,20 @@ export default function AdminDashboard({
           icon={<Link2 size={14} />}
           label="Links"
         />
+        <TabBtn
+          active={tab === "photos"}
+          onClick={() => setTab("photos")}
+          icon={<ImageIcon size={14} />}
+          label="Photos"
+        />
+        {capabilities.canManageTeam && (
+          <TabBtn
+            active={tab === "newsletter"}
+            onClick={() => setTab("newsletter")}
+            icon={<Newspaper size={14} />}
+            label="Scoop"
+          />
+        )}
         {capabilities.canManageClubs && (
           <TabBtn
             active={tab === "clubs"}
@@ -307,6 +348,19 @@ export default function AdminDashboard({
             clubs={initial.clubs}
             items={initial.links}
             canPin={capabilities.canRedirect}
+            onChange={refresh}
+          />
+        )}
+        {tab === "photos" && (
+          <PhotosTab
+            session={session}
+            items={initial.photos}
+            onChange={refresh}
+          />
+        )}
+        {tab === "newsletter" && capabilities.canManageTeam && (
+          <NewsletterTab
+            items={initial.newsletters}
             onChange={refresh}
           />
         )}
@@ -1755,6 +1809,346 @@ function roleBadge(role: string) {
   if (role === "sga_member") return "border-poly-navy/30 bg-poly-navy/5 text-poly-navy";
   if (role === "class") return "border-ink-300 bg-ink-100 text-ink-700";
   return "border-ink-200 bg-ink-50 text-ink-600";
+}
+
+/* ---------- Photos ---------- */
+
+function PhotosTab({
+  session,
+  items,
+  onChange,
+}: {
+  session: SessionPayload;
+  items: Photo[];
+  onChange: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [caption, setCaption] = useState("");
+  const [eventLabel, setEventLabel] = useState("");
+  const [audience, setAudience] = useState("all");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const canvas = document.createElement("canvas");
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      img.onload = () => {
+        const maxPx = 1200;
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+        setUrl(dataUrl);
+        setPreviewUrl(dataUrl);
+      };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function create() {
+    if (!url.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, title, caption, audience, eventLabel: eventLabel || null }),
+    });
+    setBusy(false);
+    if (!res.ok) { setErr("Failed to upload"); return; }
+    setOpen(false);
+    setUrl(""); setPreviewUrl(null); setTitle(""); setCaption(""); setEventLabel(""); setAudience("all");
+    onChange();
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Delete this photo?")) return;
+    await fetch(`/api/photos?id=${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  const isSga = session.role === "sga_admin" || session.role === "sga_member";
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-xl">Photos</h2>
+        <button onClick={() => setOpen(!open)} className="btn-primary">
+          <Plus size={14} /> {open ? "Cancel" : "Add Photo"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="card mb-4 space-y-4 animate-slide-up">
+          <div>
+            <label className="label">Photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFile}
+              className="block w-full text-sm text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-poly-navy/10 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-poly-navy hover:file:bg-poly-navy/20 cursor-pointer"
+            />
+            {previewUrl && (
+              <div className="mt-3 relative w-fit">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl} alt="Preview" className="h-40 rounded-xl object-cover border border-ink-200" />
+                <button
+                  onClick={() => { setUrl(""); setPreviewUrl(null); }}
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-ink-900 text-white flex items-center justify-center"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Title (optional)</label>
+              <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Spirit Week" />
+            </div>
+            <div>
+              <label className="label">Event label (optional)</label>
+              <input className="input" value={eventLabel} onChange={(e) => setEventLabel(e.target.value)} placeholder="Homecoming 2025" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Caption (optional)</label>
+            <input className="input" value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Brief description" />
+          </div>
+          {isSga && (
+            <div>
+              <label className="label">Audience</label>
+              <div className="flex flex-wrap gap-2">
+                {[{ value: "all", label: "Everyone" }, { value: "sga", label: "SGA Only" }].map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setAudience(o.value)}
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                      audience === o.value ? "bg-poly-navy text-white" : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {err && <ErrorBox message={err} />}
+          <button onClick={create} disabled={busy || !url} className="btn-accent">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+            Upload
+          </button>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <Empty>No photos yet. Upload the first one!</Empty>
+      ) : (
+        <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+          {items.map((p) => (
+            <div key={p.id} className="break-inside-avoid relative group rounded-2xl overflow-hidden border border-ink-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt={p.caption ?? p.title ?? "Photo"} className="w-full object-cover" />
+              <div className="absolute inset-0 bg-poly-navy/0 group-hover:bg-poly-navy/60 transition-colors duration-300 rounded-2xl flex flex-col items-start justify-end p-3 gap-1">
+                {(p.title || p.eventLabel) && (
+                  <p className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity line-clamp-1">
+                    {p.title ?? p.eventLabel}
+                  </p>
+                )}
+                <button
+                  onClick={() => remove(p.id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity flex h-7 w-7 items-center justify-center rounded-lg bg-red-500/90 text-white hover:bg-red-600"
+                  title="Delete photo"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Newsletter / Scoop ---------- */
+
+function NewsletterTab({
+  items,
+  onChange,
+}: {
+  items: Newsletter[];
+  onChange: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [issueLabel, setIssueLabel] = useState("");
+  const [description, setDescription] = useState("");
+  const [body, setBody] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [coverUrl, setCoverUrl] = useState("");
+  const [publishedAt, setPublishedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function resetForm() {
+    setTitle(""); setIssueLabel(""); setDescription(""); setBody("");
+    setExternalUrl(""); setCoverUrl(""); setPublishedAt(new Date().toISOString().slice(0, 10));
+    setErr(null);
+  }
+
+  function startNew() {
+    setEditingId(null);
+    resetForm();
+    setOpen(true);
+  }
+
+  function startEdit(n: Newsletter) {
+    setEditingId(n.id);
+    setTitle(n.title);
+    setIssueLabel(n.issueLabel ?? "");
+    setDescription(n.description ?? "");
+    setBody(n.body ?? "");
+    setExternalUrl(n.externalUrl ?? "");
+    setCoverUrl(n.coverUrl ?? "");
+    setPublishedAt(new Date(n.publishedAt).toISOString().slice(0, 10));
+    setOpen(true);
+    setErr(null);
+  }
+
+  async function save() {
+    if (!title.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const payload = {
+      id: editingId,
+      title, issueLabel: issueLabel || null, description: description || null,
+      body: body || null, externalUrl: externalUrl || null, coverUrl: coverUrl || null,
+      publishedAt,
+    };
+    const res = await fetch("/api/newsletter", {
+      method: editingId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    setBusy(false);
+    if (!res.ok) { const d = await res.json().catch(() => ({})); setErr(d.error || "Failed"); return; }
+    setOpen(false);
+    setEditingId(null);
+    resetForm();
+    onChange();
+  }
+
+  async function remove(id: string) {
+    if (!confirm("Delete this issue?")) return;
+    await fetch(`/api/newsletter?id=${id}`, { method: "DELETE" });
+    onChange();
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display text-xl">SGA Scoop</h2>
+        <button onClick={startNew} className="btn-primary">
+          <Plus size={14} /> New Issue
+        </button>
+      </div>
+
+      {open && (
+        <div className="card mb-4 space-y-4 animate-slide-up">
+          <h3 className="font-display text-lg">{editingId ? "Edit Issue" : "New Issue"}</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Title *</label>
+              <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="May Edition" />
+            </div>
+            <div>
+              <label className="label">Issue label (e.g. Vol. 1 No. 3)</label>
+              <input className="input" value={issueLabel} onChange={(e) => setIssueLabel(e.target.value)} placeholder="Vol. 1 No. 1" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Short description</label>
+            <input className="input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's in this issue?" />
+          </div>
+          <div>
+            <label className="label">External URL (link to full issue)</label>
+            <input className="input" value={externalUrl} onChange={(e) => setExternalUrl(e.target.value)} placeholder="https://docs.google.com/..." />
+          </div>
+          <div>
+            <label className="label">Cover image URL (optional)</label>
+            <input className="input" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <div>
+            <label className="label">Body text (shown inline if no external URL)</label>
+            <textarea className="input resize-none" rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Newsletter content..." />
+          </div>
+          <div>
+            <label className="label">Published date</label>
+            <input type="date" className="input" value={publishedAt} onChange={(e) => setPublishedAt(e.target.value)} />
+          </div>
+          {err && <ErrorBox message={err} />}
+          <div className="flex gap-2">
+            <button onClick={save} disabled={busy || !title.trim()} className="btn-accent">
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              {editingId ? "Save Changes" : "Publish"}
+            </button>
+            <button onClick={() => { setOpen(false); setEditingId(null); resetForm(); }} className="btn-ghost">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {items.length === 0 ? (
+        <Empty>No issues published yet.</Empty>
+      ) : (
+        <div className="space-y-3">
+          {items.map((n) => (
+            <div key={n.id} className="card flex items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1.5 text-xs">
+                  {n.issueLabel && (
+                    <span className="chip border-poly-navy/30 bg-poly-navy/8 text-poly-navy">{n.issueLabel}</span>
+                  )}
+                  <span className="text-ink-400">{new Date(n.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                </div>
+                <h3 className="font-display text-lg mb-1">{n.title}</h3>
+                {n.description && <p className="text-sm text-ink-600 line-clamp-2">{n.description}</p>}
+                {n.externalUrl && (
+                  <a href={n.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-poly-navy hover:underline mt-1">
+                    <ExternalLink size={11} /> View issue
+                  </a>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <IconBtn onClick={() => startEdit(n)} title="Edit">
+                  <Edit2 size={14} />
+                </IconBtn>
+                <IconBtn onClick={() => remove(n.id)} title="Delete" danger>
+                  <Trash2 size={14} />
+                </IconBtn>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AccountsTab({

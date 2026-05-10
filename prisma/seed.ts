@@ -9,6 +9,8 @@ async function main() {
   await prisma.suggestion.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.event.deleteMany();
+  await prisma.photo.deleteMany();
+  await prisma.newsletter.deleteMany();
   await prisma.resourceLink.deleteMany();
   await prisma.admin.deleteMany();
   await prisma.teamMember.deleteMany();
