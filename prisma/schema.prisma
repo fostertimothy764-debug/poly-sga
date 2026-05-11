@@ -158,6 +158,14 @@ model ResourceLink {
   club Club? @relation(fields: [clubId], references: [id], onDelete: SetNull)
 }
 
+// Mailing list — students subscribe to receive SGA updates via email
+model MailingList {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?  // optional display name
+  createdAt DateTime @default(now())
+}
+
 // Public form on /clubs — NOT a club creation form; just a request for SGA to consider
 // status: "pending" | "reviewed" | "declined"
 model ClubRequest {

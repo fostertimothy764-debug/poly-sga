@@ -9,7 +9,9 @@ import {
   Megaphone,
   Users,
   Briefcase,
+  Mail,
 } from "lucide-react";
+import MailingListForm from "@/components/mailing-list-form";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +57,7 @@ export default async function Home() {
         <StarIcon className="absolute top-20 left-[6%] text-poly-navy opacity-25" size={14} />
         <SparkleIcon className="absolute top-40 right-[35%] text-poly-orange opacity-30" size={22} />
         <SparkleIcon className="absolute bottom-32 left-[15%] text-poly-navy opacity-20" size={18} />
-        <div className="container-page relative pt-20 pb-28 sm:pt-28 sm:pb-36">
+        <div className="container-page relative pt-28 pb-28 sm:pt-36 sm:pb-36">
           <div className="max-w-3xl animate-slide-up">
             {greeting && (
               <span className="chip mb-5 inline-flex">
@@ -248,6 +250,25 @@ export default async function Home() {
             })}
           </div>
         )}
+      </section>
+
+      {/* ── Mailing list ── */}
+      <section className="container-page pb-16">
+        <div className="relative overflow-hidden rounded-3xl border border-ink-200 bg-white px-8 py-10 sm:px-12 sm:py-12">
+          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none" aria-hidden />
+          <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-poly-navy/6 blur-2xl pointer-events-none" aria-hidden />
+          <div className="relative max-w-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-poly-orange/10 text-poly-orange mb-5">
+              <Mail size={20} />
+            </div>
+            <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">Stay in the loop</p>
+            <h2 className="h-display text-3xl sm:text-4xl mb-3">Get the SGA Scoop</h2>
+            <p className="text-ink-600 text-sm leading-relaxed mb-6">
+              Enter your email and we&apos;ll notify you when new newsletter issues drop — no spam, just updates.
+            </p>
+            <MailingListForm />
+          </div>
+        </div>
       </section>
 
       {/* ── CTA banner ── */}

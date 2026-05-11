@@ -75,26 +75,26 @@ export default function Nav({
           : "bg-transparent"
       )}
     >
-      <div className="container-page flex items-center justify-between h-16">
-        {/* Logo */}
+      <div className="container-page flex items-center justify-between h-20">
+        {/* Logo — pushed to the far left with extra room before nav links */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-3 group mr-8"
           aria-label="Poly SGA home"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://cmsv2-assets.apptegy.net/uploads/17625/logo/20148/Polytechnic_logo.png"
             alt="Baltimore Polytechnic Institute"
-            className="h-8 w-8 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+            className="h-9 w-9 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
           />
-          <span className="font-display text-lg tracking-tight">
+          <span className="font-display text-xl tracking-tight">
             Poly <span className="text-poly-orange">SGA</span>
           </span>
         </Link>
 
         {/* Desktop links */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 flex-1">
           {links.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);

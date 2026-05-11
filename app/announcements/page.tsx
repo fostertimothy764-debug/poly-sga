@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/db";
 import { getGrade, gradeLabel } from "@/lib/grade";
-import { relativeTime, formatDate } from "@/lib/utils";
-import { Pin } from "lucide-react";
+import { getSession } from "@/lib/auth";
 import AudienceFilter from "./filter";
+import AnnouncementList from "./announcement-list";
+import AdminModeBanner from "@/components/admin-mode-banner";
+
+export const metadata = { title: "Announcements · Poly SGA" };
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +15,7 @@ export default async function AnnouncementsPage({
   searchParams: { view?: string };
 }) {
   const grade = getGrade();
+  const session = await getSession();
   const view = searchParams.view || "mine";
 
   let where: { audience?: { in?: string[]; equals?: string } } = {};
@@ -59,53 +63,19 @@ export default async function AnnouncementsPage({
         }
       />
 
-      {announcements.length === 0 ? (
-        <div className="card text-center text-sm text-ink-500 py-16">
-          No announcements here yet.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {announcements.map((a) => (
-            <article
-              key={a.id}
-              className="card card-hover animate-slide-up"
-            >
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                {a.pinned && (
-                  <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                    <Pin size={11} /> Pinned
-                  </span>
-                )}
-                {a.audience === "all" ? (
-                  <span className="chip border-ink-300 bg-ink-100 text-ink-700">
-                    Schoolwide
-                  </span>
-                ) : a.audience === "club" ? (
-                  <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                    Club
-                  </span>
-                ) : (
-                  <span className="chip border-poly-navy/30 bg-poly-navy/5 text-poly-navy">
-                    Class of 20{a.audience}
-                  </span>
-                )}
-                <time className="text-xs text-ink-500" dateTime={a.createdAt.toISOString()}>
-                  {formatDate(a.createdAt)} · {relativeTime(a.createdAt)}
-                </time>
-              </div>
-              <h2 className="font-display text-2xl sm:text-3xl mb-3">
-                {a.title}
-              </h2>
-              <p className="text-ink-700 leading-relaxed whitespace-pre-line">
-                {a.body}
-              </p>
-              {a.authorName && (
-                <p className="mt-4 text-xs text-ink-500">— {a.authorName}</p>
-              )}
-            </article>
-          ))}
-        </div>
+      {session && (
+        <AdminModeBanner name={session.name} />
       )}
+
+      <AnnouncementList
+        initial={announcements}
+        admin={session ? {
+          name: session.name,
+          role: session.role,
+          classYear: session.classYear,
+          clubId: session.clubId,
+        } : null}
+      />
     </div>
   );
 }
