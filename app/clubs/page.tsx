@@ -20,36 +20,24 @@ export default async function ClubsPage() {
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      {/* Decorative header */}
-      <div className="relative mb-12">
-        <div
-          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        <div
-          className="absolute top-10 -left-4 h-32 w-32 rounded-full bg-poly-navy/5 blur-2xl pointer-events-none"
-          aria-hidden
-        />
-        <header className="relative max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-            Get involved
-          </p>
-          <div className="flex items-end gap-4">
-            <h1 className="h-display text-5xl sm:text-6xl">Clubs</h1>
-            {isAdmin && (
-              <Link
-                href="/admin#clubs"
-                className="mb-1 flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 hover:border-ink-400 hover:text-ink-900 transition-colors"
-              >
-                <Settings size={11} /> Manage clubs
-              </Link>
-            )}
-          </div>
-          <p className="text-ink-600 leading-relaxed mt-4">
-            Find your people. There&apos;s a club for every kind of Poly student.
-          </p>
-        </header>
-      </div>
+      <header className="mb-12 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Get involved</p>
+        <div className="flex items-end gap-4">
+          <h1 className="h-display text-4xl sm:text-5xl">Clubs</h1>
+          {isAdmin && (
+            <Link
+              href="/admin#clubs"
+              className="mb-1 flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-600 hover:border-ink-400 hover:text-ink-900 transition-colors"
+            >
+              <Settings size={11} /> Manage clubs
+            </Link>
+          )}
+        </div>
+        <p className="text-ink-600 leading-relaxed mt-4">
+          Find your people. There&apos;s a club for every kind of Poly
+          student.
+        </p>
+      </header>
 
       {clubs.length === 0 ? (
         <div className="card text-center text-sm text-ink-500 py-16">
@@ -73,9 +61,9 @@ export default async function ClubsPage() {
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-ink-800 to-poly-navy" />
+                  <div className="absolute inset-0 bg-poly-navy" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-poly-navyDark/70 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-4">
                   <span className="font-display text-xl text-white leading-tight">
                     {c.name}

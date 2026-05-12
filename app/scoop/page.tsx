@@ -17,19 +17,14 @@ export default async function ScoopPage() {
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      {/* Header */}
-      <div className="relative mb-12">
-        <div className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-navy/6 blur-3xl pointer-events-none" aria-hidden />
-        <div className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-orange/6 blur-2xl pointer-events-none" aria-hidden />
-        <header className="relative max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">Newsletter</p>
-          <h1 className="h-display text-5xl sm:text-6xl mb-4">SGA Scoop</h1>
-          <p className="text-ink-600 leading-relaxed">
-            The official SGA newsletter — updates, spotlights, and everything
-            happening at Poly, straight from your student government.
-          </p>
-        </header>
-      </div>
+      <header className="mb-12 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Newsletter</p>
+        <h1 className="h-display text-4xl sm:text-5xl mb-4">SGA Scoop</h1>
+        <p className="text-ink-600 leading-relaxed">
+          The official SGA newsletter: updates, spotlights, and everything
+          happening at Poly, straight from your student government.
+        </p>
+      </header>
 
       {session && <AdminModeBanner name={session.name} />}
 

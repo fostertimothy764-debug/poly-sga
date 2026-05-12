@@ -34,17 +34,15 @@ export default function WelcomeClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-ink-50 px-6 py-16">
-      <div className="absolute inset-0 dot-grid opacity-50 pointer-events-none" aria-hidden />
       <div className="relative w-full max-w-xl animate-slide-up">
-        <div className="text-center mb-10">
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-poly-navy text-poly-orange font-bold mb-6">
-            P
-          </div>
-          <h1 className="h-display text-4xl sm:text-5xl mb-3 leading-tight">
-            Welcome to <span className="gradient-text italic">Poly SGA</span>
+        <div className="mb-10">
+          <p className="label text-ink-500 mb-3">The Poly SGA Weekly</p>
+          <h1 className="h-display text-4xl sm:text-5xl mb-3 leading-[1.05]">
+            Welcome.
           </h1>
-          <p className="text-ink-600">
-            Pick your class so we can show you what matters to you.
+          <p className="text-ink-600 leading-relaxed max-w-md">
+            This is what your student government is up to. Pick your class so
+            the news up top is the news that&apos;s yours.
           </p>
         </div>
 
@@ -56,7 +54,7 @@ export default function WelcomeClient() {
               className={`group flex items-center justify-between rounded-2xl border p-4 sm:p-5 text-left transition-all ${
                 picked === g.value
                   ? "border-poly-navy bg-white shadow-[0_4px_24px_-8px_rgba(10,35,66,0.15)]"
-                  : "border-ink-200 bg-white/60 hover:border-ink-300 hover:bg-white"
+                  : "border-ink-200 bg-white hover:border-ink-300"
               }`}
             >
               <div>

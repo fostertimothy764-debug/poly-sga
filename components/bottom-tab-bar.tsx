@@ -18,7 +18,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 flex md:hidden border-t border-ink-200 bg-white/95 backdrop-blur-sm"
+      className="fixed bottom-0 inset-x-0 z-50 flex md:hidden border-t border-ink-200 bg-white"
       aria-label="Main navigation"
     >
       <div className="flex w-full pb-safe">

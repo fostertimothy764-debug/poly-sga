@@ -56,6 +56,7 @@ model Announcement {
   audience   String   @default("all")
   clubId     String?
   authorName String?
+  leadImage  String?  // base64 data-URL or https URL; used for home-page lead crop
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -77,14 +78,18 @@ model Event {
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  name      String
-  role      String
-  grade     String
-  bio       String?
-  photoUrl  String?
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  grade       String
+  bio         String?
+  photoUrl    String?
+  pronouns    String?
+  askMeAbout  String?  // one-liner, max 140 chars enforced at API
+  schoolEmail String?
+  instagram   String?  // handle without leading @
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
 
   admin Admin?
 }
@@ -93,17 +98,24 @@ model TeamMember {
 //   sga    = SGA inbox only (default; not specified)
 //   class  = class inbox + SGA inbox
 //   club   = club inbox + SGA inbox
+// status: "new" | "under_review" | "on_the_agenda" | "in_progress" | "done" | "declined" | "custom"
 model Suggestion {
-  id        String   @id @default(cuid())
-  body      String
-  category  String   @default("general")
-  target    String   @default("sga")
-  clubId    String?
-  contact   String?
-  read      Boolean  @default(false)
-  private   Boolean  @default(false)
-  votes     Int      @default(0)
-  createdAt DateTime @default(now())
+  id                  String   @id @default(cuid())
+  body                String
+  category            String   @default("general")
+  target              String   @default("sga")
+  clubId              String?
+  contact             String?
+  read                Boolean  @default(false)
+  private             Boolean  @default(false)
+  votes               Int      @default(0)
+  status              String   @default("new")
+  statusLabel         String?  // free-text label used only when status == "custom" (≤32 chars)
+  statusNote          String?  // optional officer note (≤240 chars)
+  statusUpdatedById   String?
+  statusUpdatedByName String?  // denormalized officer display name
+  statusUpdatedAt     DateTime?
+  createdAt           DateTime @default(now())
 
   club      Club?            @relation(fields: [clubId], references: [id], onDelete: SetNull)
   votesList SuggestionVote[]

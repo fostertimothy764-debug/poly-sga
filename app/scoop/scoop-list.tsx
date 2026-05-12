@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ExternalLink, Newspaper, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type Issue = {
   id: string;
@@ -33,6 +34,7 @@ export default function ScoopList({
   const [editUrl, setEditUrl] = useState("");
   const [editDate, setEditDate] = useState("");
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog } = useConfirm();
 
   function startEdit(n: Issue) {
     setEditingId(n.id);
@@ -65,7 +67,12 @@ export default function ScoopList({
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this issue?")) return;
+    const ok = await confirm({
+      title: "Delete this issue?",
+      body: "Subscribers won't be re-notified, but the issue will disappear from the site.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     await fetch(`/api/newsletter?id=${id}`, { method: "DELETE" });
     setItems((prev) => prev.filter((n) => n.id !== id));
   }
@@ -74,6 +81,7 @@ export default function ScoopList({
 
   return (
     <div className="space-y-16">
+      {dialog}
       {/* Latest issue — featured */}
       <section>
         <p className="text-xs uppercase tracking-[0.2em] text-poly-orange mb-5">Latest Issue</p>
@@ -160,11 +168,11 @@ function IssueCard({
 
       {/* Admin controls */}
       {canEdit && (
-        <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <button onClick={onEdit} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-poly-navy hover:bg-white shadow-sm transition-colors">
+        <div className="absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
+          <button onClick={onEdit} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-poly-navy hover:bg-ink-100 border border-ink-200 transition-colors">
             <Pencil size={13} />
           </button>
-          <button onClick={onDelete} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-red-500 hover:bg-white shadow-sm transition-colors">
+          <button onClick={onDelete} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark border border-ink-200 transition-colors">
             <Trash2 size={13} />
           </button>
         </div>

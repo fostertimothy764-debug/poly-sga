@@ -8,14 +8,12 @@ import {
   ChevronDown,
   EyeOff,
   Loader2,
-  Lock,
   Plus,
   Send,
-  Sparkles,
-  Users,
   X,
 } from "lucide-react";
 import { relativeTime } from "@/lib/utils";
+import StatusPill from "@/components/status-pill";
 
 type Item = {
   id: string;
@@ -28,9 +26,20 @@ type Item = {
   votes: number;
   createdAt: string;
   voted: boolean;
+  status: string;
+  statusLabel: string | null;
+  statusNote: string | null;
+  statusUpdatedByName: string | null;
 };
 
 type Club = { id: string; name: string };
+
+type Win = {
+  id: string;
+  body: string;
+  statusUpdatedByName: string | null;
+  statusUpdatedAt: string | null;
+};
 
 const categories = [
   { value: "all", label: "All" },
@@ -58,10 +67,12 @@ function targetTone(item: Item) {
 export default function SuggestionsClient({
   initial,
   clubs,
+  wins,
   preset,
 }: {
   initial: Item[];
   clubs: Club[];
+  wins: Win[];
   preset?: { target?: string; clubId?: string };
 }) {
   const router = useRouter();
@@ -117,42 +128,54 @@ export default function SuggestionsClient({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      <div className="relative">
-        <div
-          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        <div
-          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-navy/5 blur-2xl pointer-events-none"
-          aria-hidden
-        />
-      <header className="relative grid lg:grid-cols-[1.1fr_1fr] gap-10 items-end mb-10">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-            Your voice
-          </p>
-          <h1 className="h-display text-5xl sm:text-6xl mb-4">
-            Ideas, voted by you.
-          </h1>
-          <p className="text-ink-600 leading-relaxed max-w-lg">
-            See what other Poly students want to change. Upvote what you agree
-            with. The most-voted ideas land on our weekly meeting agenda. Want
-            to send something directly without posting publicly?{" "}
-            <button
-              onClick={() => setShowForm(true)}
-              className="text-poly-orange underline underline-offset-2 hover:text-poly-orangeDark"
-            >
-              Use the private form.
-            </button>
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-3 lg:max-w-md lg:ml-auto">
-          <Stat icon={<Lock size={14} />} label="Anonymous" value="Always" />
-          <Stat icon={<Users size={14} />} label="Sent to" value="Right inbox" />
-          <Stat icon={<Sparkles size={14} />} label="Top ideas" value="On agenda" />
-        </div>
+      <header className="mb-10 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Your voice</p>
+        <h1 className="h-display text-4xl sm:text-5xl mb-4">
+          Ideas, voted by you.
+        </h1>
+        <p className="text-ink-600 leading-relaxed">
+          Anonymous. Upvote what you agree with; the most-voted ideas land on
+          our weekly meeting agenda. Want to send something directly without
+          posting publicly?{" "}
+          <button
+            onClick={() => setShowForm(true)}
+            className="text-poly-navy underline underline-offset-2 hover:text-poly-orange"
+          >
+            Use the private form.
+          </button>
+        </p>
       </header>
-      </div>
+
+      {wins.length > 0 && (
+        <section className="mb-10">
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="label text-poly-green">
+              Wins · last 30 days
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-ink-500">
+              Shipped by your SGA
+            </p>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {wins.map((w) => (
+              <li
+                key={w.id}
+                className="rounded-2xl border border-poly-green/30 bg-poly-green/5 p-4 flex flex-col gap-2"
+              >
+                <StatusPill status="done" />
+                <p className="text-sm text-ink-800 leading-relaxed line-clamp-3">
+                  {w.body}
+                </p>
+                {w.statusUpdatedByName && (
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-ink-500 mt-auto">
+                    — {w.statusUpdatedByName}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
         <Pills options={categories} value={filter} onChange={setFilter} />
@@ -194,34 +217,33 @@ export default function SuggestionsClient({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="card flex flex-col items-center text-center gap-4 py-16">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-4xl select-none">
-            ✦
-          </div>
-          <h3 className="font-display text-xl sm:text-2xl font-medium tracking-tight max-w-[240px]">
+        <div className="border-t border-ink-200 py-12 max-w-xl">
+          <h3 className="font-display text-2xl leading-snug mb-3">
             {filter === "all" && targetFilter === "all"
               ? "No ideas yet."
-              : "No ideas match this filter."}
+              : "Nothing matches that filter."}
           </h3>
-          <p className="text-sm text-ink-600 max-w-xs leading-relaxed">
+          <p className="text-sm text-ink-600 leading-relaxed mb-6">
             {filter === "all" && targetFilter === "all"
-              ? "You'd be the first. The SGA reads everything that lands here."
+              ? "You'd be the first. SGA reads everything that lands here."
               : "Try a different filter, or be the first to share one."}
           </p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-accent text-sm px-5 py-2.5"
-          >
-            Drop the first one
-          </button>
-          {(filter !== "all" || targetFilter !== "all") && (
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              onClick={() => { setFilter("all"); setTargetFilter("all"); }}
-              className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-400 hover:text-ink-700 transition-colors"
+              onClick={() => setShowForm(true)}
+              className="btn-accent text-sm"
             >
-              OR · Browse all ideas →
+              Share an idea
             </button>
-          )}
+            {(filter !== "all" || targetFilter !== "all") && (
+              <button
+                onClick={() => { setFilter("all"); setTargetFilter("all"); }}
+                className="text-sm text-ink-600 underline underline-offset-2 hover:text-poly-navy transition-colors"
+              >
+                Browse all ideas
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="grid gap-2">
@@ -271,27 +293,8 @@ function Pills({
   );
 }
 
-function Stat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="card text-center py-4 px-2">
-      <div className="mx-auto mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 text-ink-700">
-        {icon}
-      </div>
-      <div className="text-xs text-ink-500">{label}</div>
-      <div className="text-sm font-medium">{value}</div>
-    </div>
-  );
-}
-
 function SuggestionRow({ item, onVote }: { item: Item; onVote: () => void }) {
+  const showStatus = item.status && item.status !== "new";
   return (
     <div className="card flex items-start gap-4 transition-all">
       <button
@@ -311,12 +314,23 @@ function SuggestionRow({ item, onVote }: { item: Item; onVote: () => void }) {
           <span className={`chip ${targetTone(item)}`}>
             For {targetLabel(item)}
           </span>
+          {showStatus && (
+            <StatusPill status={item.status} statusLabel={item.statusLabel} />
+          )}
           <span className="chip capitalize">{item.category}</span>
           <span className="text-xs text-ink-500">{relativeTime(item.createdAt)}</span>
         </div>
         <p className="text-sm text-ink-800 leading-relaxed whitespace-pre-line">
           {item.body}
         </p>
+        {item.statusNote && (
+          <p className="mt-2 text-xs italic text-ink-600 leading-relaxed">
+            {item.statusNote}
+            {item.statusUpdatedByName && (
+              <span className="not-italic text-ink-500"> — {item.statusUpdatedByName}</span>
+            )}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -384,6 +398,10 @@ function SubmitModal({
             votes: 1,
             createdAt: new Date().toISOString(),
             voted: true,
+            status: "new",
+            statusLabel: null,
+            statusNote: null,
+            statusUpdatedByName: null,
           };
           setTimeout(() => onCreated(newItem), 700);
         } else {
@@ -407,18 +425,18 @@ function SubmitModal({
 
   const inboxDesc =
     target === "sga"
-      ? "Sent to the SGA inbox only."
+      ? "Goes to the SGA inbox. A real officer reads it within a day or two."
       : target === "club"
-        ? "Sent to the club's inbox AND the SGA inbox."
-        : "Sent to that class's inbox AND the SGA inbox.";
+        ? "Goes to the club's officers and stays in the SGA inbox too."
+        : "Goes to that class's officers and stays in the SGA inbox too.";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-poly-navy/40 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-6 bg-poly-navyDark/50 animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-3xl shadow-2xl animate-slide-up max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white rounded-3xl border border-ink-200 shadow-[0_24px_60px_-20px_rgba(10,35,66,0.35)] animate-slide-up max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {done ? (
@@ -433,12 +451,12 @@ function SubmitModal({
               {wasPrivate ? <EyeOff size={20} /> : <Check size={20} />}
             </div>
             <h3 className="font-display text-2xl mb-1">
-              {wasPrivate ? "Sent privately." : "Posted."}
+              {wasPrivate ? "Sent." : "Live."}
             </h3>
             <p className="text-sm text-ink-500">
               {wasPrivate
-                ? "Your message went straight to the selected inbox — it won't appear on the public board."
-                : "Your idea is live for everyone to vote on."}
+                ? "Your message landed in the inbox. It won't show up on the public board."
+                : "Your idea is live for everyone to vote on. We added the first upvote — yours."}
             </p>
           </div>
         ) : (
@@ -616,7 +634,7 @@ function SubmitModal({
             </div>
 
             {error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-xl bg-poly-orangeSoft border border-poly-orange/30 px-4 py-3 text-sm text-poly-orangeDark">
                 {error}
               </div>
             )}

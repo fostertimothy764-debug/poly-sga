@@ -34,27 +34,14 @@ export default async function AnnouncementsPage({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      {/* Decorative header */}
-      <div className="relative mb-10">
-        <div
-          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        <div
-          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-navy/5 blur-2xl pointer-events-none"
-          aria-hidden
-        />
-        <header className="relative max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-            Updates
-          </p>
-          <h1 className="h-display text-5xl sm:text-6xl mb-4">Announcements</h1>
-          <p className="text-ink-600 leading-relaxed">
-            The latest news from your SGA and class officers — meeting notes,
-            deadlines, wins, and everything in between.
-          </p>
-        </header>
-      </div>
+      <header className="mb-10 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Updates</p>
+        <h1 className="h-display text-4xl sm:text-5xl mb-4">Announcements</h1>
+        <p className="text-ink-600 leading-relaxed">
+          The latest news from your SGA and class officers, posted as it
+          happens.
+        </p>
+      </header>
 
       <AudienceFilter
         currentView={view}
@@ -75,6 +62,7 @@ export default async function AnnouncementsPage({
           classYear: session.classYear,
           clubId: session.clubId,
         } : null}
+        viewerGrade={grade && grade !== "guest" ? grade : null}
       />
     </div>
   );

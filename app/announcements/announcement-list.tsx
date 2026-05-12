@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Pin, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
-import { relativeTime, formatDate } from "@/lib/utils";
+import { classAccentStyle, readingTime, relativeTime, formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/confirm-dialog";
+import RichBody from "@/components/rich-body";
 
 type Announcement = {
   id: string;
@@ -24,9 +26,11 @@ type AdminContext = {
 export default function AnnouncementList({
   initial,
   admin,
+  viewerGrade,
 }: {
   initial: Announcement[];
   admin: AdminContext | null;
+  viewerGrade: string | null;
 }) {
   const [items, setItems] = useState(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,6 +38,7 @@ export default function AnnouncementList({
   const [editBody, setEditBody] = useState("");
   const [editPinned, setEditPinned] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog } = useConfirm();
 
   function startEdit(a: Announcement) {
     setEditingId(a.id);
@@ -61,7 +66,12 @@ export default function AnnouncementList({
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this announcement?")) return;
+    const ok = await confirm({
+      title: "Delete this announcement?",
+      body: "This can't be undone. Students will no longer see it.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     await fetch(`/api/announcements?id=${id}`, { method: "DELETE" });
     setItems((prev) => prev.filter((a) => a.id !== id));
   }
@@ -80,15 +90,14 @@ export default function AnnouncementList({
 
   if (items.length === 0) {
     return (
-      <div className="card flex flex-col items-center justify-center text-center gap-4 py-16">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
-          ✦
-        </div>
-        <h3 className="font-display text-xl font-medium tracking-tight max-w-xs">
-          Nothing here yet.
+      <div className="border-t border-ink-200 py-16 max-w-xl">
+        <p className="label text-ink-500 mb-3">Nothing here yet</p>
+        <h3 className="font-display text-2xl leading-snug mb-3">
+          No announcements in this view.
         </h3>
-        <p className="text-sm text-ink-500 max-w-xs leading-relaxed">
-          Your SGA will post announcements here. Try switching to "All" to see schoolwide posts.
+        <p className="text-sm text-ink-600 leading-relaxed">
+          Switch to <strong className="font-medium text-ink-900">All</strong>{" "}
+          to see schoolwide posts, or check back after the next SGA meeting.
         </p>
       </div>
     );
@@ -100,13 +109,18 @@ export default function AnnouncementList({
 
   return (
     <div className="space-y-3">
+      {dialog}
       {items.map((a) => (
-        <article key={a.id} className="card animate-slide-up group relative">
+        <article
+          key={a.id}
+          className="card animate-slide-up group relative"
+          style={classAccentStyle(a.audience, viewerGrade)}
+        >
           {editingId === a.id ? (
             /* ── Inline edit form ── */
             <div className="space-y-3">
               <input
-                className="input font-display text-xl"
+                className="input text-base font-semibold"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder="Title"
@@ -144,7 +158,7 @@ export default function AnnouncementList({
             <>
               {/* Admin controls — appear on hover */}
               {canEdit(a) && (
-                <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => startEdit(a)}
                     title="Edit"
@@ -155,7 +169,7 @@ export default function AnnouncementList({
                   <button
                     onClick={() => remove(a.id)}
                     title="Delete"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark transition-colors"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -170,7 +184,7 @@ export default function AnnouncementList({
                   </span>
                 )}
                 {!a.pinned && isNew(a.createdAt) && (
-                  <span className="chip border-green-300 bg-green-50 text-green-700 font-mono font-semibold tracking-wide">
+                  <span className="chip border-poly-green/30 bg-poly-green/10 text-poly-green font-mono font-semibold tracking-wide">
                     NEW
                     <span className="sr-only">(posted in the last 48 hours)</span>
                   </span>
@@ -189,8 +203,12 @@ export default function AnnouncementList({
                 </time>
               </div>
               <h2 className="font-display text-2xl sm:text-3xl mb-3">{a.title}</h2>
-              <p className="text-ink-700 leading-relaxed whitespace-pre-line">{a.body}</p>
-              {a.authorName && <p className="mt-4 text-xs text-ink-500">— {a.authorName}</p>}
+              <RichBody text={a.body} />
+              <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
+                {a.authorName && <span>— {a.authorName}</span>}
+                {a.authorName && <span className="text-ink-300">·</span>}
+                <span>{readingTime(a.body)}</span>
+              </div>
             </>
           )}
         </article>

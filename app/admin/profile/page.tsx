@@ -38,6 +38,10 @@ export default async function ProfilePage() {
               grade: admin.teamMember.grade,
               bio: admin.teamMember.bio,
               photoUrl: admin.teamMember.photoUrl,
+              pronouns: admin.teamMember.pronouns,
+              askMeAbout: admin.teamMember.askMeAbout,
+              schoolEmail: admin.teamMember.schoolEmail,
+              instagram: admin.teamMember.instagram,
             }
           : null
       }

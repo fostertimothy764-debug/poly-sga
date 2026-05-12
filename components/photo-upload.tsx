@@ -109,7 +109,7 @@ export default function PhotoUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center rounded-2xl bg-poly-navyDark/60 opacity-0 group-hover:opacity-100 transition-opacity"
           title="Upload photo"
         >
           {busy ? (
@@ -127,7 +127,7 @@ export default function PhotoUpload({
               setPreview(null);
               onUpload("");
             }}
-            className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-poly-orangeDark text-white opacity-0 group-hover:opacity-100 transition-opacity"
             title="Remove photo"
           >
             <X size={10} />
@@ -145,7 +145,7 @@ export default function PhotoUpload({
         {busy ? "Uploading…" : photo ? "Change photo" : "Upload photo"}
       </button>
 
-      {err && <p className="text-xs text-red-600">{err}</p>}
+      {err && <p className="text-xs text-poly-orangeDark">{err}</p>}
 
       {/* Hidden file input */}
       <input

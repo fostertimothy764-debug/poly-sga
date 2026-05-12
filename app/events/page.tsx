@@ -46,27 +46,14 @@ export default async function EventsPage({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      {/* Decorative header */}
-      <div className="relative mb-10">
-        <div
-          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-poly-navy/6 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        <div
-          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-orange/6 blur-2xl pointer-events-none"
-          aria-hidden
-        />
-        <header className="relative max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-            Calendar
-          </p>
-          <h1 className="h-display text-5xl sm:text-6xl mb-4">Events</h1>
-          <p className="text-ink-600 leading-relaxed">
-            Spirit weeks, fundraisers, meetings, and everything else SGA and your
-            class officers are putting on.
-          </p>
-        </header>
-      </div>
+      <header className="mb-10 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Calendar</p>
+        <h1 className="h-display text-4xl sm:text-5xl mb-4">Events</h1>
+        <p className="text-ink-600 leading-relaxed">
+          Spirit weeks, fundraisers, meetings, and everything else SGA and
+          your class officers are putting on.
+        </p>
+      </header>
 
       <AudienceFilter
         currentView={view}
@@ -88,24 +75,24 @@ export default async function EventsPage({
             <section className="mb-16">
               <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5">Upcoming</h2>
               {upcoming.length === 0 ? (
-                <div className="card flex flex-col items-center text-center gap-4 py-16">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
-                    ◧
-                  </div>
-                  <h3 className="font-display text-xl font-medium tracking-tight">Nothing on the calendar yet.</h3>
-                  <p className="text-sm text-ink-500 max-w-xs leading-relaxed">
-                    SGA events will show up here. Check back before the week starts!
+                <div className="border-t border-ink-200 py-12 max-w-xl">
+                  <h3 className="font-display text-2xl leading-snug mb-3">
+                    Nothing on the calendar yet.
+                  </h3>
+                  <p className="text-sm text-ink-600 leading-relaxed">
+                    SGA events will appear here as they&apos;re scheduled.
+                    Check back before the week starts.
                   </p>
                 </div>
               ) : (
-                <EventList initial={upcoming} admin={adminCtx} section="upcoming" />
+                <EventList initial={upcoming} admin={adminCtx} section="upcoming" viewerGrade={grade && grade !== "guest" ? grade : null} />
               )}
             </section>
 
             {clubEvents.length > 0 && (
               <section className="mb-16">
                 <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5">Club Events</h2>
-                <EventList initial={clubEvents} admin={adminCtx} section="club" />
+                <EventList initial={clubEvents} admin={adminCtx} section="club" viewerGrade={grade && grade !== "guest" ? grade : null} />
               </section>
             )}
 

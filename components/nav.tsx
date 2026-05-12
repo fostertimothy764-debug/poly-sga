@@ -71,8 +71,8 @@ export default function Nav({
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-ink-50/90 backdrop-blur-md border-b border-ink-200/60 shadow-sm"
-          : "bg-transparent"
+          ? "bg-ink-50 border-b border-ink-200"
+          : "bg-ink-50/95"
       )}
     >
       <div className="container-page flex items-center justify-between h-20">
@@ -164,7 +164,7 @@ export default function Nav({
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-ink-200/60 bg-ink-50/95 backdrop-blur-md animate-fade-in">
+        <div className="md:hidden border-t border-ink-200 bg-ink-50 animate-fade-in">
           <nav className="container-page py-4 flex flex-col gap-1">
             {links.map((l) => {
               const active =

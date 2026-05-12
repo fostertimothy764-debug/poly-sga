@@ -88,7 +88,7 @@ export default function PhotoGallery({
       {/* Lightbox */}
       {lightbox && (
         <div
-          className="fixed inset-0 z-[300] bg-poly-navyDark/95 backdrop-blur-sm flex items-center justify-center animate-fade-in"
+          className="fixed inset-0 z-[300] bg-poly-navyDark/95 flex items-center justify-center animate-fade-in"
           onClick={close}
         >
           {/* Close */}

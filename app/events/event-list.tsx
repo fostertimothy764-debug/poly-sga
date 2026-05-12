@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Calendar, Clock, MapPin, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
-import { formatDate, formatTime } from "@/lib/utils";
+import { classAccentStyle, formatDate, formatTime } from "@/lib/utils";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type EventItem = {
   id: string;
@@ -49,10 +50,12 @@ export default function EventList({
   initial,
   admin,
   section,
+  viewerGrade,
 }: {
   initial: EventItem[];
   admin: AdminContext | null;
   section: "upcoming" | "past" | "club";
+  viewerGrade: string | null;
 }) {
   const [items, setItems] = useState(initial);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -62,6 +65,7 @@ export default function EventList({
   const [editStartsAt, setEditStartsAt] = useState("");
   const [editEndsAt, setEditEndsAt] = useState("");
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog } = useConfirm();
 
   function startEdit(e: EventItem) {
     setEditingId(e.id);
@@ -94,7 +98,12 @@ export default function EventList({
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this event?")) return;
+    const ok = await confirm({
+      title: "Delete this event?",
+      body: "Anyone who saved it will lose it. This can't be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     await fetch(`/api/events?id=${id}`, { method: "DELETE" });
     setItems((prev) => prev.filter((e) => e.id !== id));
   }
@@ -116,12 +125,17 @@ export default function EventList({
 
   return (
     <div className={section === "upcoming" ? "grid gap-3 md:grid-cols-2" : "space-y-3"}>
+      {dialog}
       {items.map((e) => (
-        <article key={e.id} className="card card-hover animate-slide-up group relative">
+        <article
+          key={e.id}
+          className="card card-hover animate-slide-up group relative"
+          style={classAccentStyle(e.audience, viewerGrade)}
+        >
           {editingId === e.id ? (
             /* ── Inline edit form ── */
             <div className="space-y-3">
-              <input className="input font-display text-lg" value={editTitle} onChange={(ev) => setEditTitle(ev.target.value)} placeholder="Event title" />
+              <input className="input text-base font-semibold" value={editTitle} onChange={(ev) => setEditTitle(ev.target.value)} placeholder="Event title" />
               <textarea className="input resize-none" rows={3} value={editDesc} onChange={(ev) => setEditDesc(ev.target.value)} placeholder="Description" />
               <input className="input" value={editLocation} onChange={(ev) => setEditLocation(ev.target.value)} placeholder="Location" />
               <div className="grid sm:grid-cols-2 gap-3">
@@ -147,11 +161,11 @@ export default function EventList({
             /* ── Normal view ── */
             <>
               {canEdit(e) && (
-                <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="absolute top-4 right-4 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                   <button onClick={() => startEdit(e)} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg bg-poly-navy/8 text-poly-navy hover:bg-poly-navy/15 transition-colors">
                     <Pencil size={13} />
                   </button>
-                  <button onClick={() => remove(e.id)} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
+                  <button onClick={() => remove(e.id)} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark transition-colors">
                     <Trash2 size={13} />
                   </button>
                 </div>

@@ -16,9 +16,15 @@ export async function POST(req: NextRequest) {
   }
 
   const data = await req.json();
-  const { name, role, grade, bio, order, photoUrl } = data || {};
+  const { name, role, grade, bio, order, photoUrl, pronouns, askMeAbout, schoolEmail, instagram } = data || {};
   if (!name || !role || !grade) {
     return NextResponse.json({ error: "missing fields" }, { status: 400 });
+  }
+  if (typeof askMeAbout === "string" && askMeAbout.length > 140) {
+    return NextResponse.json({ error: "askMeAbout too long (max 140)" }, { status: 400 });
+  }
+  if (typeof pronouns === "string" && pronouns.length > 32) {
+    return NextResponse.json({ error: "pronouns too long (max 32)" }, { status: 400 });
   }
   const created = await prisma.teamMember.create({
     data: {
@@ -27,6 +33,10 @@ export async function POST(req: NextRequest) {
       grade,
       bio: bio ?? null,
       photoUrl: photoUrl ?? null,
+      pronouns: pronouns ?? null,
+      askMeAbout: askMeAbout ?? null,
+      schoolEmail: schoolEmail ?? null,
+      instagram: typeof instagram === "string" ? instagram.replace(/^@/, "") : null,
       order: order ?? 0,
     },
   });

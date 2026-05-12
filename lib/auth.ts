@@ -138,3 +138,28 @@ export function canSeeInbox(
   if (s.role === "club" && target === "club" && clubId === s.clubId) return true;
   return false;
 }
+
+/* can this session set a status on a suggestion targeted at (target, clubId)? */
+export function canSetSuggestionStatus(
+  s: SessionPayload | null,
+  target: string,
+  clubId: string | null
+) {
+  if (!s) return false;
+  if (s.role === "sga_admin" || s.role === "sga_member") return true;
+  if (s.role === "class" && target === s.classYear) return true;
+  if (s.role === "club" && target === "club" && clubId === s.clubId) return true;
+  return false;
+}
+
+export const SUGGESTION_STATUSES = [
+  "new",
+  "under_review",
+  "on_the_agenda",
+  "in_progress",
+  "done",
+  "declined",
+  "custom",
+] as const;
+
+export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number];

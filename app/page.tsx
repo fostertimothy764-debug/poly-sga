@@ -1,171 +1,208 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getGrade, gradeLabel } from "@/lib/grade";
-import { GRADES } from "@/lib/grade";
-import { formatDateShort, formatTime, relativeTime } from "@/lib/utils";
+import { getGrade, GRADES } from "@/lib/grade";
 import {
-  ArrowRight,
-  Calendar,
-  MessageSquare,
-  Megaphone,
-  Users,
-  Briefcase,
-  Mail,
-} from "lucide-react";
-import MailingListForm from "@/components/mailing-list-form";
+  classAccentStyle,
+  formatDate,
+  formatTime,
+  readingTime,
+  relativeTime,
+} from "@/lib/utils";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-const CLASS_COLORS: Record<string, string> = {
-  "27": "#E15A1F",
-  "28": "#5D6FB8",
-  "29": "#C68A1E",
-  "30": "#7BB66B",
-};
-
-function classColor(grade: string) {
-  return CLASS_COLORS[grade] ?? "#0a2342";
-}
 
 function classSub(grade: string) {
   return GRADES.find((g) => g.value === grade)?.sub ?? "Students";
 }
 
+function dek(body: string, len = 220) {
+  const trimmed = body.trim().replace(/\s+/g, " ");
+  if (trimmed.length <= len) return trimmed;
+  const slice = trimmed.slice(0, len);
+  const lastSpace = slice.lastIndexOf(" ");
+  return (lastSpace > len * 0.6 ? slice.slice(0, lastSpace) : slice) + "…";
+}
+
+function audienceLabel(audience: string) {
+  if (audience === "all") return "Schoolwide";
+  if (audience === "club") return "Club";
+  return `Class of 20${audience}`;
+}
+
+function digestSentence(
+  upcoming: number,
+  newPosts: number,
+  classLabel: string,
+) {
+  if (upcoming > 0 && newPosts > 0) {
+    return `${upcoming} event${upcoming !== 1 ? "s" : ""} on the calendar this week, plus ${newPosts} new post${newPosts !== 1 ? "s" : ""} worth reading.`;
+  }
+  if (upcoming > 0) {
+    return `${upcoming} event${upcoming !== 1 ? "s" : ""} coming up this week — block out the time.`;
+  }
+  if (newPosts > 0) {
+    return `${newPosts} new post${newPosts !== 1 ? "s" : ""} from your SGA this week.`;
+  }
+  return `A quiet week for the ${classLabel}. New posts land here as they happen.`;
+}
+
 export default async function Home() {
   const grade = getGrade();
   const audienceFilter =
-    grade && grade !== "guest"
-      ? { audience: { in: ["all", grade] } }
-      : {};
+    grade && grade !== "guest" ? { audience: { in: ["all", grade] } } : {};
 
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [announcements, events, teamCount, clubCount, newPostsCount, upcomingCount, trendingCount] = await Promise.all([
+  const [
+    announcements,
+    events,
+    newPostsCount,
+    upcomingCount,
+    trendingCount,
+    topIdea,
+    lastAnnouncement,
+    totalAnnouncements,
+  ] = await Promise.all([
     prisma.announcement.findMany({
       where: audienceFilter,
       orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
-      take: 3,
+      take: 5,
     }),
     prisma.event.findMany({
       where: { ...audienceFilter, startsAt: { gte: now } },
       orderBy: { startsAt: "asc" },
-      take: 3,
+      take: 4,
     }),
-    prisma.teamMember.count(),
-    prisma.club.count(),
-    prisma.announcement.count({ where: { ...audienceFilter, createdAt: { gte: weekAgo } } }),
-    prisma.event.count({ where: { startsAt: { gte: now, lte: weekAhead } } }),
-    prisma.suggestion.count({ where: { private: false, votes: { gte: 5 } } }),
+    prisma.announcement.count({
+      where: { ...audienceFilter, createdAt: { gte: weekAgo } },
+    }),
+    prisma.event.count({
+      where: { startsAt: { gte: now, lte: weekAhead } },
+    }),
+    prisma.suggestion.count({
+      where: { private: false, votes: { gte: 5 } },
+    }),
+    prisma.suggestion.findFirst({
+      where: { private: false, createdAt: { gte: weekAgo } },
+      orderBy: { votes: "desc" },
+      select: { id: true, body: true, votes: true },
+    }),
+    prisma.announcement.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { title: true, createdAt: true },
+    }),
+    prisma.announcement.count(),
   ]);
 
-  const greeting =
-    grade && grade !== "guest" ? gradeLabel(grade) : null;
+  const lead = announcements[0] ?? null;
+  const secondary = announcements.slice(1, 4);
+  const viewerGrade = grade && grade !== "guest" ? grade : null;
+
+  const today = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  // Issue numbering — Vol. is school years since the site launched (2023);
+  // Issue No. is the running count of announcements. Both update naturally.
+  const volume = Math.max(1, now.getFullYear() - 2023 + (now.getMonth() >= 7 ? 1 : 0));
+  const issueNo = Math.max(1, totalAnnouncements);
+  const monthYear = now.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  // Activity ribbon — only for engaged (non-guest) users, and only when there's a signal
+  const showRibbon =
+    viewerGrade !== null && (topIdea !== null || lastAnnouncement !== null);
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-ink-50">
-        <div className="absolute inset-0 dot-grid opacity-40" aria-hidden />
-        {/* Accent blob */}
-        <div
-          className="absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full bg-poly-orange/10 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        {/* Decorative stars */}
-        <StarIcon className="absolute top-12 right-[12%] text-poly-orange opacity-70" size={28} />
-        <StarIcon className="absolute top-32 right-[22%] text-poly-navy opacity-40" size={16} />
-        <StarIcon className="absolute bottom-24 right-[8%] text-poly-orange opacity-50" size={20} />
-        <StarIcon className="absolute top-20 left-[6%] text-poly-navy opacity-25" size={14} />
-        <SparkleIcon className="absolute top-40 right-[35%] text-poly-orange opacity-30" size={22} />
-        <SparkleIcon className="absolute bottom-32 left-[15%] text-poly-navy opacity-20" size={18} />
-        <div className="container-page relative pt-28 pb-28 sm:pt-36 sm:pb-36">
-          <div className="max-w-3xl animate-slide-up">
-            {greeting && (
-              <span className="chip mb-5 inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-poly-orange" />
-                {greeting}
-              </span>
-            )}
-            <h1 className="h-display text-5xl sm:text-[4.5rem] leading-[0.92] tracking-tight mb-6">
-              Your school.
-              <br />
-              <span className="gradient-text italic">Your voice.</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-ink-600 max-w-2xl mb-10 leading-relaxed">
-              {greeting
-                ? `Everything happening at Poly, filtered for the ${gradeLabel(grade!).toLowerCase()}.`
-                : "The Student Government Association of Baltimore Polytechnic Institute — stay updated, get involved, and tell us what matters."}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/announcements" className="btn-primary">
-                What&apos;s new
-                <ArrowRight size={16} />
-              </Link>
-              <Link href="/suggestions" className="btn-ghost">
-                Share an idea
-              </Link>
-            </div>
-          </div>
+    <div className="container-page py-10 sm:py-14">
+      {/* ── Masthead ── */}
+      <div className="mb-3 pb-4 border-b-[3px] border-double border-ink-300">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 text-[11px] uppercase tracking-[0.18em] text-ink-500">
+          <span className="font-mono">
+            Vol. {volume} · Issue No. {issueNo}
+          </span>
+          <span className="hidden sm:inline">{today}</span>
+          <span className="sm:hidden">
+            {now.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
         </div>
-
-        {/* Stats bar */}
-        <div className="border-t border-ink-200/80 bg-white/60 backdrop-blur-sm">
-          <div className="container-page py-4">
-            <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-ink-600">
-              <span className="flex items-center gap-2">
-                <Users size={14} className="text-poly-orange" />
-                <strong className="text-ink-900 font-semibold">{teamCount}</strong> officers
-              </span>
-              <span className="flex items-center gap-2">
-                <Briefcase size={14} className="text-poly-orange" />
-                <strong className="text-ink-900 font-semibold">{clubCount}</strong> clubs
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-ink-500">2026–2027 school year</span>
-              </span>
-            </div>
-          </div>
+        <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5">
+          <h2 className="font-display text-xl sm:text-2xl tracking-tight text-ink-900">
+            The Poly SGA Weekly
+          </h2>
+          <p className="font-display italic text-sm text-ink-500">
+            Reporting from Baltimore Polytechnic Institute · {monthYear}
+          </p>
         </div>
-      </section>
+      </div>
 
-      {/* ── "This week for you" digest card (Idea 01) ── */}
+      {/* ── Live activity ribbon ── */}
+      {showRibbon && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500 mb-9 pb-3 border-b border-ink-200">
+          <span className="font-mono uppercase tracking-[0.1em] text-poly-orange">
+            This week
+          </span>
+          {topIdea && topIdea.votes > 0 && (
+            <>
+              <span className="text-ink-300">·</span>
+              <Link
+                href="/suggestions"
+                className="hover:text-poly-navy transition-colors"
+              >
+                <span className="font-semibold text-poly-navy">
+                  {topIdea.votes} vote{topIdea.votes !== 1 ? "s" : ""}
+                </span>{" "}
+                on &ldquo;{dek(topIdea.body, 60)}&rdquo;
+              </Link>
+            </>
+          )}
+          {lastAnnouncement && (
+            <>
+              <span className="text-ink-300">·</span>
+              <span>
+                Last update{" "}
+                <span className="text-ink-700">
+                  {relativeTime(lastAnnouncement.createdAt)}
+                </span>
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Personalized digest (only when grade set) ── */}
       {grade && grade !== "guest" && (
-        <section className="container-page pt-8 pb-0">
-          <div
-            className="rounded-2xl p-5 sm:p-6 text-white"
-            style={{ background: "#0E1E3A" }}
-          >
-            <p
-              className="font-mono text-[10px] uppercase tracking-[0.08em] mb-2"
-              style={{ color: "#f26522" }}
-            >
+        <section className="mb-10">
+          <div className="rounded-2xl bg-poly-navy text-white p-6 sm:p-7">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-poly-orange mb-3">
               This week · for {classSub(grade)}
             </p>
-            <h2 className="font-display text-xl sm:text-2xl font-medium leading-snug tracking-tight mb-4">
-              {upcomingCount > 0
-                ? `${upcomingCount} event${upcomingCount !== 1 ? "s" : ""} coming up${newPostsCount > 0 ? ` and ${newPostsCount} new post${newPostsCount !== 1 ? "s" : ""}` : ""} this week.`
-                : newPostsCount > 0
-                ? `${newPostsCount} new post${newPostsCount !== 1 ? "s" : ""} from your SGA this week.`
-                : "Stay tuned — your SGA will be posting updates soon."}
+            <h2 className="font-display text-2xl sm:text-3xl font-light leading-snug tracking-tight mb-5 max-w-2xl">
+              {digestSentence(upcomingCount, newPostsCount, classSub(grade))}
             </h2>
-            <div className="flex gap-5 text-sm text-white/75">
+            <div className="flex flex-wrap gap-x-7 gap-y-2 text-sm text-white/75">
               <span>
-                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                <strong className="font-display text-xl font-normal text-white leading-none mr-1.5">
                   {newPostsCount}
                 </strong>
                 new posts
               </span>
               <span>
-                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                <strong className="font-display text-xl font-normal text-white leading-none mr-1.5">
                   {upcomingCount}
                 </strong>
                 events
               </span>
               <span>
-                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                <strong className="font-display text-xl font-normal text-white leading-none mr-1.5">
                   {trendingCount}
                 </strong>
                 ideas trending
@@ -175,368 +212,221 @@ export default async function Home() {
         </section>
       )}
 
-      {/* ── Quick nav cards ── */}
-      <section className="container-page pt-12 pb-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <QuickCard
-            href="/announcements"
-            icon={<Megaphone size={20} />}
-            label="Announcements"
-            color="bg-amber-50 text-amber-700"
-          />
-          <QuickCard
-            href="/events"
-            icon={<Calendar size={20} />}
-            label="Events"
-            color="bg-sky-50 text-sky-700"
-          />
-          <QuickCard
-            href="/clubs"
-            icon={<Briefcase size={20} />}
-            label="Clubs"
-            color="bg-violet-50 text-violet-700"
-          />
-          <QuickCard
-            href="/suggestions"
-            icon={<MessageSquare size={20} />}
-            label="Ideas"
-            color="bg-green-50 text-green-700"
-          />
-        </div>
-      </section>
+      {/* ── Lead article + sidebar ── */}
+      {lead ? (
+        <section className="grid gap-10 lg:gap-14 lg:grid-cols-[2fr_1fr] mb-14 pb-14 border-b border-ink-200">
+          {/* Lead */}
+          <article style={classAccentStyle(lead.audience, viewerGrade)}>
+            {lead.leadImage && (
+              <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-ink-100 mb-6 border border-ink-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={lead.leadImage}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-[11px] uppercase tracking-[0.14em]">
+              {lead.pinned && (
+                <span className="font-mono text-poly-orange">Pinned</span>
+              )}
+              <span className="text-ink-500">{audienceLabel(lead.audience)}</span>
+              <span className="text-ink-400">·</span>
+              <span className="text-ink-500">{relativeTime(lead.createdAt)}</span>
+            </div>
+            <h1 className="h-display text-4xl sm:text-5xl leading-[1.05] mb-5">
+              <Link
+                href="/announcements"
+                className="hover:text-poly-navy transition-colors"
+              >
+                {lead.title}
+              </Link>
+            </h1>
+            <p className="text-lg text-ink-700 leading-relaxed max-w-prose mb-5 whitespace-pre-line first-letter:font-display first-letter:text-6xl first-letter:font-light first-letter:float-left first-letter:mr-3 first-letter:mt-1.5 first-letter:leading-[0.82] first-letter:text-poly-navy">
+              {dek(lead.body, 320)}
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-sm text-ink-500">
+              {lead.authorName && (
+                <span>
+                  By{" "}
+                  <span className="text-ink-800 font-medium">
+                    {lead.authorName}
+                  </span>
+                </span>
+              )}
+              <span className="hidden sm:inline text-ink-300">·</span>
+              <time
+                className="hidden sm:inline"
+                dateTime={new Date(lead.createdAt).toISOString()}
+              >
+                {formatDate(lead.createdAt)}
+              </time>
+              <span className="hidden sm:inline text-ink-300">·</span>
+              <span className="hidden sm:inline">{readingTime(lead.body)}</span>
+              <Link
+                href="/announcements"
+                className="ml-auto group flex items-center gap-1 text-poly-navy hover:text-poly-orange transition-colors"
+              >
+                Read more
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                />
+              </Link>
+            </div>
+          </article>
 
-      {/* ── Latest announcements ── */}
-      <section className="container-page py-16">
-        <SectionHeader eyebrow="Latest" title="Announcements" href="/announcements" />
-        {announcements.length === 0 ? (
-          <RichEmptyState
-            headline="No announcements yet."
-            body="Your SGA will post updates here soon — check back!"
-            cta={{ label: "See all ideas", href: "/suggestions" }}
-          />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((a, i) => {
-              const isNew = Date.now() - new Date(a.createdAt).getTime() < 48 * 60 * 60 * 1000;
+          {/* Sidebar — upcoming events */}
+          <aside className="lg:border-l lg:border-ink-200 lg:pl-10">
+            <div className="flex items-baseline justify-between mb-5">
+              <h2 className="label text-ink-800">What&apos;s next</h2>
+              <Link
+                href="/events"
+                className="text-[11px] uppercase tracking-[0.14em] text-ink-500 hover:text-poly-navy transition-colors"
+              >
+                All events
+              </Link>
+            </div>
+            {events.length === 0 ? (
+              <p className="text-sm text-ink-500 leading-relaxed">
+                Nothing on the calendar yet. SGA events appear here as they
+                land.
+              </p>
+            ) : (
+              <ol className="space-y-5">
+                {events.map((e) => {
+                  const d = new Date(e.startsAt);
+                  return (
+                    <li
+                      key={e.id}
+                      style={classAccentStyle(e.audience, viewerGrade)}
+                    >
+                      <Link href="/events" className="group block">
+                        <div className="flex items-baseline gap-3 mb-1.5">
+                          <span className="font-display text-2xl font-light text-poly-navy leading-none">
+                            {d.getDate()}
+                          </span>
+                          <span className="text-[11px] uppercase tracking-[0.14em] text-ink-500">
+                            {d.toLocaleDateString("en-US", {
+                              month: "short",
+                              weekday: "short",
+                            })}
+                          </span>
+                        </div>
+                        <h3 className="font-display text-lg leading-snug mb-1 group-hover:text-poly-orange transition-colors">
+                          {e.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar size={11} />
+                            {formatTime(e.startsAt)}
+                          </span>
+                          {e.location && (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin size={11} />
+                              {e.location}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </aside>
+        </section>
+      ) : (
+        <section className="mb-14 pb-14 border-b border-ink-200">
+          <h1 className="h-display text-4xl sm:text-5xl leading-[1.05] mb-4">
+            Nothing on the front page yet.
+          </h1>
+          <p className="text-lg text-ink-600 leading-relaxed max-w-prose">
+            Your SGA will post here as soon as there&apos;s news. In the
+            meantime, browse{" "}
+            <Link
+              href="/suggestions"
+              className="text-poly-navy underline underline-offset-2 hover:text-poly-orange"
+            >
+              ideas the student body is voting on
+            </Link>
+            .
+          </p>
+        </section>
+      )}
+
+      {/* ── Secondary announcements stack ── */}
+      {secondary.length > 0 && (
+        <section className="mb-14">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="label text-ink-800">More from your SGA</h2>
+            <Link
+              href="/announcements"
+              className="text-[11px] uppercase tracking-[0.14em] text-ink-500 hover:text-poly-navy transition-colors"
+            >
+              All announcements
+            </Link>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {secondary.map((a) => {
+              const isNew =
+                Date.now() - new Date(a.createdAt).getTime() <
+                48 * 60 * 60 * 1000;
+              const accent = classAccentStyle(a.audience, viewerGrade);
               return (
                 <Link
                   key={a.id}
                   href="/announcements"
-                  className={`card card-hover group flex flex-col ${
-                    i === 0 ? "sm:col-span-2 lg:col-span-1" : ""
-                  }`}
+                  className="group block border-t border-ink-200 pt-5"
+                  style={accent}
                 >
-                  {/* Coloured top accent */}
-                  <div
-                    className={`-mx-5 -mt-5 mb-4 h-1.5 rounded-t-2xl ${
-                      a.pinned ? "bg-poly-orange" : "bg-ink-200"
-                    }`}
-                  />
-                  <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-                    {a.pinned && (
-                      <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                        Pinned
-                      </span>
-                    )}
+                  <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.14em] text-ink-500">
+                    <span>{audienceLabel(a.audience)}</span>
+                    <span className="text-ink-300">·</span>
+                    <span>{relativeTime(a.createdAt)}</span>
                     {isNew && !a.pinned && (
-                      <span className="chip border-poly-green/30 bg-poly-green/10 text-poly-green font-mono font-semibold tracking-wide">
-                        NEW
+                      <span className="font-mono text-poly-green ml-auto">
+                        New
                       </span>
                     )}
-                    {a.audience !== "all" && a.audience !== "club" && (
-                      <span className="chip border-poly-navy/30 bg-poly-navy/5 text-poly-navy">
-                        Class of 20{a.audience}
-                      </span>
-                    )}
-                    {a.audience === "club" && (
-                      <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                        Club
-                      </span>
-                    )}
-                    <span className="text-ink-500 ml-auto">{relativeTime(a.createdAt)}</span>
                   </div>
-                  <h3 className="font-display text-xl mb-2 group-hover:text-poly-orange transition-colors leading-snug">
+                  <h3 className="font-display text-xl leading-snug mb-2 group-hover:text-poly-orange transition-colors">
                     {a.title}
                   </h3>
-                  <p className="text-sm text-ink-600 line-clamp-3 leading-relaxed flex-1">
-                    {a.body}
+                  <p className="text-sm text-ink-600 leading-relaxed line-clamp-3">
+                    {dek(a.body, 140)}
                   </p>
-                  {a.authorName && (
-                    <p className="mt-3 text-xs text-ink-400">— {a.authorName}</p>
-                  )}
+                  <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
+                    {a.authorName && <span>— {a.authorName}</span>}
+                    {a.authorName && <span className="text-ink-300">·</span>}
+                    <span>{readingTime(a.body)}</span>
+                  </div>
                 </Link>
               );
             })}
           </div>
-        )}
-      </section>
-
-      {/* ── Upcoming events ── */}
-      <section className="container-page pb-16">
-        <SectionHeader eyebrow="Coming up" title="Events" href="/events" />
-        {events.length === 0 ? (
-          <RichEmptyState
-            headline="Nothing on the calendar yet."
-            body="SGA events will appear here. Check back before the week starts!"
-            cta={{ label: "Browse events", href: "/events" }}
-          />
-        ) : (
-          <div className="space-y-3">
-            {events.map((e) => {
-              const d = new Date(e.startsAt);
-              return (
-                <Link
-                  key={e.id}
-                  href="/events"
-                  className="card card-hover flex items-start gap-5 group"
-                >
-                  {/* Date block */}
-                  <div className="flex-shrink-0 w-14 text-center">
-                    <div className="rounded-xl bg-poly-navy text-white py-2">
-                      <div className="font-display text-2xl leading-none">
-                        {d.getDate()}
-                      </div>
-                      <div className="text-[10px] uppercase tracking-wider mt-0.5 text-ink-300">
-                        {d.toLocaleDateString("en-US", { month: "short" })}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0 py-0.5">
-                    <h3 className="font-display text-lg mb-1 group-hover:text-poly-orange transition-colors">
-                      {e.title}
-                    </h3>
-                    <p className="text-sm text-ink-600 line-clamp-1 mb-1.5">
-                      {e.description}
-                    </p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-ink-500">
-                      <span>{formatTime(e.startsAt)}</span>
-                      <span>·</span>
-                      <span>{e.location}</span>
-                      {e.audience !== "all" && e.audience !== "club" && (
-                        <span className="text-poly-navy font-medium">
-                          · Class of 20{e.audience}
-                        </span>
-                      )}
-                      {e.audience === "club" && (
-                        <span className="text-poly-orangeDark font-medium">
-                          · Club Event
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <ArrowRight
-                    size={16}
-                    className="shrink-0 self-center text-ink-300 group-hover:text-poly-orange group-hover:translate-x-0.5 transition-all"
-                  />
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* ── Mailing list ── */}
-      <section className="container-page pb-16">
-        <div className="relative overflow-hidden rounded-3xl border border-ink-200 bg-white px-8 py-10 sm:px-12 sm:py-12">
-          <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-poly-orange/8 blur-3xl pointer-events-none" aria-hidden />
-          <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-poly-navy/6 blur-2xl pointer-events-none" aria-hidden />
-          <div className="relative max-w-xl">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-poly-orange/10 text-poly-orange mb-5">
-              <Mail size={20} />
-            </div>
-            <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">Stay in the loop</p>
-            <h2 className="h-display text-3xl sm:text-4xl mb-3">Get the SGA Scoop</h2>
-            <p className="text-ink-600 text-sm leading-relaxed mb-6">
-              Enter your email and we&apos;ll notify you when new newsletter issues drop — no spam, just updates.
-            </p>
-            <MailingListForm />
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA banner ── */}
-      <section className="container-page pb-24">
-        <div className="relative overflow-hidden rounded-3xl bg-poly-navy text-white px-10 py-12 sm:px-14 sm:py-16">
-          {/* decorative blobs */}
-          <div
-            className="absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-poly-orange/20 blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="absolute -left-12 top-0 h-48 w-48 rounded-full bg-poly-navy/50 blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="absolute left-1/2 bottom-0 h-32 w-64 -translate-x-1/2 rounded-full bg-poly-orange/10 blur-2xl"
-            aria-hidden
-          />
-          {/* Stars */}
-          <StarIcon className="absolute top-6 right-[45%] text-poly-orange opacity-50" size={18} />
-          <StarIcon className="absolute bottom-10 left-[38%] text-white opacity-15" size={12} />
-          <SparkleIcon className="absolute top-10 right-10 text-poly-orange opacity-40" size={22} />
-          <SparkleIcon className="absolute bottom-6 right-[25%] text-white opacity-15" size={16} />
-
-          <div className="relative grid sm:grid-cols-2 gap-8 items-center">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-poly-orange mb-4">
-                Make an impact
-              </p>
-              <h2 className="h-display text-4xl sm:text-5xl mb-4">
-                Open to every{" "}
-                <em className="text-white/70">Poly student.</em>
-              </h2>
-              <p className="text-white/60 leading-relaxed mb-6">
-                SGA works for every Poly student. Share your ideas, stay up to
-                date on what&apos;s happening, and connect with the people
-                representing you.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href="/team"
-                  className="btn bg-poly-orange text-white hover:bg-poly-orangeDark"
-                >
-                  Meet the team
-                  <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/suggestions"
-                  className="btn border border-white/20 text-ink-300 hover:text-white hover:border-white/40 transition-colors"
-                >
-                  Submit an idea
-                </Link>
-              </div>
-            </div>
-
-            {/* Stat cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-                <div className="font-display text-4xl text-poly-orange mb-1">{teamCount}</div>
-                <div className="text-sm text-white/50">elected officers</div>
-              </div>
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-                <div className="font-display text-4xl text-poly-orange mb-1">{clubCount}</div>
-                <div className="text-sm text-white/50">clubs on campus</div>
-              </div>
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-5 col-span-2 flex items-center gap-3">
-                <div className="flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-poly-orange/20 text-poly-orange">
-                  <Calendar size={16} />
-                </div>
-                <div>
-                  <div className="text-xs text-white/40 mb-0.5">Coming up</div>
-                  <div className="text-sm text-white/80">
-                    {events[0]?.title ?? "Check the Events tab for dates"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-function QuickCard({
-  href,
-  icon,
-  label,
-  color,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  color: string;
-}) {
-  return (
-    <Link href={href} className="card card-hover group flex flex-col items-center gap-3 py-6 text-center">
-      <span
-        className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-transform group-hover:scale-110 ${color}`}
-      >
-        {icon}
-      </span>
-      <span className="text-sm font-medium text-ink-800">{label}</span>
-    </Link>
-  );
-}
-
-function SectionHeader({
-  eyebrow,
-  title,
-  href,
-}: {
-  eyebrow: string;
-  title: string;
-  href: string;
-}) {
-  return (
-    <div className="flex items-end justify-between mb-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-2">{eyebrow}</p>
-        <h2 className="h-display text-3xl sm:text-4xl">{title}</h2>
-      </div>
-      <Link
-        href={href}
-        className="group flex items-center gap-1 text-sm text-ink-500 hover:text-ink-900 transition-colors pb-1"
-      >
-        View all{" "}
-        <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-      </Link>
-    </div>
-  );
-}
-
-function RichEmptyState({
-  headline,
-  body,
-  cta,
-}: {
-  headline: string;
-  body: string;
-  cta?: { label: string; href: string };
-}) {
-  return (
-    <div className="card flex flex-col items-center justify-center text-center gap-4 py-14">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
-        ✦
-      </div>
-      <h3 className="font-display text-xl font-medium tracking-tight max-w-xs">{headline}</h3>
-      <p className="text-sm text-ink-600 max-w-xs leading-relaxed">{body}</p>
-      {cta && (
-        <Link href={cta.href} className="btn-primary text-xs px-5 py-2.5">
-          {cta.label} <ArrowRight size={13} />
-        </Link>
+        </section>
       )}
+
+      {/* ── Tail strip: ideas + footer link ── */}
+      <section className="border-t border-ink-300 pt-8 grid gap-6 sm:grid-cols-[1fr_auto] items-end">
+        <div className="max-w-md">
+          <p className="label text-ink-500 mb-2">From the idea board</p>
+          <p className="font-display text-2xl leading-snug text-ink-900">
+            {trendingCount > 0
+              ? `${trendingCount} idea${trendingCount !== 1 ? "s" : ""} on this week's meeting agenda.`
+              : "Have something you'd change about Poly?"}
+          </p>
+        </div>
+        <Link
+          href="/suggestions"
+          className="btn-primary self-start sm:self-end"
+        >
+          Share an idea
+          <ArrowRight size={14} />
+        </Link>
+      </section>
     </div>
-  );
-}
-
-/* Decorative SVG helpers */
-function StarIcon({ className, size = 20 }: { className?: string; size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={className}
-      aria-hidden
-    >
-      <path d="M10 1l2.39 6.26L19 9l-5.5 4.74L15.18 20 10 16.77 4.82 20l1.68-6.26L1 9l6.61-1.74z" />
-    </svg>
-  );
-}
-
-function SparkleIcon({ className, size = 20 }: { className?: string; size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={className}
-      aria-hidden
-    >
-      <path d="M10 0 L11.5 8.5 L20 10 L11.5 11.5 L10 20 L8.5 11.5 L0 10 L8.5 8.5 Z" />
-    </svg>
   );
 }

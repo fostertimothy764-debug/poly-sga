@@ -47,15 +47,15 @@ export function Toast({
   return (
     <div
       key={toast.id}
-      className={`fixed bottom-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border animate-slide-up max-w-xs ${
+      className={`fixed bottom-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-[0_12px_28px_-12px_rgba(10,35,66,0.35)] border animate-slide-up max-w-xs ${
         isOk
-          ? "bg-white border-green-200 text-green-800"
-          : "bg-white border-red-200 text-red-700"
+          ? "bg-white border-poly-green/30 text-ink-800"
+          : "bg-white border-poly-orange/30 text-poly-orangeDark"
       }`}
     >
       <span
         className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${
-          isOk ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+          isOk ? "bg-poly-green/15 text-poly-green" : "bg-poly-orangeSoft text-poly-orangeDark"
         }`}
       >
         {isOk ? <Check size={13} /> : <AlertCircle size={13} />}

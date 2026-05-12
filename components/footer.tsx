@@ -65,6 +65,9 @@ export default function Footer() {
               <Link href="/suggestions" className="hover:text-poly-navy transition-colors">
                 Ideas
               </Link>
+              <Link href="/about" className="hover:text-poly-navy transition-colors">
+                Colophon
+              </Link>
               <button
                 onClick={changeGrade}
                 className="hover:text-poly-navy transition-colors"

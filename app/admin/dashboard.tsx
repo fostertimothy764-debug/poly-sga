@@ -34,6 +34,7 @@ import {
   Calendar,
   ChevronDown,
   Check,
+  ClipboardList,
   Edit2,
   ExternalLink,
   File,
@@ -61,6 +62,7 @@ import {
 import { formatDate, formatTime, relativeTime } from "@/lib/utils";
 import type { AdminRole, SessionPayload } from "@/lib/auth";
 import PhotoUpload from "@/components/photo-upload";
+import StatusPill, { STATUS_OPTIONS, type SuggestionStatus } from "@/components/status-pill";
 
 type Club = {
   id: string;
@@ -136,6 +138,11 @@ type Suggestion = {
   clubId: string | null;
   club: Club | null;
   createdAt: Date | string;
+  status: string;
+  statusLabel: string | null;
+  statusNote: string | null;
+  statusUpdatedByName: string | null;
+  statusUpdatedAt: Date | string | null;
 };
 
 type ResourceLink = {
@@ -478,6 +485,7 @@ function AnnouncementsTab({
   const [pinned, setPinned] = useState(false);
   const [audience, setAudience] = useState(initialAudience);
   const [clubId, setClubId] = useState<string>(session.clubId || clubs[0]?.id || "");
+  const [leadImage, setLeadImage] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -494,6 +502,7 @@ function AnnouncementsTab({
         pinned,
         audience,
         clubId: audience === "club" ? clubId : null,
+        leadImage: leadImage || null,
       }),
     });
     setBusy(false);
@@ -506,6 +515,7 @@ function AnnouncementsTab({
     setTitle("");
     setBody("");
     setPinned(false);
+    setLeadImage("");
     setAudience(initialAudience);
     onChange();
   }
@@ -610,6 +620,18 @@ function AnnouncementsTab({
                 />
               </div>
             )}
+          </div>
+          <div>
+            <label className="label">Lead photo (optional)</label>
+            <p className="text-xs text-ink-500 mb-2 max-w-md">
+              Adds a full-bleed image above the lead story on the home page. Use a real photo of the event when possible.
+            </p>
+            <PhotoUpload
+              currentUrl={leadImage || null}
+              initials="◉"
+              onUpload={setLeadImage}
+              size="lg"
+            />
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -1287,9 +1309,9 @@ function ClubRequestRow({ r, onChange }: { r: ClubRequest; onChange: () => void 
   }
 
   const statusColors: Record<string, string> = {
-    pending: "border-amber-200 bg-amber-50 text-amber-700",
-    reviewed: "border-green-200 bg-green-50 text-green-700",
-    declined: "border-red-200 bg-red-50 text-red-700",
+    pending: "border-poly-amber/30 bg-poly-amber/10 text-poly-amber",
+    reviewed: "border-poly-green/30 bg-poly-green/10 text-poly-green",
+    declined: "border-poly-orange/30 bg-poly-orangeSoft text-poly-orangeDark",
   };
 
   return (
@@ -1574,8 +1596,8 @@ const LINK_CATEGORIES = [
 ];
 
 function linkCategoryIcon(cat: string) {
-  if (cat === "form") return <FileText size={13} className="text-blue-600" />;
-  if (cat === "doc") return <File size={13} className="text-violet-600" />;
+  if (cat === "form") return <FileText size={13} className="text-poly-navy" />;
+  if (cat === "doc") return <File size={13} className="text-poly-amber" />;
   return <Link2 size={13} className="text-ink-500" />;
 }
 
@@ -1673,12 +1695,12 @@ function LinksTab({
         <div className="card mb-4 space-y-4 animate-slide-up">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="label">Title <span className="text-red-500">*</span></label>
+              <label className="label">Title <span className="text-poly-orange">*</span></label>
               <input className="input" placeholder="Senior Survey 2027" value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
             <div className="col-span-2">
-              <label className="label">URL <span className="text-red-500">*</span></label>
+              <label className="label">URL <span className="text-poly-orange">*</span></label>
               <input className="input font-mono text-sm" placeholder="https://forms.gle/…" value={form.url}
                 onChange={(e) => setForm({ ...form, url: e.target.value })} />
             </div>
@@ -2002,7 +2024,7 @@ function PhotosTab({
                 )}
                 <button
                   onClick={() => remove(p.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity flex h-7 w-7 items-center justify-center rounded-lg bg-red-500/90 text-white hover:bg-red-600"
+                  className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex h-7 w-7 items-center justify-center rounded-lg bg-white/95 text-ink-700 border border-ink-200 hover:bg-poly-orangeSoft hover:text-poly-orangeDark"
                   title="Delete photo"
                 >
                   <Trash2 size={12} />
@@ -2581,6 +2603,12 @@ function SuggestionRow({
   onChange: () => void;
 }) {
   const [showRedirect, setShowRedirect] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [statusDraft, setStatusDraft] = useState<SuggestionStatus>(
+    (s.status as SuggestionStatus) || "new",
+  );
+  const [customLabel, setCustomLabel] = useState(s.statusLabel || "");
+  const [statusNote, setStatusNote] = useState(s.statusNote || "");
   const [target, setTarget] = useState(s.target);
   const [clubId, setClubId] = useState<string>(s.clubId || clubs[0]?.id || "");
   const [busy, setBusy] = useState(false);
@@ -2599,6 +2627,25 @@ function SuggestionRow({
     setBusy(false);
     setShowRedirect(false);
     onChange();
+  }
+
+  async function saveStatus() {
+    setBusy(true);
+    const res = await fetch("/api/suggestions/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: s.id,
+        status: statusDraft,
+        statusLabel: statusDraft === "custom" ? customLabel.trim() : null,
+        statusNote: statusNote.trim() || null,
+      }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      setShowStatus(false);
+      onChange();
+    }
   }
 
   return (
@@ -2628,11 +2675,20 @@ function SuggestionRow({
               For {targetLabel(s)}
             </span>
             <span className="chip capitalize">{s.category}</span>
+            <StatusPill status={s.status} statusLabel={s.statusLabel} />
             <span className="text-ink-500">{relativeTime(s.createdAt)}</span>
           </div>
           <p className="text-sm text-ink-700 leading-relaxed whitespace-pre-line">
             {s.body}
           </p>
+          {s.statusNote && (
+            <p className="mt-2 text-xs italic text-ink-600 leading-relaxed">
+              {s.statusNote}
+              {s.statusUpdatedByName && (
+                <span className="not-italic text-ink-500"> — {s.statusUpdatedByName}</span>
+              )}
+            </p>
+          )}
           {s.contact && (
             <div className="mt-2 text-xs text-ink-500">
               Contact: <span className="text-ink-700">{s.contact}</span>
@@ -2640,6 +2696,12 @@ function SuggestionRow({
           )}
         </div>
         <div className="flex flex-col gap-1">
+          <IconBtn
+            onClick={() => setShowStatus((o) => !o)}
+            title="Update status"
+          >
+            <ClipboardList size={14} />
+          </IconBtn>
           {canRedirect && s.target === "sga" && (
             <IconBtn
               onClick={() => setShowRedirect((o) => !o)}
@@ -2659,6 +2721,75 @@ function SuggestionRow({
           </IconBtn>
         </div>
       </div>
+
+      {showStatus && (
+        <div className="mt-4 pt-4 border-t border-ink-200 space-y-3 animate-fade-in">
+          <div>
+            <label className="label">Status</label>
+            <div className="flex flex-wrap gap-2">
+              {STATUS_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setStatusDraft(o.value)}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                    statusDraft === o.value
+                      ? "bg-poly-navy text-white"
+                      : "bg-ink-100 text-ink-600 hover:bg-ink-200"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {statusDraft === "custom" && (
+            <div>
+              <label className="label">Custom label</label>
+              <input
+                value={customLabel}
+                onChange={(e) => setCustomLabel(e.target.value)}
+                className="input"
+                maxLength={32}
+                placeholder="Waiting on principal"
+              />
+              <div className="mt-1 text-right text-[11px] text-ink-400">
+                {customLabel.length}/32
+              </div>
+            </div>
+          )}
+          <div>
+            <label className="label">Note (optional)</label>
+            <textarea
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              className="input resize-none"
+              rows={2}
+              maxLength={240}
+              placeholder="What happened, or what's next."
+            />
+            <div className="mt-1 text-right text-[11px] text-ink-400">
+              {statusNote.length}/240
+            </div>
+          </div>
+          <p className="text-xs text-ink-500">
+            Visible to everyone on the public idea board.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={saveStatus}
+              disabled={busy || (statusDraft === "custom" && !customLabel.trim())}
+              className="btn-accent"
+            >
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+              Save status
+            </button>
+            <button onClick={() => setShowStatus(false)} className="btn-ghost">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {showRedirect && (
         <div className="mt-4 pt-4 border-t border-ink-200 space-y-3 animate-fade-in">
@@ -2757,7 +2888,7 @@ function IconBtn({
       title={title}
       className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
         danger
-          ? "text-ink-400 hover:bg-red-50 hover:text-red-600"
+          ? "text-ink-500 hover:bg-poly-orangeSoft hover:text-poly-orangeDark"
           : "text-ink-500 hover:bg-ink-100 hover:text-ink-900"
       }`}
     >
@@ -2768,7 +2899,7 @@ function IconBtn({
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div className="rounded-xl bg-poly-orangeSoft border border-poly-orange/30 px-4 py-3 text-sm text-poly-orangeDark">
       {message}
     </div>
   );

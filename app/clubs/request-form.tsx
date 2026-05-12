@@ -37,9 +37,9 @@ export default function ClubRequestForm() {
 
   if (done) {
     return (
-      <div className="mt-20 rounded-3xl border border-green-200 bg-green-50 px-8 py-10 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-          <Check size={22} className="text-green-600" />
+      <div className="mt-20 rounded-3xl border border-poly-green/30 bg-poly-green/10 px-8 py-10 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-poly-green/20">
+          <Check size={22} className="text-poly-green" />
         </div>
         <h3 className="font-display text-2xl mb-2">Request received!</h3>
         <p className="text-sm text-ink-600 mb-5 max-w-sm mx-auto">
@@ -87,10 +87,11 @@ export default function ClubRequestForm() {
           <p className="text-ink-600 leading-relaxed">
             If your club already exists at Poly but isn&apos;t listed here, you can ask SGA to add it to the website.
           </p>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <strong>⚠ This is not a form to start a new club.</strong> It only requests that an
-            existing club be added to this website&apos;s listing. SGA will review and may follow up with
-            you before anything appears.
+          <div className="rounded-xl border border-poly-amber/40 bg-poly-amber/10 px-4 py-3 text-sm text-ink-800">
+            <strong className="text-poly-amber">Note —</strong> this is not a form to start a
+            new club. It only requests that an existing club be added to this
+            website&apos;s listing. SGA will review and may follow up with you
+            before anything appears.
           </div>
         </div>
       )}
@@ -100,15 +101,16 @@ export default function ClubRequestForm() {
           onSubmit={submit}
           className="card space-y-5 animate-slide-up"
         >
-          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
-            <strong>⚠ Not a club creation form.</strong> This only requests that your club be
-            added to this website. It does <em>not</em> create, register, or officially start a
-            club at Poly. SGA will review and may reach out before approving.
+          <div className="rounded-xl bg-poly-amber/10 border border-poly-amber/40 px-4 py-3 text-sm text-ink-800">
+            <strong className="text-poly-amber">Not a club creation form.</strong> This only
+            requests that your club be added to this website. It does{" "}
+            <em>not</em> create, register, or officially start a club at Poly.
+            SGA will review and may reach out before approving.
           </div>
 
           <div>
             <label className="label" htmlFor="clubName">
-              Club name <span className="text-red-500">*</span>
+              Club name <span className="text-poly-orange">*</span>
             </label>
             <input
               id="clubName"
@@ -122,7 +124,7 @@ export default function ClubRequestForm() {
 
           <div>
             <label className="label" htmlFor="description">
-              What is your club? <span className="text-red-500">*</span>
+              What is your club? <span className="text-poly-orange">*</span>
             </label>
             <textarea
               id="description"
@@ -163,7 +165,7 @@ export default function ClubRequestForm() {
           </div>
 
           {err && (
-            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-xl bg-poly-orangeSoft border border-poly-orange/30 px-4 py-3 text-sm text-poly-orangeDark">
               {err}
             </div>
           )}

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const data = await req.json();
-  const { title, body: text, pinned, audience, clubId } = data || {};
+  const { title, body: text, pinned, audience, clubId, leadImage } = data || {};
   if (!title || !text) {
     return NextResponse.json({ error: "title and body required" }, { status: 400 });
   }
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       audience: finalAudience,
       clubId: finalClubId,
       authorName: session.name,
+      leadImage: typeof leadImage === "string" && leadImage ? leadImage : null,
     },
   });
   return NextResponse.json(created, { status: 201 });
@@ -103,6 +104,10 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.title === "string") updates.title = body.title.trim();
   if (typeof body.body === "string") updates.body = body.body.trim();
   if (typeof body.pinned === "boolean") updates.pinned = body.pinned;
+  if ("leadImage" in body) {
+    updates.leadImage =
+      typeof body.leadImage === "string" && body.leadImage ? body.leadImage : null;
+  }
 
   const updated = await prisma.announcement.update({ where: { id }, data: updates });
   return NextResponse.json(updated);

@@ -30,11 +30,6 @@ export default function Shell({
       <Nav grade={grade} officerName={officerName} officerRole={officerRole} />
       {/* pb-16 on mobile to clear the bottom tab bar */}
       <main className="min-h-[calc(100vh-200px)] pt-20 pb-16 md:pb-0">
-        {/* Thin gradient accent line just below nav */}
-        <div
-          className="h-px bg-gradient-to-r from-poly-orange/70 via-poly-navy/50 to-transparent"
-          aria-hidden
-        />
         <div key={pathname} className="animate-page-in">
           {children}
         </div>

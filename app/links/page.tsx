@@ -8,21 +8,21 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Links & Resources · Poly SGA" };
 
 function categoryIcon(cat: string) {
-  if (cat === "form") return <FileText size={16} className="text-blue-600" />;
-  if (cat === "doc") return <File size={16} className="text-violet-600" />;
+  if (cat === "form") return <FileText size={16} className="text-poly-navy" />;
+  if (cat === "doc") return <File size={16} className="text-poly-amber" />;
   return <Link2 size={16} className="text-ink-500" />;
 }
 
 function categoryChip(cat: string) {
   if (cat === "form")
     return (
-      <span className="chip border-blue-200 bg-blue-50 text-blue-700">
+      <span className="chip border-poly-navy/30 bg-poly-navySoft text-poly-navy">
         Google Form
       </span>
     );
   if (cat === "doc")
     return (
-      <span className="chip border-violet-200 bg-violet-50 text-violet-700">
+      <span className="chip border-poly-amber/30 bg-poly-amber/10 text-poly-amber">
         Document
       </span>
     );
@@ -57,29 +57,16 @@ export default async function LinksPage({
 
   return (
     <div className="container-page py-12 sm:py-16 animate-fade-in">
-      {/* Decorative header */}
-      <div className="relative mb-10">
-        <div
-          className="absolute -top-6 -right-8 h-64 w-64 rounded-full bg-blue-500/6 blur-3xl pointer-events-none"
-          aria-hidden
-        />
-        <div
-          className="absolute top-8 -left-4 h-32 w-32 rounded-full bg-poly-orange/6 blur-2xl pointer-events-none"
-          aria-hidden
-        />
-        <header className="relative max-w-2xl">
-          <p className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-3">
-            Resources
-          </p>
-          <h1 className="h-display text-5xl sm:text-6xl mb-4">
-            Links &amp; Forms
-          </h1>
-          <p className="text-ink-600 leading-relaxed">
-            Google Forms, sign-up sheets, important documents, and other links
-            posted by SGA and your class officers.
-          </p>
-        </header>
-      </div>
+      <header className="mb-10 pb-8 border-b border-ink-200 max-w-2xl">
+        <p className="label text-ink-500 mb-3">Resources</p>
+        <h1 className="h-display text-4xl sm:text-5xl mb-4">
+          Links &amp; Forms
+        </h1>
+        <p className="text-ink-600 leading-relaxed">
+          Google Forms, sign-up sheets, important documents, and other links
+          posted by SGA and your class officers.
+        </p>
+      </header>
 
       <AudienceFilter
         currentView={view}

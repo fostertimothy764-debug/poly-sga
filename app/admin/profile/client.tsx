@@ -26,6 +26,10 @@ export default function ProfileClient({
     grade: string;
     bio: string | null;
     photoUrl: string | null;
+    pronouns: string | null;
+    askMeAbout: string | null;
+    schoolEmail: string | null;
+    instagram: string | null;
   } | null;
 }) {
   const router = useRouter();
@@ -224,6 +228,10 @@ function TeamProfileForm({
     grade: string;
     bio: string | null;
     photoUrl: string | null;
+    pronouns: string | null;
+    askMeAbout: string | null;
+    schoolEmail: string | null;
+    instagram: string | null;
   };
   onSaved: () => void;
   onError: (e: string) => void;
@@ -234,6 +242,10 @@ function TeamProfileForm({
     grade: initial.grade,
     bio: initial.bio || "",
     photoUrl: initial.photoUrl || "",
+    pronouns: initial.pronouns || "",
+    askMeAbout: initial.askMeAbout || "",
+    schoolEmail: initial.schoolEmail || "",
+    instagram: initial.instagram || "",
   });
   const [busy, setBusy] = useState(false);
 
@@ -243,7 +255,15 @@ function TeamProfileForm({
     const res = await fetch(`/api/team/${initial.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, bio: form.bio || null, photoUrl: form.photoUrl || null }),
+      body: JSON.stringify({
+        ...form,
+        bio: form.bio || null,
+        photoUrl: form.photoUrl || null,
+        pronouns: form.pronouns || null,
+        askMeAbout: form.askMeAbout || null,
+        schoolEmail: form.schoolEmail || null,
+        instagram: form.instagram || null,
+      }),
     });
     setBusy(false);
     if (res.ok) onSaved();
@@ -253,7 +273,7 @@ function TeamProfileForm({
   return (
     <Section
       title="Public profile"
-      description="This is the card students see on the Team page. Only you can edit it."
+      description="This is what students see on your /team page card and profile. Only you can edit it."
     >
       <form onSubmit={save} className="space-y-4">
         <div className="flex items-start gap-4">
@@ -264,7 +284,7 @@ function TeamProfileForm({
             size="lg"
           />
           <p className="text-xs text-ink-500 pt-1 max-w-xs leading-relaxed">
-            Click your photo (or the circle) to upload a new one. JPG, PNG, or WEBP — any size, we&apos;ll compress it automatically.
+            Click your photo (or the circle) to upload a new one. JPG, PNG, or WEBP, we&apos;ll compress it automatically.
           </p>
         </div>
 
@@ -285,7 +305,7 @@ function TeamProfileForm({
               className="input"
             />
           </div>
-          <div className="col-span-2">
+          <div>
             <label className="label">Grade</label>
             <input
               value={form.grade}
@@ -293,6 +313,31 @@ function TeamProfileForm({
               className="input"
               placeholder="Class of 2027"
             />
+          </div>
+          <div>
+            <label className="label">Pronouns (optional)</label>
+            <input
+              value={form.pronouns}
+              onChange={(e) => setForm({ ...form, pronouns: e.target.value })}
+              className="input"
+              maxLength={32}
+              placeholder="she/her"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="label">Ask me about (optional)</label>
+          <input
+            value={form.askMeAbout}
+            onChange={(e) => setForm({ ...form, askMeAbout: e.target.value })}
+            className="input"
+            maxLength={140}
+            placeholder="The senior–faculty basketball game I'm trying to bring back"
+          />
+          <div className="mt-1 flex justify-between text-[11px] text-ink-400">
+            <span>One short sentence — gives students something to walk up and say.</span>
+            <span>{form.askMeAbout.length}/140</span>
           </div>
         </div>
 
@@ -307,6 +352,28 @@ function TeamProfileForm({
           />
           <div className="mt-1 text-right text-[11px] text-ink-400">
             {form.bio.length}/400
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">School email (optional)</label>
+            <input
+              type="email"
+              value={form.schoolEmail}
+              onChange={(e) => setForm({ ...form, schoolEmail: e.target.value })}
+              className="input font-mono text-sm"
+              placeholder="firstlast@bcps.k12.md.us"
+            />
+          </div>
+          <div>
+            <label className="label">Instagram (optional)</label>
+            <input
+              value={form.instagram}
+              onChange={(e) => setForm({ ...form, instagram: e.target.value.replace(/^@/, "") })}
+              className="input font-mono text-sm"
+              placeholder="handle"
+            />
           </div>
         </div>
 
