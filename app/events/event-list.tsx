@@ -161,19 +161,29 @@ export default function EventList({
             /* ── Normal view ── */
             <>
               {canEdit(e) && (
-                <div className="absolute top-4 right-4 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
-                  <button onClick={() => startEdit(e)} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg bg-poly-navy/8 text-poly-navy hover:bg-poly-navy/15 transition-colors">
-                    <Pencil size={13} />
+                <div className="absolute top-3 right-3 z-10 flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => startEdit(e)}
+                    title="Edit"
+                    aria-label="Edit event"
+                    className="flex h-10 w-10 md:h-9 md:w-9 items-center justify-center rounded-xl bg-white border border-ink-200 text-poly-navy hover:bg-poly-navySoft active:scale-95 transition-all shadow-sm"
+                  >
+                    <Pencil size={15} />
                   </button>
-                  <button onClick={() => remove(e.id)} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark transition-colors">
-                    <Trash2 size={13} />
+                  <button
+                    onClick={() => remove(e.id)}
+                    title="Delete"
+                    aria-label="Delete event"
+                    className="flex h-10 w-10 md:h-9 md:w-9 items-center justify-center rounded-xl bg-white border border-ink-200 text-ink-700 hover:bg-poly-orangeSoft hover:text-poly-orangeDark hover:border-poly-orange/30 active:scale-95 transition-all shadow-sm"
+                  >
+                    <Trash2 size={15} />
                   </button>
                 </div>
               )}
               <div className="flex items-start gap-5">
                 <DateBlock date={e.startsAt} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className={`flex flex-wrap gap-2 mb-2 ${canEdit(e) ? "pr-24 md:pr-0" : ""}`}>
                     {isSoon(e.startsAt) && (
                       <span className="chip border-poly-orange/40 bg-poly-orangeSoft text-poly-orangeDark font-mono font-semibold tracking-wide">
                         SOON

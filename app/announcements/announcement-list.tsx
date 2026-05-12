@@ -156,27 +156,29 @@ export default function AnnouncementList({
           ) : (
             /* ── Normal view ── */
             <>
-              {/* Admin controls — appear on hover */}
+              {/* Admin controls — always visible on touch, hover-reveal on desktop */}
               {canEdit(a) && (
-                <div className="absolute top-4 right-4 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 right-3 z-10 flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => startEdit(a)}
                     title="Edit"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-poly-navy/8 text-poly-navy hover:bg-poly-navy/15 transition-colors"
+                    aria-label="Edit announcement"
+                    className="flex h-10 w-10 md:h-9 md:w-9 items-center justify-center rounded-xl bg-white border border-ink-200 text-poly-navy hover:bg-poly-navySoft active:scale-95 transition-all shadow-sm"
                   >
-                    <Pencil size={13} />
+                    <Pencil size={15} />
                   </button>
                   <button
                     onClick={() => remove(a.id)}
                     title="Delete"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark transition-colors"
+                    aria-label="Delete announcement"
+                    className="flex h-10 w-10 md:h-9 md:w-9 items-center justify-center rounded-xl bg-white border border-ink-200 text-ink-700 hover:bg-poly-orangeSoft hover:text-poly-orangeDark hover:border-poly-orange/30 active:scale-95 transition-all shadow-sm"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={15} />
                   </button>
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className={`flex flex-wrap items-center gap-2 mb-3 ${canEdit(a) ? "pr-24 md:pr-0" : ""}`}>
                 {a.pinned && (
                   <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
                     <Pin size={11} /> Pinned

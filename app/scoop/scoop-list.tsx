@@ -168,12 +168,22 @@ function IssueCard({
 
       {/* Admin controls */}
       {canEdit && (
-        <div className="absolute top-3 right-3 flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-          <button onClick={onEdit} title="Edit" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-poly-navy hover:bg-ink-100 border border-ink-200 transition-colors">
-            <Pencil size={13} />
+        <div className="absolute top-3 right-3 z-10 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={onEdit}
+            title="Edit"
+            aria-label="Edit issue"
+            className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white text-poly-navy hover:bg-poly-navySoft border border-ink-200 active:scale-95 transition-all shadow-sm"
+          >
+            <Pencil size={15} />
           </button>
-          <button onClick={onDelete} title="Delete" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-ink-600 hover:bg-poly-orangeSoft hover:text-poly-orangeDark border border-ink-200 transition-colors">
-            <Trash2 size={13} />
+          <button
+            onClick={onDelete}
+            title="Delete"
+            aria-label="Delete issue"
+            className="flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-white text-ink-700 hover:bg-poly-orangeSoft hover:text-poly-orangeDark border border-ink-200 hover:border-poly-orange/30 active:scale-95 transition-all shadow-sm"
+          >
+            <Trash2 size={15} />
           </button>
         </div>
       )}

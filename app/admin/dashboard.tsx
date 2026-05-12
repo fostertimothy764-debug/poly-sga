@@ -1985,7 +1985,7 @@ function PhotosTab({
             <div>
               <label className="label">Audience</label>
               <div className="flex flex-wrap gap-2">
-                {[{ value: "all", label: "Everyone" }, { value: "sga", label: "SGA Only" }].map((o) => (
+                {[{ value: "all", label: "Schoolwide" }, { value: "sga", label: "SGA only" }].map((o) => (
                   <button
                     key={o.value}
                     type="button"
