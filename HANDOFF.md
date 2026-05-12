@@ -1,93 +1,104 @@
 # Poly SGA — Developer Handoff
 
-> **Purpose**: Drop this file into a new Claude Code session to get full context on the codebase, what has been built, and what comes next.
+> Drop this file into a fresh Claude Code session to land with full context.
 
 ---
 
-## Project Overview
+## What this is
 
-**Poly SGA** is the student-government website for Baltimore Polytechnic Institute. It lets students browse announcements, events, clubs, and team bios; upvote idea-board suggestions; and receive class-targeted content. Officers log in to post, edit, and manage everything.
+**Poly SGA** is the student-government website for Baltimore Polytechnic Institute. It lets students browse announcements, events, clubs, and team bios; upvote idea-board suggestions; track officer follow-through via a public status system; and read the SGA Scoop newsletter. Officers log in to post, edit, and manage everything.
 
-- **Live URL**: https://poly-sga2.vercel.app
+- **Live**: https://poly-sga2.vercel.app
 - **Repo**: https://github.com/fostertimothy764-debug/poly-sga
-- **Local path**: `/Users/tjs/sga-website`
+- **Local**: `/Users/tjs/sga-website`
 - **Hosting**: Vercel (auto-deploys from `main`)
 
+The site is **not** a generic LMS portal. The strategic anchor is *legitimacy*: a student who lands on the site should leave with the sense that SGA is a real organization doing real work. The aesthetic is a small-press neighborhood paper (think Eater city pages), not a SaaS landing.
+
 ---
 
-## Tech Stack
+## Strategic + visual context
+
+Two root-level docs carry the strategy and visual system. **Read these before designing anything.**
+
+- **`PRODUCT.md`** — register (`product`), users, anti-references (LMS portals, SaaS landings, kids' apps), 5 design principles. Strategic.
+- **`DESIGN.md`** — Stitch-format frontmatter (colors, typography, components) + 6-section body (Overview, Colors, Typography, Elevation, Components, Do's and Don'ts). North Star: *"The Neighborhood Paper."* Visual.
+
+Both are enforced by the `impeccable` skill — running `/impeccable critique` or `/impeccable audit` reads from these files.
+
+---
+
+## Tech stack
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 14 (App Router, server components) |
 | Styling | Tailwind CSS v3 |
-| Database | PostgreSQL via Neon (serverless) |
+| Database | PostgreSQL via Neon (serverless, free tier — auto-suspends) |
 | ORM | Prisma 5 |
 | Auth | JWT in httpOnly cookie (`poly_sga_session`) via `jose` |
 | Icons | Lucide React |
-| Fonts | Inter (sans) + Fraunces (display/serif) from Google Fonts |
+| Fonts | **Plus Jakarta Sans** (body) + **Fraunces** (display/serif) — both Google Fonts |
 | Deploy | Vercel |
 
-### Key env vars (`.env`)
+### `.env`
+
 ```
-DATABASE_URL=       # Neon pooler URL
-DIRECT_URL=         # Neon direct URL (for Prisma migrations)
+DATABASE_URL=       # Neon pooler URL (used by app at runtime)
+DIRECT_URL=         # Neon direct URL (used by Prisma migrations)
 JWT_SECRET=         # 32+ char secret for officer session JWTs
+ADMIN_USERNAME=     # initial sga_admin seed username
+ADMIN_PASSWORD=     # initial sga_admin seed password
 ```
 
 ---
 
-## Repository Structure
+## Project structure
 
 ```
 sga-website/
+├── PRODUCT.md                       # ★ strategic doc
+├── DESIGN.md                        # ★ visual system
+├── HANDOFF.md                       # this file
 ├── app/
-│   ├── page.tsx                    # Home page (server component)
-│   ├── layout.tsx                  # Root layout — loads fonts, wraps in Shell
-│   ├── globals.css                 # Tailwind base + component classes
+│   ├── page.tsx                     # Home — newspaper masthead, lead, secondary stack
+│   ├── not-found.tsx                # ★ custom 404, editorial voice
+│   ├── about/page.tsx               # ★ colophon
+│   ├── layout.tsx                   # loads fonts, wraps in Shell
+│   ├── globals.css                  # Tailwind base + component classes
 │   ├── announcements/
-│   │   ├── page.tsx                # Server: fetches + renders announcements
-│   │   ├── announcement-list.tsx   # Client: renders list, inline admin edit
-│   │   ├── filter.tsx              # Audience filter tabs (Mine/All/School)
-│   │   └── loading.tsx             # ★ Skeleton shown during navigation
-│   ├── events/
-│   │   ├── page.tsx                # Server: upcoming + past + club events
-│   │   ├── event-list.tsx          # Client: renders list, inline admin edit
-│   │   └── loading.tsx             # ★ Skeleton shown during navigation
-│   ├── suggestions/
-│   │   ├── page.tsx                # Server: fetches suggestions + clubs
-│   │   ├── client.tsx              # Client: vote, filter, submit modal
-│   │   └── loading.tsx             # ★ Skeleton shown during navigation
-│   ├── clubs/
 │   │   ├── page.tsx
-│   │   ├── [slug]/page.tsx
-│   │   └── request-form.tsx
-│   ├── team/page.tsx
+│   │   ├── announcement-list.tsx    # inline admin edit, pull-quote rendering
+│   │   ├── filter.tsx               # audience filter tabs
+│   │   └── loading.tsx
+│   ├── events/                      # page, event-list, loading
+│   ├── suggestions/                 # page (incl. wins query), client (idea board, status pills)
+│   ├── clubs/                       # page, [slug]/page, request-form
+│   ├── team/
+│   │   ├── page.tsx                 # grid of clickable officer cards
+│   │   └── [id]/
+│   │       ├── page.tsx             # ★ officer profile (server)
+│   │       └── contact-strip.tsx    # ★ tap-to-copy email/Instagram
 │   ├── links/page.tsx
-│   ├── photos/
-│   │   ├── page.tsx
-│   │   └── gallery.tsx
-│   ├── scoop/
-│   │   ├── page.tsx
-│   │   └── scoop-list.tsx
-│   ├── welcome/
-│   │   ├── page.tsx
-│   │   └── client.tsx              # Grade picker (class cookie flow)
+│   ├── photos/                      # page, gallery
+│   ├── scoop/                       # page, scoop-list
+│   ├── welcome/                     # page, client (grade picker)
 │   ├── admin/
-│   │   ├── page.tsx                # Officer dashboard
-│   │   ├── dashboard.tsx           # Client dashboard component
+│   │   ├── page.tsx                 # protected dashboard wrapper
+│   │   ├── dashboard.tsx            # ★ big — all admin tabs in one file
 │   │   ├── login/page.tsx
-│   │   └── profile/
+│   │   └── profile/page.tsx + client.tsx
 │   └── api/
-│       ├── announcements/route.ts  # GET (list) / POST / PATCH / DELETE
+│       ├── announcements/route.ts   # GET / POST / PATCH / DELETE (now accepts leadImage)
 │       ├── events/route.ts
 │       ├── suggestions/
-│       │   ├── route.ts            # GET / POST
-│       │   ├── vote/route.ts       # POST (toggle vote)
-│       │   └── redirect/route.ts
+│       │   ├── route.ts             # GET / POST / PATCH(read) / DELETE
+│       │   ├── vote/route.ts
+│       │   ├── redirect/route.ts    # sga_admin only
+│       │   └── status/route.ts      # ★ POST — set status with role-based perms
 │       ├── clubs/route.ts + [id]/route.ts
-│       ├── team/route.ts + [id]/route.ts
-│       ├── grade/route.ts          # POST (set cookie) / DELETE (clear)
+│       ├── team/route.ts + [id]/route.ts  # accept new profile fields
+│       ├── grade/route.ts           # set/clear class cookie
 │       ├── auth/login + logout + profile
 │       ├── photos/route.ts
 │       ├── newsletter/route.ts
@@ -95,208 +106,302 @@ sga-website/
 │       ├── mailing-list/route.ts
 │       └── admin/accounts/route.ts
 ├── components/
-│   ├── shell.tsx                   # Wraps nav + footer + bottom tab bar
-│   ├── nav.tsx                     # Top navigation (client component)
-│   ├── bottom-tab-bar.tsx          # ★ Mobile 5-tab bar (new)
-│   ├── footer.tsx
+│   ├── shell.tsx                    # wraps nav + footer + bottom tab bar
+│   ├── nav.tsx                      # top nav
+│   ├── bottom-tab-bar.tsx           # mobile 5-tab bar
+│   ├── footer.tsx                   # incl. /about link
 │   ├── admin-mode-banner.tsx
 │   ├── mailing-list-form.tsx
-│   ├── photo-upload.tsx
-│   └── toast.tsx
+│   ├── photo-upload.tsx             # client-side compress to base64
+│   ├── toast.tsx
+│   ├── confirm-dialog.tsx           # ★ useConfirm() hook + portal dialog
+│   ├── status-pill.tsx              # ★ 7-status renderer, reused everywhere
+│   └── rich-body.tsx                # ★ pull-quote rendering (`> ` syntax)
 ├── lib/
-│   ├── db.ts                       # Prisma client singleton
-│   ├── auth.ts                     # JWT session helpers
-│   ├── grade.ts                    # Grade cookie helpers + GRADES constant
-│   └── utils.ts                    # cn(), formatDate, formatTime, relativeTime
+│   ├── db.ts                        # Prisma client singleton
+│   ├── auth.ts                      # JWT helpers + canSetSuggestionStatus + SUGGESTION_STATUSES
+│   ├── grade.ts                     # cookie helpers + GRADES + getVoterId
+│   └── utils.ts                     # cn, formatDate, relativeTime, readingTime, classAccentStyle
 ├── prisma/
-│   ├── schema.prisma
+│   ├── schema.prisma                # ★ updated: status fields, profile fields, leadImage
+│   ├── migrations/
+│   │   └── manual-life-pass.sql     # ★ idempotent SQL — apply if `prisma db push` fails
 │   └── seed.ts
-├── middleware.ts                   # Redirect to /welcome if no grade cookie
-└── tailwind.config.ts
+├── middleware.ts                    # redirect to /welcome if no grade cookie
+└── tailwind.config.ts               # palette: poly-{orange,navy,green,amber,...} + class-{27..30}
 ```
 
-★ = added in Phase 1
+★ = added or substantially rewritten in the editorial redesign.
 
 ---
 
-## Data Models (Prisma)
+## Data models (Prisma)
 
+```prisma
+Admin              # role: sga_admin | sga_member | class | club; teamMemberId FK
+Club               # slug, name, description, meetingTime, location, photoUrl
+Announcement       # title, body, pinned, audience, clubId, authorName, leadImage ★
+Event              # title, description, location, audience, clubId, startsAt, endsAt
+TeamMember         # name, role, grade, bio, photoUrl, order
+                   # + pronouns, askMeAbout, schoolEmail, instagram ★
+Suggestion         # body, category, target, clubId, contact, votes, private
+                   # + status ★, statusLabel ★, statusNote ★,
+                   #   statusUpdatedById ★, statusUpdatedByName ★, statusUpdatedAt ★
+SuggestionVote     # (suggestionId, voterId) unique
+Photo              # title, caption, url, audience, eventLabel
+Newsletter        ("SGA Scoop")  # title, issueLabel, body, externalUrl, coverUrl, publishedAt
+ResourceLink       # title, url, description, category, audience, pinned
+MailingList        # email, name
+ClubRequest        # public form on /clubs (not a club-creation form)
 ```
-Admin           – officer accounts; roles: sga_admin | sga_member | class | club
-Club            – slug, name, description, meetingTime, location, photoUrl
-Announcement    – title, body, pinned, audience, clubId, authorName, createdAt
-Event           – title, description, location, audience, clubId, startsAt, endsAt
-TeamMember      – name, role, grade, bio, photoUrl, order
-Suggestion      – body, category, target, clubId, votes, private, createdAt
-SuggestionVote  – suggestionId + voterId (unique pair)
-Photo           – title, caption, url (base64 or https), audience, eventLabel
-Newsletter      – title, issueLabel, description, body, externalUrl, coverUrl
-ResourceLink    – title, url, description, category, audience, pinned
-MailingList     – email, name
-ClubRequest     – clubName, description, contactName, contactInfo, status
-```
 
-**Audience values** used across Announcement, Event, ResourceLink:
-`"all"` | `"27"` | `"28"` | `"29"` | `"30"` | `"club"`
+**Audience** (Announcement, Event, ResourceLink, Photo): `"all" | "27" | "28" | "29" | "30" | "club"` — displayed in chips as `Schoolwide / Class of 20XX / Club`. Always use "Schoolwide," not "Everyone."
 
-**Suggestion target values**: `"sga"` | `"27"` | `"28"` | `"29"` | `"30"` | `"club"`
+**Suggestion target**: `"sga" | "27" | "28" | "29" | "30" | "club"` — who reads the idea's inbox.
+
+**Suggestion status** (★): `"new" | "under_review" | "on_the_agenda" | "in_progress" | "done" | "declined" | "custom"` — see `lib/auth.ts:SUGGESTION_STATUSES`. `custom` renders `statusLabel` as a free-text pill.
 
 ---
 
-## Identity & Auth System
+## Identity & auth
 
 ### Student (anonymous)
-- On first visit, middleware redirects to `/welcome`.
-- User picks a class year → `POST /api/grade` sets `poly_grade` cookie (1-year, lax).
+- First visit → middleware redirects to `/welcome` → student picks class → `POST /api/grade` sets `poly_grade` cookie (1y, lax).
 - Grade values: `"27" | "28" | "29" | "30" | "guest"`.
-- Voter identity: `poly_voter` cookie (UUID, 1-year) used to deduplicate votes.
+- Voter identity: `poly_voter` cookie (UUID, 1y) deduplicates votes.
 - No login, no PII stored.
 
 ### Officers
-- `POST /api/auth/login` → sets `poly_sga_session` JWT cookie (1-year, httpOnly, HS256).
+- `POST /api/auth/login` → sets `poly_sga_session` JWT cookie (1y, httpOnly, HS256).
 - Session payload: `{ adminId, username, name, role, isSiteAdmin, classYear, clubId, teamMemberId }`.
-- `lib/auth.ts` → `getSession()` reads + verifies the cookie server-side.
+- `lib/auth.ts:getSession()` reads + verifies the cookie server-side.
 - Role matrix:
 
-| Role | Can post to |
-|---|---|
-| `sga_admin` | Everything |
-| `sga_member` | Schoolwide + own team profile |
-| `class` | Own class year only |
-| `club` | Own club only |
+| Role | Can post to | Can update suggestion status on |
+|---|---|---|
+| `sga_admin` | Everything | Any idea |
+| `sga_member` | Schoolwide + class years + own team profile | Any idea |
+| `class` | Own class year only | Ideas targeted at own class year |
+| `club` | Own club only | Ideas targeted at own club |
+
+Permission helpers in `lib/auth.ts`: `isSgaAdmin`, `isSga`, `canManageTeam`, `canEditTeamMember`, `canPostAudience`, `canPostToClub`, `canSeeInbox`, `canRedirectSuggestion`, `canSetSuggestionStatus`.
 
 ---
 
-## Design Tokens
+## Design tokens
 
-All tokens live in `tailwind.config.ts` and `globals.css`.
+All tokens live in `tailwind.config.ts` + `DESIGN.md`. **Don't add new tokens without updating DESIGN.md.**
 
 ### Colors
-```
-poly-orange:     #f26522   (primary CTA, active states)
-poly-orangeDark: #d44e0f   (hover on orange)
-poly-orangeSoft: #FFE9DC   (tinted bg for orange pills/empty states) ★
-poly-navy:       #0a2342   (primary dark, hero, officer view)
-poly-navyDark:   #061629   (hover on navy)
-poly-navySoft:   #E6EAF2   (tinted bg for navy pills) ★
-poly-green:      #3E8E5A   (success / "in progress" status) ★
-poly-amber:      #C68A1E   (warning / "under review" status) ★
 
-ink-50:  #f8f8f7   (page background)
-ink-100: #eeede9
-ink-200: #d9d6cf   (borders, hairlines)
-ink-300–900: warm gray scale
-
-class-27: #E15A1F  (Seniors) ★
-class-28: #5D6FB8  (Juniors) ★
-class-29: #C68A1E  (Sophomores) ★
-class-30: #7BB66B  (Freshmen) ★
 ```
-★ = added in Phase 1
+# Signal — used sparingly (≤10% per screen, "The One Voice Rule")
+poly-orange      #f26522   primary CTA, active nav, NEW badge
+poly-orangeDark  #d44e0f   orange hover/destructive accent
+poly-orangeSoft  #FFE9DC   tinted background for SOON / empty-state circles
+
+# Ground — authority
+poly-navy        #0a2342   digest card, primary button
+poly-navyDark    #061629   navy hover
+poly-navySoft    #E6EAF2   tinted background for schoolwide chips
+
+# Status — for status pills, never decorative
+poly-green       #3E8E5A   "Done", success
+poly-amber       #C68A1E   "Under review", warnings
+
+# Warm neutrals — never #000 / #fff in body or chrome
+ink-50           #f8f8f7   page background (canonical)
+ink-100          #eeede9
+ink-200          #d9d6cf   hairline borders, dividers
+ink-300–900      warm gray scale
+white            #ffffff   card surfaces only (not page bg)
+
+# Class-year identity — only on viewer's own content, never paints chrome
+class-27         #E15A1F   Seniors
+class-28         #5D6FB8   Juniors
+class-29         #C68A1E   Sophomores
+class-30         #7BB66B   Freshmen
+```
 
 ### Typography
+
 ```
-font-sans:    Inter (CSS var --font-sans)
-font-display: Fraunces (CSS var --font-display) — used for h1–h3, large numbers
+font-sans        Plus Jakarta Sans, system-ui, sans-serif   body
+font-display     Fraunces (variable, opsz), Georgia, serif  headlines + ledes
 ```
 
-### Component Utility Classes (globals.css)
+Hierarchy: Display (Fraunces 300, clamp 2–3.75rem) → Headline (Fraunces 400) → Title (Jakarta 600 1.125rem) → Body (Jakarta 400 1rem, max 65ch) → Label (Jakarta 600 0.75rem uppercase tracked).
+
+### Component utilities (`globals.css`)
+
 ```css
 .container-page   max-w-5xl, centered, px-6 sm:px-8
-.btn              base button (rounded-full, focus ring)
-.btn-primary      navy fill
-.btn-accent       orange fill
-.btn-ghost        text only with hover bg
-.card             rounded-2xl, border-ink-200, bg-white, p-6
-.card-hover       hover border + subtle shadow
-.input            rounded-xl form field
-.label            ALL CAPS tracking-wider field label
+.btn / .btn-primary / .btn-accent / .btn-ghost
+.card / .card-hover
+.input
+.label            uppercase tracking-wider field label
 .chip             rounded-full tag/badge
 .h-display        font-display font-light tracking-tight
+.rule-hair / .rule-double  hairline + newspaper double-rule
 ```
 
+### Absolute bans (enforced by `/impeccable` detector)
+
+- No `.gradient-text` (`background-clip: text` with gradient).
+- No `blur-3xl` / `blur-2xl` decorative blobs.
+- No `backdrop-blur` (was in nav, bottom-tab-bar, modals — all removed).
+- No side-stripe borders (`border-left` > 1px as a colored accent).
+- No `from-black/*` overlays (use `from-poly-navyDark/*`).
+- No off-palette Tailwind defaults (`amber-50`, `sky-50`, `violet-50`, `red-500`, etc.). Use palette tokens.
+- No Title-Cased headings (sentence-case only, except `.label`).
+- No exclamation marks in chrome.
+- No "Everyone" — audience chips read "Schoolwide."
+
+`npx impeccable --json --fast app components` should return `[]`. Run after any visual change.
+
 ---
 
-## Routing & Pages
+## Signature components
 
-| Route | Type | Description |
+### `<StatusPill>` (`components/status-pill.tsx`)
+Single renderer for idea statuses. 7 values, 7 color tones. Used on:
+- Public `/suggestions` row (skipped when status === "new")
+- Admin dashboard SuggestionRow
+- Wins strip on `/suggestions`
+
+```tsx
+<StatusPill status="done" statusLabel={null} />
+```
+
+### `<RichBody>` (`components/rich-body.tsx`)
+Renders announcement bodies with a thin slice of editorial structure. Paragraphs split on blank lines. Any paragraph starting with `> ` renders as a **Fraunces italic pull-quote** with a hairline left rule. No markdown library — the surface is intentionally tiny.
+
+### `<ConfirmDialog>` + `useConfirm()` (`components/confirm-dialog.tsx`)
+Portal-mounted styled dialog. Replaces `window.confirm()` across delete flows. Esc to cancel, Enter to confirm. Destructive variant uses `poly-orangeDark` (never red — red isn't in the palette).
+
+```tsx
+const { confirm, dialog } = useConfirm();
+const ok = await confirm({ title: "Delete this?", confirmLabel: "Delete" });
+```
+
+### `<ContactStrip>` (`app/team/[id]/contact-strip.tsx`)
+Tap-to-copy email + Instagram on the officer profile. Confirms with `✓ Copied` in `poly-green` for 1.8s. Underlying mailto/instagram links still work as fallback.
+
+### Wins strip (`/suggestions`)
+Server-fetched at the top of the page: `Suggestion.findMany({ status: "done", statusUpdatedAt: { gte: 30daysAgo }})`. Renders a 3-up grid attributed to the shipping officer. **The receipt that SGA does real work.**
+
+### Activity ribbon (`/`)
+Thin server-rendered line below the masthead: top idea this week + relative time of the most recent announcement. Only shown for users with a grade cookie set. No polling.
+
+### Issue masthead (`/`)
+Double-rule divider, `Vol. X · Issue No. Y` (X = school years since 2023; Y = total announcement count), italic dateline. Reads as a publication, not an app.
+
+### Class-year accent (`lib/utils.ts:classAccentStyle`)
+2px left-border in the viewer's class hex color, only on content where `audience === viewerGrade`. Never paints chrome, never on schoolwide content. Applied on home secondary stack, events sidebar, announcement-list, event-list.
+
+---
+
+## Routes
+
+| Route | Type | Notes |
 |---|---|---|
-| `/` | Server | Home: hero, digest card, quick nav, announcements, events |
-| `/welcome` | Client | Grade picker (redirected here if no cookie) |
-| `/announcements` | Server+Client | Full announcement list with audience filter |
-| `/events` | Server+Client | Upcoming, club, and past events |
-| `/suggestions` | Server+Client | Idea board: vote, filter, submit |
-| `/clubs` | Server | Club index |
-| `/clubs/[slug]` | Server | Club detail |
-| `/team` | Server | Officer team grid |
-| `/links` | Server | Resource links |
-| `/photos` | Server+Client | Photo gallery |
+| `/` | Server | Masthead, activity ribbon, digest, lead article w/ drop cap + reading time, secondary stack, tail strip |
+| `/welcome` | Client | Grade picker, redirected here if no cookie |
+| `/announcements` | Server+Client | Editorial header, filter tabs, list with pull-quote rendering + reading time |
+| `/events` | Server+Client | Upcoming / Club / Recently sections |
+| `/suggestions` | Server+Client | Wins strip → filters → list with status pills + notes |
+| `/clubs` + `/clubs/[slug]` | Server | Index + detail |
+| `/team` | Server | Clickable officer cards with "Ask me about" pull-quote |
+| `/team/[id]` | Server+Client | ★ officer profile with bio, contact strip |
+| `/links` | Server+Client | Resource links by category |
+| `/photos` | Server+Client | Gallery |
 | `/scoop` | Server+Client | Newsletter issues |
-| `/admin` | Server+Client | Officer dashboard (protected by session) |
-| `/admin/login` | Client | Officer login form |
-| `/admin/profile` | Client | Officer profile edit |
+| `/about` | Server | ★ colophon |
+| `/admin` | Server+Client | Officer dashboard (protected) |
+| `/admin/login` | Client | Officer login |
+| `/admin/profile` | Server+Client | Self-edit profile (incl. pronouns, askMeAbout, contact) |
+| `*` (404) | Server | ★ custom not-found, masthead voice |
 
-**All pages** are `force-dynamic` (no static caching) to always reflect DB state.
-
----
-
-## What Was Implemented: Phase 1 (commit `32730ab`)
-
-All five ideas from the `design_handoff_poly_sga/` bundle. The design spec lives at `/tmp/website_extract/design_handoff_poly_sga/` (extracted from `~/Downloads/website.zip`). The canonical spec file is `ideas.jsx`.
-
-### Idea 01 — "This week for you" digest card (`app/page.tsx`)
-- Appears on home when the user has a grade cookie set (not for guests).
-- Navy card (`#0E1E3A`) with orange mono eyebrow "THIS WEEK · FOR [CLASS]", a Fraunces summary sentence driven by real counts, and three stat counters.
-- Queries added: `newPostsCount` (announcements created in last 7 days), `upcomingCount` (events in next 7 days), `trendingCount` (suggestions with ≥5 votes).
-- Summary sentence logic: if events → leads with event count; else if posts → leads with post count; else → placeholder text.
-- `classSub(grade)` maps `"28"` → `"Juniors"` etc. via `GRADES` from `lib/grade.ts`.
-
-### Idea 02 — Freshness pills
-- **`NEW` badge** (green chip): shown on announcements < 48 h old, hidden when post is also `pinned` (pinned already signals priority).
-  - Added to: home page announcement cards (`app/page.tsx`) and announcement list (`app/announcements/announcement-list.tsx`).
-  - Each badge includes `<span class="sr-only">` for screen readers.
-- **`SOON` badge** (orange-soft chip): shown on events starting within 24 h.
-  - Added to: `app/events/event-list.tsx` via `isSoon(startsAt)` helper.
-
-### Idea 03 — Mobile bottom tab bar (`components/bottom-tab-bar.tsx`)
-- Fixed 5-tab nav: Home / Events / Ideas / Clubs / Team (Lucide icons).
-- Visible only on `< md` breakpoint (`flex md:hidden`).
-- Active tab: `text-poly-orange`, thicker stroke (`strokeWidth={2.5}`).
-- Uses `usePathname()` for active detection; `/` is exact-match only.
-- `aria-current="page"` on active tab for accessibility.
-- Wired into `components/shell.tsx` — also adds `pb-16 md:pb-0` to `<main>` so content isn't hidden behind the bar.
-
-### Idea 04 — Illustrated empty states
-- All bare `"No items."` divs replaced with: ✦ icon in `poly-orangeSoft` circle + Fraunces headline + body copy + optional CTA button.
-- Locations updated:
-  - `app/page.tsx` → `RichEmptyState` component (home announcements + events sections)
-  - `app/announcements/announcement-list.tsx` → inline empty state
-  - `app/events/page.tsx` → inline empty state for upcoming section
-  - `app/suggestions/client.tsx` → inline empty state with context-aware copy (filter-active vs. truly empty) and a "Browse all ideas →" reset link
-
-### Idea 05 — Skeleton loaders (loading.tsx)
-- Three new `loading.tsx` files — Next.js App Router auto-shows these during navigation (Suspense boundary):
-  - `app/announcements/loading.tsx` — card skeletons with chip + title + body rows
-  - `app/events/loading.tsx` — date-block + content skeletons in 2-col grid
-  - `app/suggestions/loading.tsx` — vote button + idea row skeletons
+All pages `force-dynamic` (no static caching).
 
 ---
 
-## Patterns & Conventions
+## Working with the data
 
-### Server vs. Client split
-- Pages are **server components** that fetch data and pass it as `initial` props to client components.
-- Client components handle interactivity (voting, filtering, inline edit) and receive initial data to avoid layout shift.
+### Apply pending schema migration (one-time)
+
+The editorial redesign added new columns to `Announcement`, `TeamMember`, and `Suggestion`. The Prisma client is regenerated; the DB columns may need to be applied if the previous session couldn't reach Neon's direct endpoint. Run **one** of:
+
+```bash
+npx prisma db push                     # uses DIRECT_URL
+```
+
+Or paste `prisma/migrations/manual-life-pass.sql` into the Neon SQL editor (it's idempotent — `ADD COLUMN IF NOT EXISTS`).
+
+### When Neon goes idle
+
+Free-tier Neon compute suspends after ~5 minutes idle. Symptoms: `P1001 Can't reach database server` + 500 errors on any Prisma route. Fix: open the Neon console SQL editor and run `SELECT 1;` to wake the compute. Auto-resume sometimes takes >5s, which exceeds Prisma's default `connect_timeout` — append `&connect_timeout=30` to both URLs in `.env` for slack.
+
+### Local dev
+
+```bash
+cd /Users/tjs/sga-website
+npm run dev                            # http://localhost:3000
+```
+
+Middleware redirects unset-grade visitors to `/welcome`, so test with `document.cookie = "poly_grade=28"` in DevTools to see the home for a Junior.
+
+### Auth check
+
+```bash
+npx prisma studio                      # GUI; verify Admin table has sga_admin user
+```
+
+If you need to seed: `npx prisma db seed` (reads `prisma/seed.ts`).
+
+---
+
+## Recent work — what shipped in the editorial redesign
+
+Commit `4a4f8d9` (editorial redesign) + `5447db2` (mobile admin button fix).
+
+**Strategic anchors written:** `PRODUCT.md` + `DESIGN.md`.
+
+**Home page rebuilt as a newspaper:**
+- Issue masthead with `Vol. X · Issue No. Y` + italic dateline.
+- Activity ribbon (top idea this week, last update relative time).
+- Lead article with drop cap on the dek, byline + reading time.
+- Secondary 3-up stack with class-year left-border accent.
+- Real-photo lead when `Announcement.leadImage` is set.
+- Tail strip with one CTA.
+
+**Officer profiles:** `/team/[id]` with photo, pronouns, "Ask me about" lede in Fraunces, full bio, tap-to-copy email + Instagram. Cards on `/team` show the askMeAbout sentence as a pull-quote.
+
+**Idea status system:** 7 statuses (`new / under_review / on_the_agenda / in_progress / done / declined / custom`) with role-based permissions. Officers update from admin dashboard inbox; public board renders pills + bylined status notes. Wins strip on `/suggestions` lists ideas shipped in last 30 days.
+
+**Decoration purge + color discipline:** All `gradient-text`, `blur-3xl`, `backdrop-blur`, sparkles, hero-metric stat tiles, off-palette `amber/sky/violet/red/black` tokens removed. Detector now returns 0 findings.
+
+**Mobile fixes:** Admin edit/delete buttons bumped to 40px on mobile (was 32px, under WCAG min), z-10 + shadow, chip rows reserve `pr-24` so chips don't steal taps.
+
+**Editorial touches:** Pull-quote rendering (`> ` syntax), reading time on announcements, custom 404, colophon page (`/about`), confirm dialog component, sentence-cased copy throughout.
+
+**Font swap:** Inter → Plus Jakarta Sans (detector flagged Inter as overused). Pairs with Fraunces.
+
+---
+
+## Patterns + conventions
+
+### Server vs. client split
+Pages are **server components** that fetch and render shells. Client components handle interactivity (voting, editing, status updates) and receive initial data to avoid layout shift.
 
 ### Grade-aware filtering
 ```ts
-const grade = getGrade(); // reads poly_grade cookie server-side
-const audienceFilter = grade && grade !== "guest"
-  ? { audience: { in: ["all", grade] } }
-  : {};
+const grade = getGrade(); // poly_grade cookie
+const audienceFilter =
+  grade && grade !== "guest" ? { audience: { in: ["all", grade] } } : {};
 ```
 
-### Admin permission check pattern (inline in client components)
+### Admin permission inline check
 ```ts
 function canEdit(item) {
   if (!admin) return false;
@@ -307,97 +412,100 @@ function canEdit(item) {
 }
 ```
 
-### Optimistic voting (suggestions/client.tsx)
+### Optimistic voting (suggestions)
 ```ts
-async function vote(id: string) {
-  // 1. Flip immediately
-  setItems(prev => prev.map(i =>
-    i.id === id ? { ...i, voted: !i.voted, votes: i.votes + (i.voted ? -1 : 1) } : i
-  ));
-  // 2. Confirm from server
-  const res = await fetch("/api/suggestions/vote", { method: "POST", ... });
+async function vote(id) {
+  setItems((prev) => prev.map((i) => i.id === id ? { ...i, voted: !i.voted, votes: i.votes + (i.voted ? -1 : 1) } : i));
+  const res = await fetch("/api/suggestions/vote", { method: "POST", body: JSON.stringify({ id }) });
   if (res.ok) {
     const data = await res.json();
-    setItems(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
+    setItems((prev) => prev.map((i) => i.id === id ? { ...i, ...data } : i));
   }
 }
 ```
 
 ### API route pattern
+- GET — list / filter (no auth unless inbox-style)
+- POST — create (officer auth)
+- PATCH — update (id in body, officer auth + role check)
+- DELETE — delete (?id= query param, officer auth)
+- Mutating routes always call `getSession()` and check role *before* touching Prisma.
+
+### Class accent
 ```ts
-// GET: list with optional where clause
-// POST: create
-// PATCH: update (id in body)
-// DELETE: delete (id in query param)
-// All officer-mutating routes call getSession() and check role
+<article style={classAccentStyle(item.audience, viewerGrade)}>
+```
+`classAccentStyle` returns `undefined` when no accent applies — safe to spread.
+
+---
+
+## Common tasks
+
+### Add a new audience-filtered page
+1. Page component fetches with `audienceFilter` from `getGrade()`.
+2. Render header with editorial pattern: `<header className="mb-10 pb-8 border-b border-ink-200 max-w-2xl">` + label eyebrow + Fraunces H1 + dek.
+3. Pass `viewerGrade={grade && grade !== "guest" ? grade : null}` to the client component.
+4. Apply `style={classAccentStyle(item.audience, viewerGrade)}` on each card.
+
+### Add a new status to ideas
+1. Add to `SUGGESTION_STATUSES` in `lib/auth.ts`.
+2. Add to `STATUS_OPTIONS` + `STATUS_CLASSES` in `components/status-pill.tsx`.
+3. Update DESIGN.md if you want it canonical.
+
+### Verify
+```bash
+npx tsc --noEmit                       # type check
+npx impeccable --json --fast app components   # 0 findings target
 ```
 
 ---
 
-## Phase Roadmap (from design spec)
+## Pending roadmap
 
-The full spec is in `design_handoff_poly_sga/README.md` and `ideas.jsx`. Implement one phase at a time.
+The original Phase 2 (idea status) is done. What's left from the original `design_handoff_poly_sga/ideas.jsx` spec:
 
 | Phase | Ideas | Status |
 |---|---|---|
-| **1 — Quick wins** | 01–05: digest card, freshness pills, bottom tab bar, empty states, skeletons | ✅ **Done** |
-| **2 — Idea board upgrade** | 10–14: status pills, comments, "my votes" filter, duplicate detection, "wins this month" strip | ⬜ Next |
-| **3 — Home + nav** | 06–09: unified "For you" feed, persistent class chip, "what's next?" strip, ⌘K search | ⬜ |
-| **4 — Events & clubs** | 15–18: RSVPs, add-to-calendar, richer club cards, club↔event cross-links | ⬜ |
-| **5 — Identity + officer tools** | 19–26: per-class hues, two-step welcome, `/me` page, celebrations, ⌘K composer, triage view, audience preview, activity dashboard | ⬜ |
-| **6 — Polish** | 27–30: dark mode, focus rings + skip link, share sheets, `@vercel/og` OG images | ⬜ |
+| **3 — Home + nav** | Persistent class chip in nav, ⌘K search, unified "For you" feed | Partial — class chip exists, ⌘K not started |
+| **4 — Events + clubs** | RSVPs, add-to-calendar, richer club cards, club↔event cross-links | Not started |
+| **5 — Identity + officer tools** | `/me` page (student-side), celebrations, ⌘K composer, audience preview, activity dashboard | Not started |
+| **6 — Polish** | Dark mode, focus rings + skip link, share sheets, `@vercel/og` OG images | Not started |
 
-### Phase 2 detail (next up)
-
-**Idea 10 — Status labels on ideas**
-- Add `status` enum column to `Suggestion`: `new | under_review | in_progress | done | declined`
-- Add `statusNote` text column (reason for declined/done)
-- Prisma migration: `npx prisma db push`
-- Officers can update status via admin dashboard or inline on the idea
-- Color-coded pill on public idea card (new=indigo, under_review=amber, in_progress=green, done=green-filled, declined=ink-3)
-
-**Idea 11 — Comments / "me too" threads**
-- New table: `IdeaComment { id, suggestionId, body, createdAt, authorClass }`
-- Lightweight reply thread per idea, school-name only (no avatars)
-- Top comment surfaces below the idea title
-
-**Idea 12 — "My votes" filter**
-- Toggle chip on suggestions page
-- Filter by `voted: true` in client-side state (already tracked)
-
-**Idea 13 — Duplicate detection**
-- While composing, debounce 300 ms then fuzzy-match against open ideas
-- Show up to 3 suggestions: "This already exists — upvote instead?"
-
-**Idea 14 — "Wins this month" strip**
-- Pinned strip above idea board showing ideas moved to `done` this month
+The most strategic next move is probably **share sheets + OG images** (Phase 6) — students share announcements in GroupMe/iMessage, and right now those previews are unstyled. Cheap win, high signal.
 
 ---
 
-## How to Continue in a New Session
+## How to continue in a new session
 
-1. **Read this file** — you now have full context.
-2. **Read the design spec**: `/tmp/website_extract/design_handoff_poly_sga/README.md` and `ideas.jsx` (or re-extract from `~/Downloads/website.zip`).
-3. **Start the dev server**: `cd /Users/tjs/sga-website && npm run dev`
-4. **Implement the next phase**: "Implement Phase 2 (ideas 10–14) following the patterns in this handoff."
+1. **Read PRODUCT.md and DESIGN.md** — strategic anchors, not optional.
+2. **Read this file** for current state.
+3. **Run** `npm run dev` and verify the home page renders (Neon may need waking).
+4. **Run** `npx impeccable --json --fast app components` — must be `[]`.
+5. **Pick a task from "Pending roadmap" above, or take direction from the user.**
+
+When in doubt: editorial pacing, real over decorative, identity stays in its lane, signal-orange ≤10% per screen.
 
 ---
 
-## Quick Reference
+## Quick reference
 
 ```bash
 # Dev
 cd /Users/tjs/sga-website
 npm run dev
 
-# DB
-npx prisma db push          # push schema changes
-npx prisma studio           # GUI
-npx prisma db seed          # seed data
+# Database
+npx prisma db push                     # apply schema; needs DIRECT_URL reachable
+npx prisma generate                    # regenerate client (no DB needed)
+npx prisma studio                      # GUI
+npx prisma db seed                     # seed data
 
 # Deploy
-git push origin main        # Vercel auto-deploys
+git push origin main                   # Vercel auto-deploys
 
-# Type check
-npx tsc --noEmit
+# Verify
+npx tsc --noEmit                       # type check
+npx impeccable --json --fast app components  # design-anti-pattern detector
 ```
+
+Maintainer: **Timothy Foster** (tim.d.foster.jr@gmail.com).
