@@ -21,8 +21,18 @@ const config: Config = {
         poly: {
           orange: "#f26522",
           orangeDark: "#d44e0f",
+          orangeSoft: "#FFE9DC",
           navy: "#0a2342",
           navyDark: "#061629",
+          navySoft: "#E6EAF2",
+          green: "#3E8E5A",
+          amber: "#C68A1E",
+        },
+        class: {
+          "27": "#E15A1F",
+          "28": "#5D6FB8",
+          "29": "#C68A1E",
+          "30": "#7BB66B",
         },
       },
       fontFamily: {

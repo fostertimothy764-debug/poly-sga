@@ -194,8 +194,34 @@ export default function SuggestionsClient({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="card text-center text-sm text-ink-500 py-16">
-          No ideas in this filter yet — be the first to share one.
+        <div className="card flex flex-col items-center text-center gap-4 py-16">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-4xl select-none">
+            ✦
+          </div>
+          <h3 className="font-display text-xl sm:text-2xl font-medium tracking-tight max-w-[240px]">
+            {filter === "all" && targetFilter === "all"
+              ? "No ideas yet."
+              : "No ideas match this filter."}
+          </h3>
+          <p className="text-sm text-ink-600 max-w-xs leading-relaxed">
+            {filter === "all" && targetFilter === "all"
+              ? "You'd be the first. The SGA reads everything that lands here."
+              : "Try a different filter, or be the first to share one."}
+          </p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-accent text-sm px-5 py-2.5"
+          >
+            Drop the first one
+          </button>
+          {(filter !== "all" || targetFilter !== "all") && (
+            <button
+              onClick={() => { setFilter("all"); setTargetFilter("all"); }}
+              className="font-mono text-[10px] uppercase tracking-[0.06em] text-ink-400 hover:text-ink-700 transition-colors"
+            >
+              OR · Browse all ideas →
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-2">

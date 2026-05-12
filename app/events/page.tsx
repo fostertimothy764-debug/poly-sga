@@ -88,7 +88,15 @@ export default async function EventsPage({
             <section className="mb-16">
               <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5">Upcoming</h2>
               {upcoming.length === 0 ? (
-                <div className="card text-center text-sm text-ink-500 py-16">Nothing on the calendar right now.</div>
+                <div className="card flex flex-col items-center text-center gap-4 py-16">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
+                    ◧
+                  </div>
+                  <h3 className="font-display text-xl font-medium tracking-tight">Nothing on the calendar yet.</h3>
+                  <p className="text-sm text-ink-500 max-w-xs leading-relaxed">
+                    SGA events will show up here. Check back before the week starts!
+                  </p>
+                </div>
               ) : (
                 <EventList initial={upcoming} admin={adminCtx} section="upcoming" />
               )}

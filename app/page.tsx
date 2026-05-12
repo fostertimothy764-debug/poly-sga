@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getGrade, gradeLabel } from "@/lib/grade";
+import { GRADES } from "@/lib/grade";
 import { formatDateShort, formatTime, relativeTime } from "@/lib/utils";
 import {
   ArrowRight,
@@ -15,6 +16,21 @@ import MailingListForm from "@/components/mailing-list-form";
 
 export const dynamic = "force-dynamic";
 
+const CLASS_COLORS: Record<string, string> = {
+  "27": "#E15A1F",
+  "28": "#5D6FB8",
+  "29": "#C68A1E",
+  "30": "#7BB66B",
+};
+
+function classColor(grade: string) {
+  return CLASS_COLORS[grade] ?? "#0a2342";
+}
+
+function classSub(grade: string) {
+  return GRADES.find((g) => g.value === grade)?.sub ?? "Students";
+}
+
 export default async function Home() {
   const grade = getGrade();
   const audienceFilter =
@@ -22,19 +38,26 @@ export default async function Home() {
       ? { audience: { in: ["all", grade] } }
       : {};
 
-  const [announcements, events, teamCount, clubCount] = await Promise.all([
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const [announcements, events, teamCount, clubCount, newPostsCount, upcomingCount, trendingCount] = await Promise.all([
     prisma.announcement.findMany({
       where: audienceFilter,
       orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
       take: 3,
     }),
     prisma.event.findMany({
-      where: { ...audienceFilter, startsAt: { gte: new Date() } },
+      where: { ...audienceFilter, startsAt: { gte: now } },
       orderBy: { startsAt: "asc" },
       take: 3,
     }),
     prisma.teamMember.count(),
     prisma.club.count(),
+    prisma.announcement.count({ where: { ...audienceFilter, createdAt: { gte: weekAgo } } }),
+    prisma.event.count({ where: { startsAt: { gte: now, lte: weekAhead } } }),
+    prisma.suggestion.count({ where: { private: false, votes: { gte: 5 } } }),
   ]);
 
   const greeting =
@@ -108,6 +131,50 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ── "This week for you" digest card (Idea 01) ── */}
+      {grade && grade !== "guest" && (
+        <section className="container-page pt-8 pb-0">
+          <div
+            className="rounded-2xl p-5 sm:p-6 text-white"
+            style={{ background: "#0E1E3A" }}
+          >
+            <p
+              className="font-mono text-[10px] uppercase tracking-[0.08em] mb-2"
+              style={{ color: "#f26522" }}
+            >
+              This week · for {classSub(grade)}
+            </p>
+            <h2 className="font-display text-xl sm:text-2xl font-medium leading-snug tracking-tight mb-4">
+              {upcomingCount > 0
+                ? `${upcomingCount} event${upcomingCount !== 1 ? "s" : ""} coming up${newPostsCount > 0 ? ` and ${newPostsCount} new post${newPostsCount !== 1 ? "s" : ""}` : ""} this week.`
+                : newPostsCount > 0
+                ? `${newPostsCount} new post${newPostsCount !== 1 ? "s" : ""} from your SGA this week.`
+                : "Stay tuned — your SGA will be posting updates soon."}
+            </h2>
+            <div className="flex gap-5 text-sm text-white/75">
+              <span>
+                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                  {newPostsCount}
+                </strong>
+                new posts
+              </span>
+              <span>
+                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                  {upcomingCount}
+                </strong>
+                events
+              </span>
+              <span>
+                <strong className="font-display text-2xl font-medium text-white leading-none mr-1">
+                  {trendingCount}
+                </strong>
+                ideas trending
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Quick nav cards ── */}
       <section className="container-page pt-12 pb-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -142,52 +209,64 @@ export default async function Home() {
       <section className="container-page py-16">
         <SectionHeader eyebrow="Latest" title="Announcements" href="/announcements" />
         {announcements.length === 0 ? (
-          <EmptyState message="No announcements yet — check back soon." />
+          <RichEmptyState
+            headline="No announcements yet."
+            body="Your SGA will post updates here soon — check back!"
+            cta={{ label: "See all ideas", href: "/suggestions" }}
+          />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {announcements.map((a, i) => (
-              <Link
-                key={a.id}
-                href="/announcements"
-                className={`card card-hover group flex flex-col ${
-                  i === 0 ? "sm:col-span-2 lg:col-span-1" : ""
-                }`}
-              >
-                {/* Coloured top accent */}
-                <div
-                  className={`-mx-5 -mt-5 mb-4 h-1.5 rounded-t-2xl ${
-                    a.pinned ? "bg-poly-orange" : "bg-ink-200"
+            {announcements.map((a, i) => {
+              const isNew = Date.now() - new Date(a.createdAt).getTime() < 48 * 60 * 60 * 1000;
+              return (
+                <Link
+                  key={a.id}
+                  href="/announcements"
+                  className={`card card-hover group flex flex-col ${
+                    i === 0 ? "sm:col-span-2 lg:col-span-1" : ""
                   }`}
-                />
-                <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
-                  {a.pinned && (
-                    <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                      Pinned
-                    </span>
+                >
+                  {/* Coloured top accent */}
+                  <div
+                    className={`-mx-5 -mt-5 mb-4 h-1.5 rounded-t-2xl ${
+                      a.pinned ? "bg-poly-orange" : "bg-ink-200"
+                    }`}
+                  />
+                  <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
+                    {a.pinned && (
+                      <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
+                        Pinned
+                      </span>
+                    )}
+                    {isNew && !a.pinned && (
+                      <span className="chip border-poly-green/30 bg-poly-green/10 text-poly-green font-mono font-semibold tracking-wide">
+                        NEW
+                      </span>
+                    )}
+                    {a.audience !== "all" && a.audience !== "club" && (
+                      <span className="chip border-poly-navy/30 bg-poly-navy/5 text-poly-navy">
+                        Class of 20{a.audience}
+                      </span>
+                    )}
+                    {a.audience === "club" && (
+                      <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
+                        Club
+                      </span>
+                    )}
+                    <span className="text-ink-500 ml-auto">{relativeTime(a.createdAt)}</span>
+                  </div>
+                  <h3 className="font-display text-xl mb-2 group-hover:text-poly-orange transition-colors leading-snug">
+                    {a.title}
+                  </h3>
+                  <p className="text-sm text-ink-600 line-clamp-3 leading-relaxed flex-1">
+                    {a.body}
+                  </p>
+                  {a.authorName && (
+                    <p className="mt-3 text-xs text-ink-400">— {a.authorName}</p>
                   )}
-                  {a.audience !== "all" && a.audience !== "club" && (
-                    <span className="chip border-poly-navy/30 bg-poly-navy/5 text-poly-navy">
-                      Class of 20{a.audience}
-                    </span>
-                  )}
-                  {a.audience === "club" && (
-                    <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
-                      Club
-                    </span>
-                  )}
-                  <span className="text-ink-500 ml-auto">{relativeTime(a.createdAt)}</span>
-                </div>
-                <h3 className="font-display text-xl mb-2 group-hover:text-poly-orange transition-colors leading-snug">
-                  {a.title}
-                </h3>
-                <p className="text-sm text-ink-600 line-clamp-3 leading-relaxed flex-1">
-                  {a.body}
-                </p>
-                {a.authorName && (
-                  <p className="mt-3 text-xs text-ink-400">— {a.authorName}</p>
-                )}
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
@@ -196,7 +275,11 @@ export default async function Home() {
       <section className="container-page pb-16">
         <SectionHeader eyebrow="Coming up" title="Events" href="/events" />
         {events.length === 0 ? (
-          <EmptyState message="No upcoming events scheduled." />
+          <RichEmptyState
+            headline="Nothing on the calendar yet."
+            body="SGA events will appear here. Check back before the week starts!"
+            cta={{ label: "Browse events", href: "/events" }}
+          />
         ) : (
           <div className="space-y-3">
             {events.map((e) => {
@@ -402,9 +485,28 @@ function SectionHeader({
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function RichEmptyState({
+  headline,
+  body,
+  cta,
+}: {
+  headline: string;
+  body: string;
+  cta?: { label: string; href: string };
+}) {
   return (
-    <div className="card text-center text-sm text-ink-500 py-14">{message}</div>
+    <div className="card flex flex-col items-center justify-center text-center gap-4 py-14">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
+        ✦
+      </div>
+      <h3 className="font-display text-xl font-medium tracking-tight max-w-xs">{headline}</h3>
+      <p className="text-sm text-ink-600 max-w-xs leading-relaxed">{body}</p>
+      {cta && (
+        <Link href={cta.href} className="btn-primary text-xs px-5 py-2.5">
+          {cta.label} <ArrowRight size={13} />
+        </Link>
+      )}
+    </div>
   );
 }
 

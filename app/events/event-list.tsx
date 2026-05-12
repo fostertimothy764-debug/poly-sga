@@ -107,6 +107,11 @@ export default function EventList({
     return false;
   }
 
+  function isSoon(startsAt: Date | string) {
+    const diff = new Date(startsAt).getTime() - Date.now();
+    return diff > 0 && diff < 24 * 60 * 60 * 1000;
+  }
+
   if (items.length === 0) return null;
 
   return (
@@ -155,6 +160,12 @@ export default function EventList({
                 <DateBlock date={e.startsAt} />
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap gap-2 mb-2">
+                    {isSoon(e.startsAt) && (
+                      <span className="chip border-poly-orange/40 bg-poly-orangeSoft text-poly-orangeDark font-mono font-semibold tracking-wide">
+                        SOON
+                        <span className="sr-only">(happening within 24 hours)</span>
+                      </span>
+                    )}
                     {e.audience === "all" ? (
                       <span className="chip">Schoolwide</span>
                     ) : e.audience === "club" ? (

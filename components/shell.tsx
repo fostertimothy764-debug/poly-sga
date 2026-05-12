@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Nav from "./nav";
 import Footer from "./footer";
+import BottomTabBar from "./bottom-tab-bar";
 import type { Grade } from "@/lib/grade";
 import type { AdminRole } from "@/lib/auth";
 
@@ -27,7 +28,8 @@ export default function Shell({
   return (
     <>
       <Nav grade={grade} officerName={officerName} officerRole={officerRole} />
-      <main className="min-h-[calc(100vh-200px)] pt-20">
+      {/* pb-16 on mobile to clear the bottom tab bar */}
+      <main className="min-h-[calc(100vh-200px)] pt-20 pb-16 md:pb-0">
         {/* Thin gradient accent line just below nav */}
         <div
           className="h-px bg-gradient-to-r from-poly-orange/70 via-poly-navy/50 to-transparent"
@@ -38,6 +40,7 @@ export default function Shell({
         </div>
       </main>
       <Footer />
+      <BottomTabBar />
     </>
   );
 }

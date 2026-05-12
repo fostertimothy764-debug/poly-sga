@@ -80,10 +80,22 @@ export default function AnnouncementList({
 
   if (items.length === 0) {
     return (
-      <div className="card text-center text-sm text-ink-500 py-16">
-        No announcements here yet.
+      <div className="card flex flex-col items-center justify-center text-center gap-4 py-16">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-poly-orangeSoft text-poly-orange text-3xl select-none">
+          ✦
+        </div>
+        <h3 className="font-display text-xl font-medium tracking-tight max-w-xs">
+          Nothing here yet.
+        </h3>
+        <p className="text-sm text-ink-500 max-w-xs leading-relaxed">
+          Your SGA will post announcements here. Try switching to "All" to see schoolwide posts.
+        </p>
       </div>
     );
+  }
+
+  function isNew(date: Date | string) {
+    return Date.now() - new Date(date).getTime() < 48 * 60 * 60 * 1000;
   }
 
   return (
@@ -154,6 +166,13 @@ export default function AnnouncementList({
                 {a.pinned && (
                   <span className="chip border-poly-orange/30 bg-poly-orange/10 text-poly-orangeDark">
                     <Pin size={11} /> Pinned
+                    <span className="sr-only">(pinned post)</span>
+                  </span>
+                )}
+                {!a.pinned && isNew(a.createdAt) && (
+                  <span className="chip border-green-300 bg-green-50 text-green-700 font-mono font-semibold tracking-wide">
+                    NEW
+                    <span className="sr-only">(posted in the last 48 hours)</span>
                   </span>
                 )}
                 {a.audience === "all" ? (
