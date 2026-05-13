@@ -9,6 +9,7 @@ import {
   relativeTime,
 } from "@/lib/utils";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
+import PhotoDesk, { type PhotoDeskItem } from "@/components/photo-desk";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ function digestSentence(
     return `${upcoming} event${upcoming !== 1 ? "s" : ""} on the calendar this week, plus ${newPosts} new post${newPosts !== 1 ? "s" : ""} worth reading.`;
   }
   if (upcoming > 0) {
-    return `${upcoming} event${upcoming !== 1 ? "s" : ""} coming up this week — block out the time.`;
+    return `${upcoming} event${upcoming !== 1 ? "s" : ""} coming up this week. Block out the time.`;
   }
   if (newPosts > 0) {
     return `${newPosts} new post${newPosts !== 1 ? "s" : ""} from your SGA this week.`;
@@ -62,9 +63,8 @@ export default async function Home() {
     newPostsCount,
     upcomingCount,
     trendingCount,
-    topIdea,
-    lastAnnouncement,
     totalAnnouncements,
+    recentPhotos,
   ] = await Promise.all([
     prisma.announcement.findMany({
       where: audienceFilter,
@@ -85,17 +85,32 @@ export default async function Home() {
     prisma.suggestion.count({
       where: { private: false, votes: { gte: 5 } },
     }),
-    prisma.suggestion.findFirst({
-      where: { private: false, createdAt: { gte: weekAgo } },
-      orderBy: { votes: "desc" },
-      select: { id: true, body: true, votes: true },
-    }),
-    prisma.announcement.findFirst({
-      orderBy: { createdAt: "desc" },
-      select: { title: true, createdAt: true },
-    }),
     prisma.announcement.count(),
+    prisma.photo.findMany({
+      where: audienceFilter,
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        url: true,
+        title: true,
+        caption: true,
+        authorName: true,
+        eventLabel: true,
+        createdAt: true,
+      },
+    }),
   ]);
+
+  const photoDeskItems: PhotoDeskItem[] = recentPhotos.map((p) => ({
+    id: p.id,
+    url: p.url,
+    title: p.title,
+    caption: p.caption,
+    authorName: p.authorName,
+    eventLabel: p.eventLabel,
+    createdAt: p.createdAt.toISOString(),
+  }));
 
   const lead = announcements[0] ?? null;
   const secondary = announcements.slice(1, 4);
@@ -116,10 +131,6 @@ export default async function Home() {
     month: "long",
     year: "numeric",
   });
-
-  // Activity ribbon — only for engaged (non-guest) users, and only when there's a signal
-  const showRibbon =
-    viewerGrade !== null && (topIdea !== null || lastAnnouncement !== null);
 
   return (
     <div className="container-page py-10 sm:py-14">
@@ -144,39 +155,8 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* ── Live activity ribbon ── */}
-      {showRibbon && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500 mb-9 pb-3 border-b border-ink-200">
-          <span className="font-mono uppercase tracking-[0.1em] text-poly-orange">
-            This week
-          </span>
-          {topIdea && topIdea.votes > 0 && (
-            <>
-              <span className="text-ink-300">·</span>
-              <Link
-                href="/suggestions"
-                className="hover:text-poly-navy transition-colors"
-              >
-                <span className="font-semibold text-poly-navy">
-                  {topIdea.votes} vote{topIdea.votes !== 1 ? "s" : ""}
-                </span>{" "}
-                on &ldquo;{dek(topIdea.body, 60)}&rdquo;
-              </Link>
-            </>
-          )}
-          {lastAnnouncement && (
-            <>
-              <span className="text-ink-300">·</span>
-              <span>
-                Last update{" "}
-                <span className="text-ink-700">
-                  {relativeTime(lastAnnouncement.createdAt)}
-                </span>
-              </span>
-            </>
-          )}
-        </div>
-      )}
+      {/* spacer between masthead and digest */}
+      <div className="mb-9" />
 
       {/* ── Personalized digest (only when grade set) ── */}
       {grade && grade !== "guest" && (
@@ -356,6 +336,9 @@ export default async function Home() {
         </section>
       )}
 
+      {/* ── Photo desk ── */}
+      {photoDeskItems.length > 0 && <PhotoDesk photos={photoDeskItems} />}
+
       {/* ── Secondary announcements stack ── */}
       {secondary.length > 0 && (
         <section className="mb-14">
@@ -378,7 +361,7 @@ export default async function Home() {
                 <Link
                   key={a.id}
                   href="/announcements"
-                  className="group block border-t border-ink-200 pt-5"
+                  className="group block border-t border-ink-200 pt-5 transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-px hover:border-ink-400 focus-visible:outline-none focus-visible:-translate-y-px focus-visible:border-poly-navy"
                   style={accent}
                 >
                   <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.14em] text-ink-500">
@@ -398,7 +381,14 @@ export default async function Home() {
                     {dek(a.body, 140)}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
-                    {a.authorName && <span>— {a.authorName}</span>}
+                    {a.authorName && (
+                      <span>
+                        By{" "}
+                        <span className="text-ink-700 font-medium">
+                          {a.authorName}
+                        </span>
+                      </span>
+                    )}
                     {a.authorName && <span className="text-ink-300">·</span>}
                     <span>{readingTime(a.body)}</span>
                   </div>
