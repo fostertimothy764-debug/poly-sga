@@ -87,7 +87,7 @@ export default async function ClubsPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-xs font-medium text-ink-700 group-hover:text-poly-orange transition-colors">
+                <div className="flex items-center gap-1 text-xs font-medium text-ink-700 group-hover:text-poly-navyDark transition-colors">
                   Learn more <ArrowRight size={12} />
                 </div>
               </div>

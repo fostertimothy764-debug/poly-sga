@@ -110,7 +110,7 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
                     prev[photo.id] ? prev : { ...prev, [photo.id]: true },
                   )
                 }
-                className="absolute inset-0 h-full w-full object-cover transition-opacity ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
+                className="absolute inset-0 h-full w-full object-cover ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
                 style={{
                   opacity: isCurrent && visible && !broken[photo.id] ? 1 : 0,
                   zIndex: isCurrent ? 1 : 0,

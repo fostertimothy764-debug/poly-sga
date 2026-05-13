@@ -71,9 +71,9 @@ function ContactRow({
         href={href}
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
-        className="inline-flex items-center gap-2 text-sm text-ink-700 hover:text-poly-orange transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-ink-700 hover:text-poly-navyDark transition-colors"
       >
-        <span className="text-ink-400 group-hover:text-poly-orange transition-colors">
+        <span className="text-ink-400 group-hover:text-poly-navyDark transition-colors">
           {icon}
         </span>
         <span className="font-mono text-xs">{label}</span>

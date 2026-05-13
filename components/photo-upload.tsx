@@ -140,7 +140,7 @@ export default function PhotoUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={busy}
-        className="text-xs text-ink-500 hover:text-poly-orange transition-colors underline underline-offset-2"
+        className="text-xs text-ink-500 hover:text-poly-navyDark transition-colors underline underline-offset-2"
       >
         {busy ? "Uploading…" : photo ? "Change photo" : "Upload photo"}
       </button>

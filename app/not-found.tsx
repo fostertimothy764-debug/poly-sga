@@ -41,7 +41,7 @@ export default function NotFound() {
           bug. Email{" "}
           <a
             href="mailto:tim.d.foster.jr@gmail.com"
-            className="text-ink-700 underline underline-offset-2 hover:text-poly-orange transition-colors"
+            className="text-ink-700 underline underline-offset-2 hover:text-poly-navyDark transition-colors"
           >
             tim.d.foster.jr@gmail.com
           </a>{" "}
@@ -62,7 +62,7 @@ function NotFoundLink({ href, label }: { href: string; label: string }) {
         <span className="font-display text-xl leading-snug">{label}</span>
         <ArrowRight
           size={16}
-          className="text-ink-400 group-hover:text-poly-orange group-hover:translate-x-0.5 transition-all"
+          className="text-ink-400 group-hover:text-poly-navyDark group-hover:translate-x-0.5 transition-all"
         />
       </Link>
     </li>

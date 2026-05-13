@@ -139,7 +139,7 @@ export default function SuggestionsClient({
           posting publicly?{" "}
           <button
             onClick={() => setShowForm(true)}
-            className="text-poly-navy underline underline-offset-2 hover:text-poly-orange"
+            className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark"
           >
             Use the private form.
           </button>

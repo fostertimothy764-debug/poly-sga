@@ -242,7 +242,7 @@ export default async function Home() {
               <span className="hidden sm:inline">{readingTime(lead.body)}</span>
               <Link
                 href="/announcements"
-                className="ml-auto group flex items-center gap-1 text-poly-navy hover:text-poly-orange transition-colors"
+                className="ml-auto group flex items-center gap-1 text-poly-navy hover:text-poly-navyDark transition-colors"
               >
                 Read more
                 <ArrowRight
@@ -290,7 +290,7 @@ export default async function Home() {
                             })}
                           </span>
                         </div>
-                        <h3 className="font-display text-lg leading-snug mb-1 group-hover:text-poly-orange transition-colors">
+                        <h3 className="font-display text-lg leading-snug mb-1 group-hover:text-poly-navyDark transition-colors">
                           {e.title}
                         </h3>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-500">
@@ -323,7 +323,7 @@ export default async function Home() {
             meantime, browse{" "}
             <Link
               href="/suggestions"
-              className="text-poly-navy underline underline-offset-2 hover:text-poly-orange"
+              className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark"
             >
               ideas the student body is voting on
             </Link>
@@ -370,7 +370,7 @@ export default async function Home() {
                       </span>
                     )}
                   </div>
-                  <h3 className="font-display text-xl leading-snug mb-2 group-hover:text-poly-orange transition-colors">
+                  <h3 className="font-display text-xl leading-snug mb-2 group-hover:text-poly-navyDark transition-colors">
                     {a.title}
                   </h3>
                   <p className="text-sm text-ink-600 leading-relaxed line-clamp-3">

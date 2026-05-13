@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "poly-sga",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/tjs/sga-website",
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

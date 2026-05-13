@@ -90,7 +90,7 @@ export default function Footer() {
               Issues?{" "}
               <a
                 href="mailto:tim.d.foster.jr@gmail.com"
-                className="text-ink-500 hover:text-poly-orange transition-colors underline underline-offset-2"
+                className="text-ink-500 hover:text-poly-navyDark transition-colors underline underline-offset-2"
               >
                 tim.d.foster.jr@gmail.com
               </a>

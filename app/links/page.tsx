@@ -155,7 +155,7 @@ function LinkCard({
 
       {/* Title */}
       <div>
-        <h3 className="font-display text-lg leading-snug group-hover:text-poly-orange transition-colors">
+        <h3 className="font-display text-lg leading-snug group-hover:text-poly-navyDark transition-colors">
           {link.title}
         </h3>
         {link.description && (

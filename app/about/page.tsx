@@ -49,7 +49,7 @@ export default function AboutPage() {
             an idea worth putting on the board, the{" "}
             <Link
               href="/suggestions"
-              className="text-poly-navy underline underline-offset-2 hover:text-poly-orange transition-colors"
+              className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark transition-colors"
             >
               idea board
             </Link>{" "}
@@ -64,7 +64,7 @@ export default function AboutPage() {
             <Row k="Issues">
               <Link
                 href="/scoop"
-                className="text-poly-navy underline underline-offset-2 hover:text-poly-orange transition-colors"
+                className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark transition-colors"
               >
                 The SGA Scoop ↗
               </Link>
@@ -86,7 +86,7 @@ export default function AboutPage() {
               If a link is broken or a name is misspelled, email{" "}
               <a
                 href="mailto:tim.d.foster.jr@gmail.com"
-                className="text-poly-navy underline underline-offset-2 hover:text-poly-orange transition-colors"
+                className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark transition-colors"
               >
                 tim.d.foster.jr@gmail.com
               </a>{" "}
@@ -102,7 +102,7 @@ export default function AboutPage() {
         </p>
         <Link
           href="/"
-          className="group inline-flex items-center gap-1 text-sm text-poly-navy hover:text-poly-orange transition-colors"
+          className="group inline-flex items-center gap-1 text-sm text-poly-navy hover:text-poly-navyDark transition-colors"
         >
           Back to the front page
           <ArrowRight
