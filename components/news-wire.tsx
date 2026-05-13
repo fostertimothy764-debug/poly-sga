@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export type WireItem = {
   label: string;
@@ -15,16 +15,15 @@ const FADE_MS = 280;
 export default function NewsWire({ items }: { items: WireItem[] }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
-  const pausedRef = useRef(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    if (items.length <= 1) return;
+    if (items.length <= 1 || paused) return;
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
     const tick = setInterval(() => {
-      if (pausedRef.current) return;
       if (reduced) {
         setIndex((i) => (i + 1) % items.length);
         return;
@@ -37,18 +36,19 @@ export default function NewsWire({ items }: { items: WireItem[] }) {
     }, ROTATE_MS);
 
     return () => clearInterval(tick);
-  }, [items.length]);
+  }, [items.length, paused]);
 
   if (items.length === 0) return null;
   const item = items[index];
+  const showProgress = items.length > 1;
 
   return (
     <div
       className="fixed inset-x-0 top-20 z-40 h-9 border-b border-ink-200 bg-ink-50"
-      onMouseEnter={() => (pausedRef.current = true)}
-      onMouseLeave={() => (pausedRef.current = false)}
-      onFocusCapture={() => (pausedRef.current = true)}
-      onBlurCapture={() => (pausedRef.current = false)}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
     >
       <div className="container-page h-full flex items-center gap-2 sm:gap-3 text-[11px]">
         <span className="font-mono uppercase tracking-[0.18em] text-ink-700 shrink-0">
@@ -78,6 +78,35 @@ export default function NewsWire({ items }: { items: WireItem[] }) {
           </span>
         </Link>
       </div>
+      {showProgress && (
+        <span
+          key={index}
+          aria-hidden
+          className="absolute left-0 bottom-0 h-px bg-poly-navy/40 wire-progress"
+          style={{
+            animationPlayState: paused ? "paused" : "running",
+          }}
+        />
+      )}
+      <style jsx>{`
+        @keyframes wire-progress {
+          from {
+            width: 0%;
+          }
+          to {
+            width: 100%;
+          }
+        }
+        .wire-progress {
+          animation: wire-progress ${ROTATE_MS}ms linear forwards;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .wire-progress {
+            animation: none;
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }

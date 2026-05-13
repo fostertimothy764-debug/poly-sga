@@ -214,7 +214,7 @@ export default async function Home() {
             <h1 className="h-display text-4xl sm:text-5xl leading-[1.05] mb-5">
               <Link
                 href="/announcements"
-                className="hover:text-poly-navy transition-colors"
+                className="group inline bg-[linear-gradient(theme(colors.poly.navy),theme(colors.poly.navy))] bg-no-repeat bg-left-bottom bg-[length:0%_2px] hover:bg-[length:100%_2px] focus-visible:bg-[length:100%_2px] transition-[background-size] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] pb-1"
               >
                 {lead.title}
               </Link>

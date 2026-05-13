@@ -125,16 +125,17 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
           )}
         </Link>
 
-        <figcaption className="lg:pb-2">
+        <figcaption
+          className={`lg:pb-2 transition-opacity duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            visible ? "opacity-100" : "opacity-0"
+          }`}
+        >
           {p.eventLabel && (
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-poly-navy mb-3">
               {p.eventLabel}
             </p>
           )}
-          <p
-            key={p.id}
-            className="font-display italic text-xl sm:text-2xl font-light leading-snug text-ink-900 mb-3 photo-caption-fade"
-          >
+          <p className="font-display italic text-xl sm:text-2xl font-light leading-snug text-ink-900 mb-3">
             &ldquo;{captionText}&rdquo;
           </p>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
@@ -149,27 +150,6 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
           </div>
         </figcaption>
       </figure>
-
-      <style jsx>{`
-        @keyframes photo-caption-fade {
-          0% {
-            opacity: 0;
-            transform: translateY(4px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .photo-caption-fade {
-          animation: photo-caption-fade 600ms cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .photo-caption-fade {
-            animation: none;
-          }
-        }
-      `}</style>
     </section>
   );
 }
