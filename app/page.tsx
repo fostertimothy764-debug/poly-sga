@@ -10,6 +10,7 @@ import {
 } from "@/lib/utils";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import PhotoDesk, { type PhotoDeskItem } from "@/components/photo-desk";
+import LeadImage from "@/components/lead-image";
 
 export const dynamic = "force-dynamic";
 
@@ -199,12 +200,7 @@ export default async function Home() {
           <article style={classAccentStyle(lead.audience, viewerGrade)}>
             {lead.leadImage && (
               <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-ink-100 mb-6 border border-ink-200">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={lead.leadImage}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
+                <LeadImage src={lead.leadImage} alt={lead.title} />
               </div>
             )}
             <div className="flex flex-wrap items-center gap-3 mb-4 text-[11px] uppercase tracking-[0.14em]">

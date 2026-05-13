@@ -16,6 +16,15 @@ function trimText(s: string, len = 90) {
 }
 
 async function getWireItems(): Promise<WireItem[]> {
+  try {
+    return await fetchWireItems();
+  } catch {
+    // Graceful empty state if the DB is asleep or unreachable.
+    return [];
+  }
+}
+
+async function fetchWireItems(): Promise<WireItem[]> {
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 

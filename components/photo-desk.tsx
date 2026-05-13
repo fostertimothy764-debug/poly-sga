@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { relativeTime } from "@/lib/utils";
 
 export type PhotoDeskItem = {
@@ -29,6 +29,9 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
   const [broken, setBroken] = useState<Record<string, boolean>>({});
+  const containerRef = useRef<HTMLElement | null>(null);
+  const onscreenRef = useRef(true);
+  const hoveredRef = useRef(false);
 
   useEffect(() => {
     if (photos.length <= 1) return;
@@ -36,7 +39,16 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        onscreenRef.current = entries[0]?.isIntersecting ?? true;
+      },
+      { threshold: 0.25 },
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+
     const tick = setInterval(() => {
+      if (!onscreenRef.current || hoveredRef.current) return;
       if (reduced) {
         setIndex((i) => (i + 1) % photos.length);
         return;
@@ -48,16 +60,25 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
       }, FADE_MS);
     }, ROTATE_MS);
 
-    return () => clearInterval(tick);
+    return () => {
+      clearInterval(tick);
+      observer.disconnect();
+    };
   }, [photos.length]);
 
   if (photos.length === 0) return null;
   const p = photos[index];
   const isBroken = broken[p.id];
   const captionText = p.caption || p.title || p.eventLabel || "From the photo desk";
+  const nextIndex = (index + 1) % photos.length;
 
   return (
-    <section className="mb-14 pb-14 border-b border-ink-200">
+    <section
+      ref={containerRef}
+      className="mb-14 pb-14 border-b border-ink-200"
+      onMouseEnter={() => (hoveredRef.current = true)}
+      onMouseLeave={() => (hoveredRef.current = false)}
+    >
       <div className="flex items-baseline justify-between mb-5">
         <h2 className="label text-ink-800">From the photo desk</h2>
         <Link
@@ -72,26 +93,31 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
         <Link
           href="/photos"
           className="relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden bg-ink-100 border border-ink-200 block group"
-          aria-label={`View all photos. Showing: ${altFor(p)}`}
         >
-          {photos.map((photo, i) => (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              key={photo.id}
-              src={photo.url}
-              alt={altFor(photo)}
-              onError={() =>
-                setBroken((prev) =>
-                  prev[photo.id] ? prev : { ...prev, [photo.id]: true },
-                )
-              }
-              className="absolute inset-0 h-full w-full object-cover transition-opacity ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
-              style={{
-                opacity: i === index && visible && !broken[photo.id] ? 1 : 0,
-                zIndex: i === index ? 1 : 0,
-              }}
-            />
-          ))}
+          {photos.map((photo, i) => {
+            const isCurrent = i === index;
+            const isNext = i === nextIndex;
+            return (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                key={photo.id}
+                src={photo.url}
+                alt={isCurrent ? altFor(photo) : ""}
+                loading={isCurrent || isNext ? "eager" : "lazy"}
+                aria-hidden={!isCurrent}
+                onError={() =>
+                  setBroken((prev) =>
+                    prev[photo.id] ? prev : { ...prev, [photo.id]: true },
+                  )
+                }
+                className="absolute inset-0 h-full w-full object-cover transition-opacity ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
+                style={{
+                  opacity: isCurrent && visible && !broken[photo.id] ? 1 : 0,
+                  zIndex: isCurrent ? 1 : 0,
+                }}
+              />
+            );
+          })}
           {isBroken && (
             <div className="absolute inset-0 flex items-center justify-center text-ink-400 text-xs uppercase tracking-[0.14em] font-mono">
               Photo unavailable
