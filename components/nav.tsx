@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { GraduationCap, LayoutDashboard, Menu, ShieldCheck, X } from "lucide-react";
+import {
+  ChevronDown,
+  GraduationCap,
+  LayoutDashboard,
+  Menu,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import type { Grade } from "@/lib/grade";
 import type { AdminRole } from "@/lib/auth";
 
@@ -19,6 +26,36 @@ const links = [
   { href: "/team", label: "Team" },
   { href: "/suggestions", label: "Ideas" },
 ];
+
+const transparencyLinks = [
+  {
+    href: "/minutes",
+    label: "Meeting minutes",
+    blurb: "Every meeting, on the record",
+  },
+  {
+    href: "/initiatives",
+    label: "Initiatives",
+    blurb: "What we're actually working on",
+  },
+  {
+    href: "/budget",
+    label: "Budget",
+    blurb: "Where the money goes",
+  },
+  {
+    href: "/accountability",
+    label: "Accountability",
+    blurb: "Action items, on the clock",
+  },
+  {
+    href: "/voice",
+    label: "Student voice",
+    blurb: "Speak up — anonymously if you want",
+  },
+];
+
+const transparencyHrefs = transparencyLinks.map((l) => l.href);
 
 function gradeShort(g: Grade) {
   if (g === "guest") return "Guest";
@@ -46,8 +83,11 @@ export default function Nav({
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [transparencyOpen, setTransparencyOpen] = useState(false);
+  const transparencyRef = useRef<HTMLDivElement | null>(null);
 
   const isOfficer = !!officerName;
+  const transparencyActive = transparencyHrefs.some((h) => pathname.startsWith(h));
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -58,7 +98,26 @@ export default function Nav({
 
   useEffect(() => {
     setOpen(false);
+    setTransparencyOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!transparencyOpen) return;
+    function onClick(e: MouseEvent) {
+      if (!transparencyRef.current?.contains(e.target as Node)) {
+        setTransparencyOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setTransparencyOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [transparencyOpen]);
 
   async function changeGrade() {
     await fetch("/api/grade", { method: "DELETE" });
@@ -94,7 +153,7 @@ export default function Nav({
         </Link>
 
         {/* Desktop links */}
-        <nav className="hidden md:flex items-center gap-1 flex-1">
+        <nav className="hidden md:flex items-center gap-0.5 flex-1">
           {links.map((l) => {
             const active =
               l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -103,7 +162,7 @@ export default function Nav({
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  "relative px-3.5 py-2 text-sm font-medium rounded-full transition-colors",
+                  "relative px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
                   active
                     ? "text-poly-navy font-semibold"
                     : "text-ink-500 hover:text-poly-navy"
@@ -116,6 +175,73 @@ export default function Nav({
               </Link>
             );
           })}
+
+          {/* Transparency dropdown — Minutes / Initiatives / Budget / Accountability / Voice */}
+          <div className="relative" ref={transparencyRef}>
+            <button
+              type="button"
+              onClick={() => setTransparencyOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={transparencyOpen}
+              className={cn(
+                "relative inline-flex items-center gap-1 px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+                transparencyActive
+                  ? "text-poly-navy font-semibold"
+                  : "text-ink-500 hover:text-poly-navy"
+              )}
+            >
+              {transparencyActive && (
+                <span className="absolute inset-0 rounded-full bg-poly-navy/8" />
+              )}
+              <span className="relative">Transparency</span>
+              <ChevronDown
+                size={13}
+                className={cn(
+                  "relative transition-transform duration-200",
+                  transparencyOpen && "rotate-180"
+                )}
+              />
+            </button>
+            {transparencyOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-72 rounded-2xl border border-ink-200 bg-white shadow-[0_12px_40px_-12px_rgba(10,35,66,0.18)] overflow-hidden animate-fade-in"
+              >
+                <div className="px-4 pt-3 pb-2 border-b border-ink-100">
+                  <p className="text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
+                    Transparency suite
+                  </p>
+                  <p className="text-[11px] text-ink-500 mt-0.5">
+                    Every decision, on the record.
+                  </p>
+                </div>
+                <ul className="py-1.5">
+                  {transparencyLinks.map((l) => {
+                    const active = pathname.startsWith(l.href);
+                    return (
+                      <li key={l.href}>
+                        <Link
+                          href={l.href}
+                          role="menuitem"
+                          className={cn(
+                            "flex flex-col gap-0.5 px-4 py-2.5 transition-colors",
+                            active
+                              ? "bg-poly-navy/5 text-poly-navy"
+                              : "text-ink-800 hover:bg-ink-50"
+                          )}
+                        >
+                          <span className="text-sm font-medium">{l.label}</span>
+                          <span className="text-[11px] text-ink-500 leading-snug">
+                            {l.blurb}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Desktop right side */}
@@ -184,6 +310,36 @@ export default function Nav({
                 </Link>
               );
             })}
+            <div className="mt-3 pt-3 border-t border-ink-200">
+              <p className="px-4 pb-2 text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
+                Transparency
+              </p>
+              {transparencyLinks.map((l) => {
+                const active = pathname.startsWith(l.href);
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className={cn(
+                      "block px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                      active
+                        ? "bg-poly-navy text-white"
+                        : "text-ink-700 hover:bg-ink-100"
+                    )}
+                  >
+                    {l.label}
+                    <span
+                      className={cn(
+                        "block text-[11px] mt-0.5 font-normal",
+                        active ? "text-white/70" : "text-ink-500"
+                      )}
+                    >
+                      {l.blurb}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
             {isOfficer ? (
               <>
                 <Link

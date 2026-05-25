@@ -14,6 +14,12 @@ Student Government Association website for Baltimore Polytechnic Institute. Next
 - **Username-based login** — login uses a short username (e.g. `luke`) instead of an email. Editable from the profile page in seconds.
 - **Stays signed in** — JWT cookie sessions last **30 days** (cleared by signing out, server-side). Done in the backend; nothing extra to do on the frontend.
 - **Clubs** — public clubs index + per-club detail page with announcements, upcoming events, and a "suggest something" shortcut. Admins can add/edit/delete clubs from the dashboard.
+- **Transparency suite** — five public pages backed by full CRUD admin tooling:
+  - `/minutes` — chronological meeting record (general/executive/emergency), with attendees, agenda, **highlighted decisions**, and per-meeting action items. Search + date-range + type filter.
+  - `/initiatives` — kanban board (Proposed → In progress → Completed → Archived). Students can submit new initiative ideas; admins review them in a separate queue and can promote to a real initiative in one click.
+  - `/budget` — semester selector with summary stat cards, SVG pie + bar charts, category accordion of line items, and a prominent **last updated** stamp.
+  - `/accountability` — aggregated view of every action item from every meeting, with per-officer completion rates, overdue highlighting, and filters by officer / status / date / category.
+  - `/voice` — anonymous-or-named submissions of concerns, questions, and suggestions. Each gets a **ticket code** (e.g. `V-A3X9B`) for status lookup at `/voice/<TICKET>`. Upvote system, public resolved feed, admin can respond, mark addressed/declined, or hide from public.
 - **Auth** — JWT cookie sessions, bcrypt-hashed passwords, server-side scope enforcement on every API route.
 - **Minimalist UI** — Inter + Fraunces typography, orange/navy Poly accents, subtle motion, mobile-first.
 
@@ -92,13 +98,26 @@ Logged-in students see posts where audience = `all` OR audience = their class (a
 Edit `.env`:
 
 ```
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://..."      # Neon-pooled connection string
+DIRECT_URL="postgresql://..."        # Neon direct (non-pooled) connection
 JWT_SECRET="<32+ char random string>"
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="poly2026"
 ```
 
 `ADMIN_USERNAME` / `ADMIN_PASSWORD` only seeds the site-admin account; everyone else is set in `prisma/seed.ts`. Re-run `npm run db:seed` after changing.
+
+`DIRECT_URL` is required for `prisma db push` / migrations on Neon; `DATABASE_URL` should use the pooled connection (`...-pooler.aws.neon.tech`).
+
+### Adding the transparency suite to an existing deploy
+
+The five transparency models (`Meeting`, `ActionItem`, `Initiative`, `InitiativeUpdate`, `InitiativeSuggestion`, `BudgetPeriod`, `BudgetLine`, `VoiceSubmission`, `VoiceVote`) are additive — no existing tables are modified. Push the schema once after pulling:
+
+```bash
+npx prisma db push
+```
+
+No new environment variables are required.
 
 ## Deploying to a real website
 
@@ -197,8 +216,19 @@ app/
   admin/
     login/             # officer login (username + password)
     profile/           # edit own login + own team profile
-    page.tsx           # dashboard (scope-aware)
+    page.tsx           # dashboard (scope-aware) + transparency launcher
     dashboard.tsx
+    transparency/      # hub for the four transparency admin pages
+    minutes/           # CRUD for meetings + action items
+    initiatives/       # board + suggestions review queue
+    budget/            # periods + line items
+    voice/             # respond, status, visibility, delete
+  minutes/             # public meeting record
+  initiatives/         # public kanban + student suggestion form
+  budget/              # public budget page with charts
+  accountability/      # aggregated action items
+  voice/               # public voice submissions feed
+    [ticket]/          # public ticket status page
   api/
     auth/login         # POST { username, password }
     auth/logout
@@ -213,6 +243,16 @@ app/
     suggestions/       # GET/POST/PATCH/DELETE
       vote/            # toggle upvote
       redirect/        # forward to another inbox (sga_admin only)
+    minutes/           # CRUD for Meeting (SGA roles)
+    action-items/      # CRUD for ActionItem (status drops are quick-update)
+    initiatives/       # CRUD for Initiative
+      updates/         # post / delete InitiativeUpdate entries
+    initiative-suggestions/  # public POST; SGA-only review/promote
+    budget/            # CRUD for BudgetPeriod
+      lines/           # CRUD for BudgetLine
+    voice/             # POST is public; PATCH/DELETE are SGA
+      vote/            # public upvote toggle (one per browser cookie)
+      ticket/          # public ticket lookup by code
 components/
   nav.tsx, footer.tsx, shell.tsx
 lib/

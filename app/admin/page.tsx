@@ -1,8 +1,17 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getSession, isSga, isSgaAdmin, isSiteAdmin } from "@/lib/auth";
 // isSga covers both sga_admin and sga_member roles
 import { prisma } from "@/lib/db";
 import AdminDashboard from "./dashboard";
+import {
+  ArrowRight,
+  CalendarClock,
+  Lightbulb,
+  MessageSquare,
+  PiggyBank,
+  ShieldCheck,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -89,18 +98,135 @@ export default async function AdminPage() {
       prisma.newsletter.findMany({ orderBy: { publishedAt: "desc" } }),
     ]);
 
+  // Transparency-suite stats — visible to SGA roles only, surfaced as a launcher panel.
+  const showTransparency = isSga(session);
+  const [meetingsCount, openVoice, pendingSuggestions, activeInitiatives, currentBudget] =
+    showTransparency
+      ? await Promise.all([
+          prisma.meeting.count(),
+          prisma.voiceSubmission.count({
+            where: { status: { in: ["received", "under_review"] } },
+          }),
+          prisma.initiativeSuggestion.count({ where: { status: "pending" } }),
+          prisma.initiative.count({
+            where: { column: { in: ["proposed", "in_progress"] } },
+          }),
+          prisma.budgetPeriod.findFirst({
+            where: { current: true },
+            select: { label: true },
+          }),
+        ])
+      : [0, 0, 0, 0, null];
+
   return (
-    <AdminDashboard
-      session={session}
-      capabilities={{
-        canManageTeam: isAdmin,
-        canManageClubs: isAdmin,
-        canManageNewsletter: isSga(session), // sga_admin + sga_member can manage the Scoop
-        canRedirect: isAdmin,
-        canManageAccounts: siteAdminUser,
-        isSiteAdmin: siteAdminUser,
-      }}
-      initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters }}
-    />
+    <>
+      <AdminDashboard
+        session={session}
+        capabilities={{
+          canManageTeam: isAdmin,
+          canManageClubs: isAdmin,
+          canManageNewsletter: isSga(session), // sga_admin + sga_member can manage the Scoop
+          canRedirect: isAdmin,
+          canManageAccounts: siteAdminUser,
+          isSiteAdmin: siteAdminUser,
+        }}
+        initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters }}
+      />
+
+      {showTransparency && (
+        <div className="container-page pb-16">
+          <section className="mt-6 rounded-2xl border border-poly-navy/15 bg-gradient-to-br from-poly-navy/[0.04] to-poly-orange/[0.04] p-6 sm:p-8">
+            <div className="flex flex-wrap items-baseline justify-between gap-3 mb-1">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={14} className="text-poly-navy" />
+                <h2 className="font-display text-xl text-ink-900">
+                  Transparency suite
+                </h2>
+              </div>
+              <Link
+                href="/admin/transparency"
+                className="text-xs text-poly-navy hover:text-poly-navyDark inline-flex items-center gap-1"
+              >
+                Open hub
+                <ArrowRight size={12} />
+              </Link>
+            </div>
+            <p className="text-sm text-ink-600 max-w-2xl mb-6">
+              Manage the public transparency pages from one place — meetings,
+              initiatives, budget, and the student voice queue.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <LauncherTile
+                href="/admin/minutes"
+                Icon={CalendarClock}
+                title="Minutes"
+                stat={`${meetingsCount} on the record`}
+              />
+              <LauncherTile
+                href="/admin/initiatives"
+                Icon={Lightbulb}
+                title="Initiatives"
+                stat={`${activeInitiatives} active`}
+                badge={pendingSuggestions > 0 ? pendingSuggestions : undefined}
+                badgeLabel="suggestion(s)"
+              />
+              <LauncherTile
+                href="/admin/budget"
+                Icon={PiggyBank}
+                title="Budget"
+                stat={currentBudget ? `Current: ${currentBudget.label}` : "No active period"}
+              />
+              <LauncherTile
+                href="/admin/voice"
+                Icon={MessageSquare}
+                title="Voice"
+                stat={`${openVoice} open`}
+                badge={openVoice > 0 ? openVoice : undefined}
+                badgeLabel="open"
+              />
+            </div>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
+
+function LauncherTile({
+  href,
+  Icon,
+  title,
+  stat,
+  badge,
+  badgeLabel,
+}: {
+  href: string;
+  Icon: typeof CalendarClock;
+  title: string;
+  stat: string;
+  badge?: number;
+  badgeLabel?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group relative rounded-xl border border-ink-200 bg-white p-4 hover:border-poly-navy/40 hover:shadow-[0_4px_20px_-8px_rgba(10,35,66,0.15)] transition-all"
+    >
+      {badge !== undefined && (
+        <span
+          className="absolute top-3 right-3 inline-flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-poly-orange text-white text-[10px] font-bold"
+          title={badgeLabel}
+        >
+          {badge}
+        </span>
+      )}
+      <Icon size={14} className="text-poly-navy mb-2" />
+      <p className="font-display text-base text-ink-900">{title}</p>
+      <p className="text-[11px] text-ink-500 mt-0.5 font-mono">{stat}</p>
+      <span className="mt-3 inline-flex items-center gap-1 text-[11px] text-poly-navy group-hover:gap-2 transition-all">
+        Open
+        <ArrowRight size={11} />
+      </span>
+    </Link>
   );
 }

@@ -189,3 +189,159 @@ model ClubRequest {
   status      String   @default("pending")
   createdAt   DateTime @default(now())
 }
+
+// ────────────────────────────────────────────────────────────────
+// Transparency suite: meetings, initiatives, budget, voice
+// ────────────────────────────────────────────────────────────────
+
+// type: "general" | "executive" | "emergency"
+model Meeting {
+  id         String   @id @default(cuid())
+  date       DateTime
+  type       String   @default("general")
+  title      String?  // optional subtitle, e.g. "Mid-semester check-in"
+  attendees  String   // newline-separated officer names
+  agenda     String   // free-text bullets (one per line)
+  decisions  String   // free-text bullets — highlighted on public page
+  notes      String?  // optional free-form notes
+  pinned     Boolean  @default(false)
+  authorName String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  actionItems ActionItem[]
+}
+
+// status: "pending" | "in_progress" | "completed"
+model ActionItem {
+  id          String    @id @default(cuid())
+  meetingId   String
+  description String
+  assignee    String    // free-text officer name (not all are admin accounts)
+  dueDate     DateTime?
+  status      String    @default("pending")
+  category    String?   // optional tag mirroring initiative categories
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([assignee])
+}
+
+// column: "proposed" | "in_progress" | "completed" | "archived"
+// category: "academic" | "facilities" | "events" | "policy" | "resources"
+model Initiative {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  owner        String    // free-text officer name
+  column       String    @default("proposed")
+  category     String    @default("academic")
+  startedAt    DateTime?
+  expectedAt   DateTime?
+  completedAt  DateTime?
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  updates InitiativeUpdate[]
+
+  @@index([column])
+  @@index([category])
+}
+
+model InitiativeUpdate {
+  id           String   @id @default(cuid())
+  initiativeId String
+  body         String
+  authorName   String?
+  createdAt    DateTime @default(now())
+
+  initiative Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+}
+
+// Student-submitted initiative ideas the SGA can promote into Initiatives
+// status: "pending" | "approved" | "declined"
+model InitiativeSuggestion {
+  id             String    @id @default(cuid())
+  title          String
+  description    String    // "why it matters"
+  submitterName  String?
+  submitterGrade String?
+  status         String    @default("pending")
+  reviewerNote   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+// One container per academic semester
+model BudgetPeriod {
+  id        String   @id @default(cuid())
+  label     String   @unique  // "Fall 2026", "Spring 2026"
+  startsAt  DateTime
+  endsAt    DateTime
+  total     Float    @default(0) // overall allocation for the period
+  current   Boolean  @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines BudgetLine[]
+}
+
+// category: "events" | "operations" | "resources" | "reserves" | "other"
+model BudgetLine {
+  id        String   @id @default(cuid())
+  periodId  String
+  category  String   @default("other")
+  label     String
+  allocated Float    @default(0)
+  spent     Float    @default(0)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  period BudgetPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  @@index([periodId])
+  @@index([category])
+}
+
+// type: "concern" | "question" | "suggestion"
+// status: "received" | "under_review" | "addressed" | "declined"
+model VoiceSubmission {
+  id             String   @id @default(cuid())
+  ticket         String   @unique // short human-readable lookup code, e.g. "V-A3X9B"
+  body           String
+  type           String   @default("suggestion")
+  submitterName  String?  // null when submitted anonymously
+  submitterGrade String?
+  isAnonymous    Boolean  @default(true)
+  status         String   @default("received")
+  responseBody   String?
+  respondedAt    DateTime?
+  responderName  String?
+  declineReason  String?
+  votes          Int      @default(0)
+  isPublic       Boolean  @default(true) // admin can hide problematic submissions from the public feed
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  votesList VoiceVote[]
+
+  @@index([status])
+}
+
+model VoiceVote {
+  id           String   @id @default(cuid())
+  submissionId String
+  voterId      String
+  createdAt    DateTime @default(now())
+
+  submission VoiceSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, voterId])
+}
