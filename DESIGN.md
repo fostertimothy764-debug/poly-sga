@@ -114,7 +114,7 @@ The system explicitly rejects three families. It does not look like an LMS porta
 The site treats students as adults reading a publication. Officers appear bylined alongside their posts. Class years are named ("Juniors", "Class of '28") rather than coded ("28"). Density is editorial, not application-shaped: most surfaces breathe, and the home page reads top-to-bottom like a lede with a few features below it.
 
 **Key Characteristics:**
-- Display serif (Fraunces) for headlines; humanist sans (Inter) for everything else.
+- Display serif (Fraunces) for headlines; humanist sans (Plus Jakarta Sans) for everything else.
 - Warm off-white page (#f8f8f7), warm-tinted neutrals throughout. Never pure white, never pure black.
 - One accent (signal-orange) used on ≤10% of any given screen. Navy carries authority; orange carries action.
 - Real photography over illustration. When illustration is unavoidable, it's a thin line mark, not a cartoon.
@@ -166,9 +166,10 @@ The palette is a warm-tinted neutral system with two strong roles (navy for auth
 
 - **Display** (Fraunces, weight 300, clamp(2rem, 5.5vw, 3.75rem), line-height 1.05): Home-page lede, page H1s. Sets the editorial register on first paint. Tracked tight (-0.02em).
 - **Headline** (Fraunces, weight 400, clamp(1.5rem, 3vw, 2.25rem), line-height 1.1): Section ledes, idea-board entries, event titles when they need to feel like features.
-- **Title** (Inter, weight 600, 1.125rem, line-height 1.3): Card titles, announcement titles in lists. Where Fraunces would feel too loud at small sizes.
-- **Body** (Inter, weight 400, 1rem, line-height 1.6): Announcement and event copy, idea descriptions, all reading. Capped at 65–75ch.
-- **Label** (Inter, weight 600, 0.75rem, line-height 1.4, letter-spacing 0.08em, uppercase): Form labels, eyebrows ("THIS WEEK · FOR JUNIORS"), audience chips. The mono-feeling element of the system.
+- **Title** (Plus Jakarta Sans, weight 600, 1.125rem, line-height 1.3): Card titles, announcement titles in lists. Where Fraunces would feel too loud at small sizes.
+- **Body** (Plus Jakarta Sans, weight 400, 1rem, line-height 1.6): Announcement and event copy, idea descriptions, all reading. Capped at 65–75ch.
+- **Label** (Plus Jakarta Sans, weight 600, 0.75rem, line-height 1.4, letter-spacing 0.08em, uppercase): Form labels, eyebrows ("THIS WEEK · FOR JUNIORS"), audience chips. The mono-feeling element of the system.
+- **Eyebrow-mono** (system monospace, weight 400, 0.625–0.6875rem, letter-spacing 0.12–0.16em, uppercase): Section eyebrows and dateline-style meta ("Vol. 3 · Issue No. 12", "Transparency suite") — a quieter, more editorial register than Label, used where the copy should read like a masthead credit line rather than a UI tag.
 
 ### Named Rules
 
@@ -184,11 +185,13 @@ The system is flat by default. Surfaces lift off the page with hairlines (1px `i
 
 ### Shadow Vocabulary
 
-- **Card Hover** (`box-shadow: 0 4px 24px -8px rgba(0,0,0,0.08)`): The only shadow in the system. Triggered by `:hover` on cards. Soft, low, warm — the page feels lifted, not glossy.
+- **Card Hover** (`box-shadow: 0 4px 24px -8px rgba(0,0,0,0.08)`, `.card-hover`): The only *resting-surface* shadow in the system. Triggered by `:hover` on cards. Soft, low, warm — the page feels lifted, not glossy.
+- **Overlay** (`box-shadow: 0 12px 40px -12px rgba(10,35,66,0.18)`, `.shadow-overlay`): For surfaces that float above a backdrop rather than resting on the page — dropdown menus, toasts. Not a Flat-By-Default violation: these aren't cards at rest, they're detached from the page entirely and need to read as such.
+- **Modal** (`box-shadow: 0 24px 60px -20px rgba(10,35,66,0.35)`, `.shadow-modal`): The heavier tier of Overlay, for full dialogs sitting above a dimmed backdrop.
 
 ### Named Rules
 
-**The Flat-By-Default Rule.** Surfaces are flat at rest. The only shadow in the system fires on hover. Resting shadows are forbidden; they read as 2014-Material-card cliché.
+**The Flat-By-Default Rule.** Cards and other surfaces resting on the page are flat at rest; their only shadow fires on hover (Card Hover). Resting shadows on flat surfaces are forbidden — they read as 2014-Material-card cliché. This doesn't apply to genuinely floating surfaces (dropdowns, toasts, modals), which use the Overlay/Modal tiers instead since they're detached from the page, not resting on it.
 
 **The No-Glass Rule.** `backdrop-filter: blur` and frosted-glass effects are forbidden. They belong to a different aesthetic family and will fight the editorial register on every page.
 
@@ -226,7 +229,7 @@ Every component carries the same logic: warm white surface, warm hairline border
 - **Error:** Border shifts to `signal-orange-deep`, helper text below in `ink-muted`. Never red.
 
 ### Navigation
-- **Style:** Top nav, 1px `ink-rule` bottom border, white background, Inter title-weight. Active item carries a `signal-orange` underline.
+- **Style:** Top nav, 1px `ink-rule` bottom border, white background, Plus Jakarta Sans title-weight. Active item carries a `signal-orange` underline.
 - **Mobile:** A fixed 5-tab bottom bar (Home / Events / Ideas / Clubs / Team), Lucide icons at 24px, active tab in `signal-orange` with weight 2.5 stroke. Visible only `<md`.
 - **The two nav layers don't visually conflict:** top nav fades to a small logo + grade chip on mobile; the bottom bar takes over as the primary affordance.
 

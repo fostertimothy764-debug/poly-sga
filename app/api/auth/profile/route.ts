@@ -39,6 +39,7 @@ export async function PATCH(req: NextRequest) {
     username?: string;
     name?: string;
     passwordHash?: string;
+    sessionVersion?: { increment: number };
   } = {};
 
   if (typeof username === "string" && username.trim() && username !== admin.username) {
@@ -68,6 +69,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
     }
     updates.passwordHash = await bcrypt.hash(password, 10);
+    // Invalidate any other previously-issued token for this account — a password
+    // change should actually kick out anyone else holding a copy of the old session.
+    updates.sessionVersion = { increment: 1 };
   }
 
   if (Object.keys(updates).length === 0) {
@@ -79,16 +83,22 @@ export async function PATCH(req: NextRequest) {
     data: updates,
   });
 
-  // Refresh JWT so the session reflects username/name changes
+  // Refresh JWT so the session reflects username/name/password changes (and the new
+  // sessionVersion, if it was just bumped above). Carries the current session's
+  // developer elevation forward unchanged — this is a same-session profile edit, not
+  // a fresh login, so it shouldn't reset (or grant) passkey step-up either way.
   await createSession({
     adminId: updated.id,
     username: updated.username,
     name: updated.name,
     role: updated.role as AdminRole,
     isSiteAdmin: updated.siteAdmin,
+    isDeveloper: updated.isDeveloper,
+    developerElevatedAt: session.developerElevatedAt,
     classYear: updated.classYear,
     clubId: updated.clubId,
     teamMemberId: updated.teamMemberId,
+    sessionVersion: updated.sessionVersion,
   });
 
   return NextResponse.json({ ok: true, username: updated.username, name: updated.name });

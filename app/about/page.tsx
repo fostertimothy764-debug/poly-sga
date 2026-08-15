@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { getSiteSettings, setting } from "@/lib/site-settings";
 
 export const metadata = {
   title: "Colophon · Poly SGA",
@@ -7,11 +8,32 @@ export const metadata = {
     "About this site — who built it, what it runs on, and why.",
 };
 
-export default function AboutPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
   const today = new Date().toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",
   });
+
+  const settings = await getSiteSettings();
+  const introParagraph = setting(
+    settings,
+    "colophon.introParagraph",
+    "This is the Poly SGA website. It exists for one reason: to make it obvious that student government at Baltimore Polytechnic Institute is real work done by real people, not a Linktree and a logo."
+  );
+  const paragraph2 = setting(
+    settings,
+    "colophon.paragraph2",
+    'Every announcement is bylined. Every idea on the board is read by an officer, voted on by students, and tracked through a public status. When something ships, it shows up under "Wins" so the whole student body can see the receipt.'
+  );
+  const paragraph3 = setting(
+    settings,
+    "colophon.paragraph3",
+    "The site is built to read like a small-press paper, not a dashboard. Fraunces for the headlines, Plus Jakarta Sans for the body. Warm-tinted neutrals throughout. One accent color, used sparingly. No mascots, no streak gamification, no Title-Cased calls to action."
+  );
+  const errataEmail = setting(settings, "colophon.errataEmail", "tim.d.foster.jr@gmail.com");
+  const maintainedBy = setting(settings, "footer.credits", "Timothy Foster");
 
   return (
     <div className="container-page py-12 sm:py-20 animate-fade-in">
@@ -27,23 +49,10 @@ export default function AboutPage() {
       <div className="grid gap-12 lg:gap-16 lg:grid-cols-[2fr_1fr]">
         <article className="space-y-5 max-w-prose text-ink-700 leading-relaxed text-lg">
           <p className="first-letter:font-display first-letter:text-6xl first-letter:font-light first-letter:float-left first-letter:mr-3 first-letter:mt-1.5 first-letter:leading-[0.82] first-letter:text-poly-navy">
-            This is the Poly SGA website. It exists for one reason: to make it
-            obvious that student government at Baltimore Polytechnic Institute
-            is real work done by real people, not a Linktree and a logo.
+            {introParagraph}
           </p>
-          <p>
-            Every announcement is bylined. Every idea on the board is read by
-            an officer, voted on by students, and tracked through a public
-            status. When something ships, it shows up under &ldquo;Wins&rdquo;
-            so the whole student body can see the receipt.
-          </p>
-          <p>
-            The site is built to read like a small-press paper, not a
-            dashboard. Fraunces for the headlines, Plus Jakarta Sans for the
-            body. Warm-tinted neutrals throughout. One accent color, used
-            sparingly. No mascots, no streak gamification, no Title-Cased
-            calls to action.
-          </p>
+          <p>{paragraph2}</p>
+          <p>{paragraph3}</p>
           <p>
             If you&apos;re a student and something here is wrong, or you have
             an idea worth putting on the board, the{" "}
@@ -60,7 +69,7 @@ export default function AboutPage() {
         <aside className="space-y-8 text-sm text-ink-600">
           <ColophonSection title="Masthead">
             <Row k="Editor">SGA officers, ex officio</Row>
-            <Row k="Built &amp; maintained">Timothy Foster</Row>
+            <Row k="Built &amp; maintained">{maintainedBy}</Row>
             <Row k="Issues">
               <Link
                 href="/scoop"
@@ -85,10 +94,10 @@ export default function AboutPage() {
             <p className="leading-relaxed">
               If a link is broken or a name is misspelled, email{" "}
               <a
-                href="mailto:tim.d.foster.jr@gmail.com"
+                href={`mailto:${errataEmail}`}
                 className="text-poly-navy underline underline-offset-2 hover:text-poly-navyDark transition-colors"
               >
-                tim.d.foster.jr@gmail.com
+                {errataEmail}
               </a>{" "}
               and we&apos;ll fix it in the next issue.
             </p>

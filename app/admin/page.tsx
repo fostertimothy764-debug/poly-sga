@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getSession, isSga, isSgaAdmin, isSiteAdmin } from "@/lib/auth";
+import { getSession, isSga, isSgaAdmin, isSiteAdmin, isDeveloper, isDeveloperElevated } from "@/lib/auth";
 // isSga covers both sga_admin and sga_member roles
 import { prisma } from "@/lib/db";
 import AdminDashboard from "./dashboard";
@@ -43,8 +43,10 @@ export default async function AdminPage() {
 
   const isAdmin = isSgaAdmin(session);
   const siteAdminUser = isSiteAdmin(session);
+  const developerUser = isDeveloper(session);
+  const developerElevated = isDeveloperElevated(session);
 
-  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters] =
+  const [announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters, passkeys, siteSettings] =
     await Promise.all([
       prisma.announcement.findMany({
         where: audienceWhere,
@@ -96,6 +98,17 @@ export default async function AdminPage() {
       prisma.photo.findMany({ orderBy: { createdAt: "desc" } }),
       // Newsletter — SGA only manages, but all see
       prisma.newsletter.findMany({ orderBy: { publishedAt: "desc" } }),
+      // Developer tier only — every other admin gets empty arrays here
+      developerUser
+        ? prisma.passkey.findMany({
+            where: { adminId: session.adminId },
+            orderBy: { createdAt: "asc" },
+            select: { id: true, deviceLabel: true, createdAt: true, lastUsedAt: true },
+          })
+        : Promise.resolve([]),
+      developerElevated
+        ? prisma.siteSetting.findMany({ orderBy: { key: "asc" } })
+        : Promise.resolve([]),
     ]);
 
   // Transparency-suite stats — visible to SGA roles only, surfaced as a launcher panel.
@@ -129,8 +142,10 @@ export default async function AdminPage() {
           canRedirect: isAdmin,
           canManageAccounts: siteAdminUser,
           isSiteAdmin: siteAdminUser,
+          isDeveloper: developerUser,
+          isDeveloperElevated: developerElevated,
         }}
-        initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters }}
+        initial={{ announcements, events, team, suggestions, unread, clubs, accounts, clubRequests, links, photos, newsletters, passkeys, siteSettings }}
       />
 
       {showTransparency && (
@@ -210,7 +225,7 @@ function LauncherTile({
   return (
     <Link
       href={href}
-      className="group relative rounded-xl border border-ink-200 bg-white p-4 hover:border-poly-navy/40 hover:shadow-[0_4px_20px_-8px_rgba(10,35,66,0.15)] transition-all"
+      className="group relative rounded-xl border border-ink-200 bg-white p-4 hover:border-poly-navy/40 hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all"
     >
       {badge !== undefined && (
         <span

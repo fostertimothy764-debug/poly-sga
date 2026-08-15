@@ -59,7 +59,7 @@ export function useConfirm() {
             onClick={() => close(false)}
           >
             <div
-              className="w-full max-w-sm bg-white rounded-2xl border border-ink-200 shadow-[0_24px_60px_-20px_rgba(10,35,66,0.35)] animate-slide-up p-6"
+              className="w-full max-w-sm bg-white rounded-2xl border border-ink-200 shadow-modal animate-slide-up p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <h2

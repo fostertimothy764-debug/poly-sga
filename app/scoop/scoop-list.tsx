@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExternalLink, Newspaper, Pencil, Trash2, Check, X, Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/confirm-dialog";
+import SmartImage from "@/components/smart-image";
 
 type Issue = {
   id: string;
@@ -158,8 +159,15 @@ function IssueCard({
     <div className={`card overflow-hidden p-0 group relative ${featured ? "sm:grid sm:grid-cols-2" : "flex flex-col"}`}>
       {/* Cover image or gradient */}
       {issue.coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={issue.coverUrl} alt={issue.title} className={`w-full object-cover ${featured ? "h-full min-h-[280px]" : "h-44"}`} />
+        <div className={`relative w-full ${featured ? "h-full min-h-[280px]" : "h-44"}`}>
+          <SmartImage
+            src={issue.coverUrl}
+            alt={issue.title}
+            fill
+            sizes={featured ? "(min-width: 640px) 50vw, 100vw" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
+            className="object-cover"
+          />
+        </div>
       ) : (
         <div className={`bg-gradient-to-br from-poly-navy to-poly-navyDark flex items-center justify-center ${featured ? "h-64 sm:h-full" : "h-32"}`}>
           <Newspaper size={featured ? 48 : 32} className="text-white/30" />
@@ -194,7 +202,7 @@ function IssueCard({
           {issue.issueLabel && (
             <span className="chip border-poly-navy/30 bg-poly-navy/8 text-poly-navy text-[10px]">{issue.issueLabel}</span>
           )}
-          <span className="text-xs text-ink-400">{formatPublished(issue.publishedAt)}</span>
+          <span className="text-xs text-ink-500">{formatPublished(issue.publishedAt)}</span>
         </div>
         <h2 className={`h-display ${featured ? "text-3xl sm:text-4xl mb-4" : "text-xl mb-2"} leading-snug`}>{issue.title}</h2>
         {issue.description && (
@@ -211,7 +219,7 @@ function IssueCard({
               Read full issue <ExternalLink size={14} />
             </a>
           )}
-          {!issue.externalUrl && issue.body && <span className="text-xs text-ink-400 italic">Full issue above</span>}
+          {!issue.externalUrl && issue.body && <span className="text-xs text-ink-500 italic">Full issue above</span>}
         </div>
       </div>
     </div>

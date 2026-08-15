@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession, isSga } from "@/lib/auth";
+import { getSession, isSga, type SessionPayload } from "@/lib/auth";
+import { VALID_CLASS_YEARS } from "@/lib/grade";
 
 // 2 MB expressed as base64 character count (~2.7 MB raw → ~2 MB data)
 const MAX_IMAGE_CHARS = 2_800_000;
+
+// Photo has no clubId field (unlike announcements/events/links), so club officers
+// can't be scoped the same way — their uploads are schoolwide by design, matching
+// app/admin/page.tsx's "Photos — all officers can upload". What we DO need to stop is
+// a class officer escalating their own upload to audience:"all" or another class's
+// year, so audience is resolved server-side from the session rather than trusted
+// verbatim from the request body.
+function resolvePhotoAudience(session: SessionPayload, requested: unknown): string {
+  if (isSga(session)) {
+    return typeof requested === "string" && (["all", ...VALID_CLASS_YEARS] as string[]).includes(requested)
+      ? requested
+      : "all";
+  }
+  if (session.role === "class" && session.classYear) {
+    return session.classYear;
+  }
+  return "all";
+}
 
 // Public GET: only return audience:"all" photos. Authenticated officers see everything.
 export async function GET(req: NextRequest) {
@@ -36,7 +55,7 @@ export async function POST(req: NextRequest) {
       url: url.trim(),
       title: title?.trim() || null,
       caption: caption?.trim() || null,
-      audience: audience || "all",
+      audience: resolvePhotoAudience(session, audience),
       authorName: authorName?.trim() || session.name,
       eventLabel: eventLabel?.trim() || null,
     },

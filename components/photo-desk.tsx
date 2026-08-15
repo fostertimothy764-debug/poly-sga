@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { relativeTime } from "@/lib/utils";
+import SmartImage from "@/components/smart-image";
 
 export type PhotoDeskItem = {
   id: string;
@@ -98,11 +99,12 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
             const isCurrent = i === index;
             const isNext = i === nextIndex;
             return (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
+              <SmartImage
                 key={photo.id}
                 src={photo.url}
                 alt={isCurrent ? altFor(photo) : ""}
+                fill
+                sizes="(min-width: 1024px) 60vw, 100vw"
                 loading={isCurrent || isNext ? "eager" : "lazy"}
                 aria-hidden={!isCurrent}
                 onError={() =>
@@ -110,7 +112,7 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
                     prev[photo.id] ? prev : { ...prev, [photo.id]: true },
                   )
                 }
-                className="absolute inset-0 h-full w-full object-cover ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
+                className="object-cover ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.01] [transition-property:opacity,transform] duration-[600ms]"
                 style={{
                   opacity: isCurrent && visible && !broken[photo.id] ? 1 : 0,
                   zIndex: isCurrent ? 1 : 0,
@@ -119,7 +121,7 @@ export default function PhotoDesk({ photos }: { photos: PhotoDeskItem[] }) {
             );
           })}
           {isBroken && (
-            <div className="absolute inset-0 flex items-center justify-center text-ink-400 text-xs uppercase tracking-[0.14em] font-mono">
+            <div className="absolute inset-0 flex items-center justify-center text-ink-500 text-xs uppercase tracking-[0.14em] font-mono">
               Photo unavailable
             </div>
           )}

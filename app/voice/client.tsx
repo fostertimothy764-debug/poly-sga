@@ -69,12 +69,14 @@ const STATUS_META: Record<
 };
 
 type Tab = "open" | "resolved" | "all";
+type Sort = "newest" | "top";
 
 export default function VoiceClient({ initial }: { initial: VoiceItem[] }) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
   const [tab, setTab] = useState<Tab>("open");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sort, setSort] = useState<Sort>("newest");
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [ticketCode, setTicketCode] = useState("");
@@ -87,18 +89,26 @@ export default function VoiceClient({ initial }: { initial: VoiceItem[] }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return items.filter((i) => {
-      if (tab === "open" && (i.status === "addressed" || i.status === "declined")) return false;
-      if (tab === "resolved" && i.status !== "addressed" && i.status !== "declined") return false;
-      if (typeFilter !== "all" && i.type !== typeFilter) return false;
-      if (!q) return true;
-      return (
-        i.body.toLowerCase().includes(q) ||
-        i.ticket.toLowerCase().includes(q) ||
-        i.responseBody?.toLowerCase().includes(q)
-      );
-    });
-  }, [items, tab, typeFilter, query]);
+    return items
+      .filter((i) => {
+        if (tab === "open" && (i.status === "addressed" || i.status === "declined")) return false;
+        if (tab === "resolved" && i.status !== "addressed" && i.status !== "declined") return false;
+        if (typeFilter !== "all" && i.type !== typeFilter) return false;
+        if (!q) return true;
+        return (
+          i.body.toLowerCase().includes(q) ||
+          i.ticket.toLowerCase().includes(q) ||
+          i.responseBody?.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => {
+        if (sort === "top") {
+          if (b.votes !== a.votes) return b.votes - a.votes;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+  }, [items, tab, typeFilter, sort, query]);
 
   async function toggleVote(id: string) {
     setItems((prev) =>
@@ -276,11 +286,11 @@ export default function VoiceClient({ initial }: { initial: VoiceItem[] }) {
             label={`All · ${counts.total}`}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="input py-2 text-xs min-w-[10rem]"
+            className="input py-2 text-xs min-w-[10rem] flex-shrink-0"
           >
             <option value="all">All types</option>
             {TYPES.map((t) => (
@@ -289,14 +299,28 @@ export default function VoiceClient({ initial }: { initial: VoiceItem[] }) {
               </option>
             ))}
           </select>
-          <span className="relative">
+          <div className="flex gap-1 p-1 rounded-full bg-ink-100 flex-shrink-0">
+            {(["newest", "top"] as Sort[]).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSort(s)}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all whitespace-nowrap ${
+                  sort === s ? "bg-white text-ink-900" : "text-ink-600 hover:text-ink-900"
+                }`}
+              >
+                {s === "newest" ? "Newest" : "Most voted"}
+              </button>
+            ))}
+          </div>
+          <span className="relative min-w-[10rem] flex-shrink-0">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search…"
-              className="input pl-9 py-2 text-xs"
+              className="input pl-9 py-2 text-xs w-full"
             />
           </span>
         </div>
@@ -329,7 +353,7 @@ function TabBtn({
       onClick={onClick}
       className={cn(
         "px-4 py-1.5 rounded-full text-xs font-medium transition-colors",
-        active ? "bg-white text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"
+        active ? "bg-white text-ink-900" : "text-ink-600 hover:text-ink-900"
       )}
     >
       {label}

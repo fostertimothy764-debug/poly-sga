@@ -2,9 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* --font-sans / --font-display are set by next/font/google via a className on <html> (app/layout.tsx) */
+
+/* RGB triplets (not hex) — tailwind.config.ts reads these through rgb(var(--color-x) / <alpha>)
+ * so Tailwind's opacity-modifier classes (bg-poly-orange/25, border-ink-200/60, etc.) keep
+ * working. A developer-set color.<token> SiteSetting overrides one of these at runtime via a
+ * :root block injected in app/layout.tsx — see lib/site-settings.ts / colorOverrideStyle(). */
 :root {
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --color-ink-50: 248 248 247;
+  --color-ink-100: 238 237 233;
+  --color-ink-200: 217 214 207;
+  --color-ink-300: 187 182 171;
+  --color-ink-400: 146 140 126;
+  --color-ink-500: 115 110 98;
+  --color-ink-600: 90 85 75;
+  --color-ink-700: 70 66 58;
+  --color-ink-800: 46 44 38;
+  --color-ink-900: 28 27 24;
+  --color-ink-950: 15 14 12;
+  --color-poly-orange: 242 101 34;
+  --color-poly-orangeDark: 212 78 15;
+  --color-poly-orangeSoft: 255 233 220;
+  --color-poly-navy: 10 35 66;
+  --color-poly-navyDark: 6 22 41;
+  --color-poly-navySoft: 230 234 242;
+  --color-poly-green: 62 142 90;
+  --color-poly-amber: 198 138 30;
 }
 
 @layer base {
@@ -36,6 +59,14 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-ink-300;
   }
+
+  /* Default keyboard focus indicator for every button, per DESIGN.md's Buttons spec
+     (2px signal-orange, 2px offset). Components with their own explicit focus-visible
+     treatment (e.g. .btn) take precedence via specificity — this just closes the gap
+     for the many raw <button> icon/toggle/filter elements that had no focus state at all. */
+  button:focus-visible {
+    @apply outline-none ring-2 ring-poly-orange ring-offset-2 ring-offset-ink-50;
+  }
 }
 
 @layer components {
@@ -65,6 +96,19 @@
 
   .card-hover {
     @apply hover:border-ink-300 hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)];
+  }
+
+  /* Floating surfaces that sit above a backdrop (dropdowns, toasts) need to visually
+     separate from the page — a lighter tier of the same warm-navy-tinted shadow used
+     for card hover, not a decorative resting shadow on a flat surface. */
+  .shadow-overlay {
+    @apply shadow-[0_12px_40px_-12px_rgba(10,35,66,0.18)];
+  }
+
+  /* Full dialogs/modals sit further above the backdrop and read as detached from the
+     page entirely, so they carry a heavier version of the same overlay shadow. */
+  .shadow-modal {
+    @apply shadow-[0_24px_60px_-20px_rgba(10,35,66,0.35)];
   }
 
   .input {

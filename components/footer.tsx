@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 
-export default function Footer() {
+export type FooterCopy = {
+  tagline: string;
+  credits: string;
+  contactEmail: string;
+};
+
+export default function Footer({ copy }: { copy: FooterCopy }) {
   const router = useRouter();
   const [showTop, setShowTop] = useState(false);
 
@@ -43,9 +49,7 @@ export default function Footer() {
                 Poly <span className="text-poly-orange">SGA</span>
               </p>
               <p className="text-xs text-ink-500 leading-relaxed max-w-xs">
-                Baltimore Polytechnic Institute · Student Government Association.
-                Open by default — every meeting, dollar, and decision in the
-                open.
+                {copy.tagline}
               </p>
             </div>
 
@@ -59,6 +63,12 @@ export default function Footer() {
                 </Link>
                 <Link href="/events" className="hover:text-poly-navy transition-colors">
                   Events
+                </Link>
+                <Link href="/scoop" className="hover:text-poly-navy transition-colors">
+                  Scoop
+                </Link>
+                <Link href="/photos" className="hover:text-poly-navy transition-colors">
+                  Photos
                 </Link>
                 <Link href="/links" className="hover:text-poly-navy transition-colors">
                   Links
@@ -120,10 +130,10 @@ export default function Footer() {
           </div>
 
           {/* Bottom row — credits + last updated */}
-          <div className="border-t border-ink-100 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-ink-400">
+          <div className="border-t border-ink-100 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-ink-500">
             <p>
               Developed &amp; maintained by{" "}
-              <span className="text-ink-600 font-medium">Timothy Foster</span>
+              <span className="text-ink-600 font-medium">{copy.credits}</span>
               <span className="mx-2 text-ink-300">·</span>
               Last updated{" "}
               <span className="text-ink-500" suppressHydrationWarning>
@@ -137,10 +147,10 @@ export default function Footer() {
             <p>
               Issues?{" "}
               <a
-                href="mailto:tim.d.foster.jr@gmail.com"
+                href={`mailto:${copy.contactEmail}`}
                 className="text-ink-500 hover:text-poly-navyDark transition-colors underline underline-offset-2"
               >
-                tim.d.foster.jr@gmail.com
+                {copy.contactEmail}
               </a>
             </p>
           </div>

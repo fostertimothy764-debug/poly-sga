@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { relativeTime } from "@/lib/utils";
-import StatusPill from "@/components/status-pill";
+import StatusPill, { STATUS_OPTIONS } from "@/components/status-pill";
 
 type Item = {
   id: string;
@@ -80,6 +80,7 @@ export default function SuggestionsClient({
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
   const [targetFilter, setTargetFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sort, setSort] = useState<Sort>("top");
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function SuggestionsClient({
   const filtered = items
     .filter((i) => filter === "all" || i.category === filter)
     .filter((i) => targetFilter === "all" || i.target === targetFilter)
+    .filter((i) => statusFilter === "all" || (i.status || "new") === statusFilter)
     .sort((a, b) => {
       if (sort === "new")
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -194,6 +196,19 @@ export default function SuggestionsClient({
           <option value="club">Clubs</option>
         </select>
 
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="rounded-full bg-ink-100 px-3.5 py-1.5 text-xs font-medium text-ink-700 border-0 focus:ring-2 focus:ring-ink-900 focus:outline-none"
+        >
+          <option value="all">Any status</option>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+
         <div className="flex gap-1 p-1 rounded-full bg-ink-100 ml-auto">
           {(["top", "new"] as Sort[]).map((s) => (
             <button
@@ -201,7 +216,7 @@ export default function SuggestionsClient({
               onClick={() => setSort(s)}
               className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all capitalize ${
                 sort === s
-                  ? "bg-white text-ink-900 shadow-sm"
+                  ? "bg-white text-ink-900"
                   : "text-ink-600 hover:text-ink-900"
               }`}
             >
@@ -219,12 +234,12 @@ export default function SuggestionsClient({
       {filtered.length === 0 ? (
         <div className="border-t border-ink-200 py-12 max-w-xl">
           <h3 className="font-display text-2xl leading-snug mb-3">
-            {filter === "all" && targetFilter === "all"
+            {filter === "all" && targetFilter === "all" && statusFilter === "all"
               ? "No ideas yet."
               : "Nothing matches that filter."}
           </h3>
           <p className="text-sm text-ink-600 leading-relaxed mb-6">
-            {filter === "all" && targetFilter === "all"
+            {filter === "all" && targetFilter === "all" && statusFilter === "all"
               ? "You'd be the first. SGA reads everything that lands here."
               : "Try a different filter, or be the first to share one."}
           </p>
@@ -235,9 +250,9 @@ export default function SuggestionsClient({
             >
               Share an idea
             </button>
-            {(filter !== "all" || targetFilter !== "all") && (
+            {(filter !== "all" || targetFilter !== "all" || statusFilter !== "all") && (
               <button
-                onClick={() => { setFilter("all"); setTargetFilter("all"); }}
+                onClick={() => { setFilter("all"); setTargetFilter("all"); setStatusFilter("all"); }}
                 className="text-sm text-ink-600 underline underline-offset-2 hover:text-poly-navy transition-colors"
               >
                 Browse all ideas
@@ -282,7 +297,7 @@ function Pills({
           onClick={() => onChange(o.value)}
           className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
             value === o.value
-              ? "bg-white text-ink-900 shadow-sm"
+              ? "bg-white text-ink-900"
               : "text-ink-600 hover:text-ink-900"
           }`}
         >
@@ -301,7 +316,7 @@ function SuggestionRow({ item, onVote }: { item: Item; onVote: () => void }) {
         onClick={onVote}
         className={`flex-shrink-0 flex flex-col items-center justify-center rounded-xl px-3 py-2 min-w-[3.5rem] transition-all active:scale-95 ${
           item.voted
-            ? "bg-poly-orange text-white shadow-[0_4px_12px_-4px_rgba(242,101,34,0.5)]"
+            ? "bg-poly-orange text-white"
             : "bg-ink-100 text-ink-700 hover:bg-ink-200"
         }`}
         aria-label={item.voted ? "Remove upvote" : "Upvote"}
@@ -436,7 +451,7 @@ function SubmitModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-3xl border border-ink-200 shadow-[0_24px_60px_-20px_rgba(10,35,66,0.35)] animate-slide-up max-h-[92vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white rounded-3xl border border-ink-200 shadow-modal animate-slide-up max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {done ? (
@@ -540,7 +555,7 @@ function SubmitModal({
                 }
                 className="input resize-none"
               />
-              <div className="mt-1 text-right text-[11px] text-ink-400">
+              <div className="mt-1 text-right text-[11px] text-ink-500">
                 {body.length}/2000
               </div>
             </div>
@@ -619,7 +634,7 @@ function SubmitModal({
             <div>
               <label className="label">
                 Contact{" "}
-                <span className="font-normal text-ink-400">
+                <span className="font-normal text-ink-500">
                   (optional — only officers see this)
                 </span>
               </label>

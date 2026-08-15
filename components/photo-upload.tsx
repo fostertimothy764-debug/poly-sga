@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Camera, Loader2, X } from "lucide-react";
+import SmartImage from "@/components/smart-image";
 
 /** Compress + resize an image file to a JPEG data-URL small enough to store in Postgres */
 function compressImage(
@@ -87,14 +88,15 @@ export default function PhotoUpload({
 
   return (
     <div className="flex flex-col items-start gap-2">
-      <div className="relative group">
+      <div className={`relative group ${photo ? dim : ""}`}>
         {/* Photo / initials circle */}
         {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <SmartImage
             src={photo}
             alt="Photo preview"
-            className={`${dim} rounded-2xl object-cover border border-ink-200 flex-shrink-0`}
+            fill
+            sizes={size === "lg" ? "80px" : "48px"}
+            className="rounded-2xl object-cover border border-ink-200"
           />
         ) : (
           <div

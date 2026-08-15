@@ -25,7 +25,11 @@ export default function WelcomeClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ grade: picked }),
     });
-    const dest = params.get("from") || "/";
+    // Only ever navigate to a same-site relative path — `from` is attacker-controllable
+    // (anyone can link straight to /welcome?from=https://evil.example/admin/login), so
+    // an absolute or protocol-relative value must never be trusted verbatim.
+    const raw = params.get("from");
+    const dest = raw && /^\/(?!\/)/.test(raw) ? raw : "/";
     // Use a hard navigation so the cookie is fully committed before the
     // new page loads — avoids the router.push + router.refresh race condition
     // that caused the spinner to hang indefinitely.
@@ -53,7 +57,7 @@ export default function WelcomeClient() {
               onClick={() => setPicked(g.value)}
               className={`group flex items-center justify-between rounded-2xl border p-4 sm:p-5 text-left transition-all ${
                 picked === g.value
-                  ? "border-poly-navy bg-white shadow-[0_4px_24px_-8px_rgba(10,35,66,0.15)]"
+                  ? "border-poly-navy bg-white ring-2 ring-poly-navy/15"
                   : "border-ink-200 bg-white hover:border-ink-300"
               }`}
             >
@@ -92,7 +96,7 @@ export default function WelcomeClient() {
           )}
         </button>
 
-        <p className="text-center text-xs text-ink-400 mt-6">
+        <p className="text-center text-xs text-ink-500 mt-6">
           You can change this anytime from the footer.
         </p>
 

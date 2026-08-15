@@ -47,7 +47,7 @@ export function Toast({
   return (
     <div
       key={toast.id}
-      className={`fixed bottom-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-[0_12px_28px_-12px_rgba(10,35,66,0.35)] border animate-slide-up max-w-xs ${
+      className={`fixed bottom-20 right-6 z-[200] flex items-center gap-3 px-4 py-3 rounded-xl shadow-overlay border animate-slide-up max-w-xs ${
         isOk
           ? "bg-white border-poly-green/30 text-ink-800"
           : "bg-white border-poly-orange/30 text-poly-orangeDark"

@@ -95,7 +95,7 @@ export default async function TransparencyHub() {
             <Link
               key={t.href}
               href={t.href}
-              className="group relative rounded-2xl border border-ink-200 bg-white p-6 hover:border-poly-navy/40 hover:shadow-[0_8px_30px_-12px_rgba(10,35,66,0.18)] transition-all"
+              className="group relative rounded-2xl border border-ink-200 bg-white p-6 hover:border-poly-navy/40 hover:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.08)] transition-all"
             >
               {t.badge !== undefined && (
                 <span className="absolute top-4 right-4 inline-flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-poly-orange text-white text-[10px] font-bold">

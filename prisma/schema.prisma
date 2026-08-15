@@ -14,20 +14,58 @@ datasource db {
 //   class       = class officer (post to own class only); classYear set
 //   club        = club officer (post to own club only); clubId set
 model Admin {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  passwordHash String
-  name         String
-  role         String   @default("sga_member")
-  siteAdmin    Boolean  @default(false)
-  classYear    String?
-  clubId       String?
-  teamMemberId String?  @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  username            String    @unique
+  passwordHash        String
+  name                String
+  role                String    @default("sga_member")
+  siteAdmin           Boolean   @default(false)
+  // Site-owner-only super tier, orthogonal to role/siteAdmin. Deliberately absent from
+  // every field list in app/api/admin/accounts/route.ts — no admin, including a
+  // siteAdmin, can grant this through the product. Only set via scripts/grant-developer.ts.
+  isDeveloper         Boolean   @default(false)
+  classYear           String?
+  clubId              String?
+  teamMemberId        String?   @unique
+  // Bumped on logout / password change so previously-issued JWTs stop verifying —
+  // the token itself can't be revoked (stateless), but embedding this value in the
+  // token and checking it here makes old copies stop working immediately.
+  sessionVersion       Int       @default(0)
+  failedLoginAttempts  Int       @default(0)
+  lockedUntil          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   club       Club?       @relation(fields: [clubId], references: [id], onDelete: SetNull)
   teamMember TeamMember? @relation(fields: [teamMemberId], references: [id], onDelete: SetNull)
+  passkeys   Passkey[]
+}
+
+// WebAuthn credentials — only ever created for isDeveloper accounts, used as the
+// step-up 2FA required before any developer-only (site settings) action.
+model Passkey {
+  id           String    @id @default(cuid())
+  adminId      String
+  credentialId String    @unique // base64url credential ID from the authenticator
+  publicKey    String              // base64url COSE public key
+  counter      Int       @default(0)
+  deviceLabel  String?             // e.g. "MacBook Touch ID", set at registration time
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+}
+
+// Open-ended key/value store for developer-editable site content (footer copy,
+// colophon prose, color token overrides, etc.). A key only affects the site once
+// some component is coded to read it — see lib/site-settings.ts.
+model SiteSetting {
+  key           String   @id
+  value         String
+  updatedAt     DateTime @updatedAt
+  updatedByName String?
 }
 
 model Club {
@@ -165,9 +203,24 @@ model ResourceLink {
   clubId      String?
   pinned      Boolean  @default(false)
   authorName  String?
+  // Stable ownership key (Admin.id) — authorName is a free-text display label an
+  // officer can change on their own profile, so it can't be trusted for access
+  // control on its own. Nullable: links created before this field existed have no
+  // recorded owner and can only be edited/deleted by SGA or a same-scope officer.
+  authorId    String?
   createdAt   DateTime @default(now())
 
   club Club? @relation(fields: [clubId], references: [id], onDelete: SetNull)
+}
+
+// Lightweight per-IP/per-route hit log backing lib/rate-limit.ts's fixed-window
+// limiter on public write endpoints. Rows are pruned opportunistically on write.
+model RateLimitHit {
+  id        String   @id @default(cuid())
+  key       String // e.g. "suggestions:203.0.113.5"
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }
 
 // Mailing list — students subscribe to receive SGA updates via email

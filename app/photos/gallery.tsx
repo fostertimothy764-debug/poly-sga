@@ -65,7 +65,7 @@ export default function PhotoGallery({
             <h2 className="text-xs uppercase tracking-[0.2em] text-ink-500 mb-5 flex items-center gap-3">
               {label}
               <span className="flex-1 h-px bg-ink-100" />
-              <span className="text-ink-400">{photos.length} photo{photos.length !== 1 ? "s" : ""}</span>
+              <span className="text-ink-500">{photos.length} photo{photos.length !== 1 ? "s" : ""}</span>
             </h2>
             <PhotoGrid photos={photos} onOpen={(i) => open(photos, i)} />
           </section>
@@ -116,6 +116,10 @@ export default function PhotoGallery({
             className="relative max-w-4xl max-h-[85vh] mx-16 flex flex-col items-center gap-3"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Plain <img>, not next/image: photo dimensions are unknown per-upload (no
+                stored width/height), so this needs the browser's natural intrinsic sizing —
+                next/image requires a fixed width/height or fill, which would force every
+                photo to the same aspect ratio. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={lightbox.photos[lightbox.index].id}
@@ -163,6 +167,8 @@ function PhotoGrid({ photos, onOpen }: { photos: Photo[]; onOpen: (i: number) =>
           onClick={() => onOpen(i)}
           className="group w-full break-inside-avoid overflow-hidden rounded-2xl border border-ink-100 relative block"
         >
+          {/* Plain <img>, not next/image: masonry grid relies on each photo's natural
+              aspect ratio (unknown/unstored) for its column height — see lightbox note above. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={p.url}

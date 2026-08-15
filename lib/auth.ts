@@ -1,11 +1,22 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { VALID_CLASS_YEARS } from "@/lib/grade";
+import { prisma } from "@/lib/db";
 
 const SESSION_COOKIE = "poly_sga_session";
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "dev-fallback-please-set-jwt-secret-32chars+"
-);
+const SESSION_LIFETIME = "30d";
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+
+// No fallback on purpose: this repo is public, so a hardcoded default secret would let
+// anyone forge an admin session (role: "sga_admin") the moment JWT_SECRET is ever unset
+// on any deployment. Fail loudly instead of signing tokens with a known-public key.
+if (!process.env.JWT_SECRET) {
+  throw new Error(
+    "JWT_SECRET is not set. Set a random 32+ character string in your environment " +
+      "(e.g. `openssl rand -base64 32`) — there is no default, by design."
+  );
+}
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export type AdminRole = "sga_admin" | "sga_member" | "class" | "club";
 
@@ -15,16 +26,22 @@ export type SessionPayload = {
   name: string;
   role: AdminRole;
   isSiteAdmin: boolean;
+  isDeveloper: boolean;
+  // Epoch ms of the last successful passkey step-up, or null if never elevated this
+  // session. Distinct from isDeveloper so a stolen/leaked 30-day session cookie can't
+  // carry developer privileges indefinitely — see isDeveloperElevated below.
+  developerElevatedAt: number | null;
   classYear: string | null;
   clubId: string | null;
   teamMemberId: string | null;
+  sessionVersion: number;
 };
 
 export async function createSession(payload: SessionPayload) {
   const token = await new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("365d")
+    .setExpirationTime(SESSION_LIFETIME)
     .sign(secret);
 
   cookies().set(SESSION_COOKIE, token, {
@@ -32,12 +49,33 @@ export async function createSession(payload: SessionPayload) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 365,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }
 
-export async function destroySession() {
+/**
+ * Clears the browser's cookie AND bumps the account's sessionVersion server-side, so
+ * any other copy of this admin's token (a different browser, a stolen/leaked cookie)
+ * stops verifying immediately instead of staying valid until its 30-day expiry.
+ */
+export async function destroySession(adminId?: string) {
   cookies().delete(SESSION_COOKIE);
+  if (adminId) {
+    await prisma.admin.update({
+      where: { id: adminId },
+      data: { sessionVersion: { increment: 1 } },
+    }).catch(() => {}); // account may already be deleted — cookie clear above still succeeds
+  }
+}
+
+/** Bumps sessionVersion without touching the current browser's cookie — used when an
+ *  admin's password changes, so every OTHER previously-issued token for that account
+ *  is invalidated (the caller then issues a fresh session for the current request). */
+export async function revokeOtherSessions(adminId: string) {
+  await prisma.admin.update({
+    where: { id: adminId },
+    data: { sessionVersion: { increment: 1 } },
+  });
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
@@ -45,15 +83,29 @@ export async function getSession(): Promise<SessionPayload | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret);
+    const adminId = payload.adminId as string;
+    const tokenVersion = (payload.sessionVersion as number) ?? 0;
+
+    // Cross-check against the DB so logout / password-change actually revoke old
+    // tokens instead of relying purely on client-side cookie deletion + 30-day expiry.
+    const admin = await prisma.admin.findUnique({
+      where: { id: adminId },
+      select: { sessionVersion: true },
+    });
+    if (!admin || admin.sessionVersion !== tokenVersion) return null;
+
     return {
-      adminId: payload.adminId as string,
+      adminId,
       username: payload.username as string,
       name: payload.name as string,
       role: (payload.role as AdminRole) || "sga_member",
       isSiteAdmin: (payload.isSiteAdmin as boolean) ?? false,
+      isDeveloper: (payload.isDeveloper as boolean) ?? false,
+      developerElevatedAt: (payload.developerElevatedAt as number | null) ?? null,
       classYear: (payload.classYear as string | null) ?? null,
       clubId: (payload.clubId as string | null) ?? null,
       teamMemberId: (payload.teamMemberId as string | null) ?? null,
+      sessionVersion: tokenVersion,
     };
   } catch {
     return null;
@@ -83,7 +135,24 @@ export function canManageClubs(s: SessionPayload | null) {
 }
 
 export function canManageAdmins(s: SessionPayload | null) {
-  return isSgaAdmin(s);
+  return isSiteAdmin(s);
+}
+
+export function isDeveloper(s: SessionPayload | null) {
+  return s?.isDeveloper === true;
+}
+
+// Passkey step-up expires from use after 30 minutes, independent of the outer 30-day
+// session cookie. Bounds how long a leaked/stolen session cookie carries developer
+// privileges without the passkey being re-proven — a plain boolean flag wouldn't.
+const DEVELOPER_ELEVATION_WINDOW_MS = 30 * 60 * 1000;
+
+export function isDeveloperElevated(s: SessionPayload | null) {
+  return (
+    isDeveloper(s) &&
+    !!s?.developerElevatedAt &&
+    Date.now() - s.developerElevatedAt < DEVELOPER_ELEVATION_WINDOW_MS
+  );
 }
 
 export function canRedirectSuggestion(s: SessionPayload | null) {

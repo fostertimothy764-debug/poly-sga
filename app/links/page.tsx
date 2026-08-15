@@ -166,7 +166,7 @@ function LinkCard({
       </div>
 
       {/* Footer */}
-      <div className="mt-auto flex items-center justify-between text-xs text-ink-400">
+      <div className="mt-auto flex items-center justify-between text-xs text-ink-500">
         {link.authorName && <span>— {link.authorName}</span>}
         <span className="ml-auto flex items-center gap-1 text-poly-orange opacity-0 group-hover:opacity-100 transition-opacity font-medium">
           Open <ExternalLink size={11} />

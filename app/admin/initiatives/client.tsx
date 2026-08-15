@@ -247,7 +247,7 @@ function TabBtn({
       onClick={onClick}
       className={cn(
         "relative flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-colors",
-        active ? "bg-white text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"
+        active ? "bg-white text-ink-900" : "text-ink-600 hover:text-ink-900"
       )}
     >
       {label}

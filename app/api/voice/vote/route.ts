@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { ensureVoterId } from "@/lib/grade";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  if (!(await checkRateLimit(`voice-vote:${clientIp(req)}`, 20, 5 * 60 * 1000))) {
+    return NextResponse.json({ error: "Too many votes — slow down." }, { status: 429 });
+  }
+
   const body = await req.json().catch(() => null);
   const id = body?.id;
   if (typeof id !== "string" || !id) {

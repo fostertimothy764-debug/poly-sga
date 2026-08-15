@@ -9,3 +9,6 @@ prisma/dev.db-journal
 
 # Local agent / IDE config
 .claude/
+
+# Generated credentials — never commit
+credentials/

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { prisma } from "@/lib/db";
+import SmartImage from "@/components/smart-image";
+import Reveal from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +34,10 @@ export default async function TeamPage() {
             Executive Board
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {exec.map((m) => (
-              <MemberCard key={m.id} member={m} highlight />
+            {exec.map((m, i) => (
+              <Reveal key={m.id} delayMs={(i % 4) * 60}>
+                <MemberCard member={m} highlight />
+              </Reveal>
             ))}
           </div>
         </section>
@@ -45,8 +49,10 @@ export default async function TeamPage() {
             Class Officers
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {classOfficers.map((m) => (
-              <MemberCard key={m.id} member={m} />
+            {classOfficers.map((m, i) => (
+              <Reveal key={m.id} delayMs={(i % 4) * 60}>
+                <MemberCard member={m} />
+              </Reveal>
             ))}
           </div>
         </section>
@@ -91,16 +97,17 @@ function MemberCard({
   return (
     <Link
       href={`/team/${member.id}`}
-      className="card card-hover overflow-hidden p-0 animate-slide-up group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-poly-navy focus-visible:ring-offset-2 focus-visible:ring-offset-ink-50"
+      className="card card-hover overflow-hidden p-0 group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-poly-navy focus-visible:ring-offset-2 focus-visible:ring-offset-ink-50"
     >
       <article>
         <div className="relative aspect-[4/5] bg-ink-100 overflow-hidden">
           {member.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <SmartImage
               src={member.photoUrl}
               alt={member.name}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover grayscale transition-[filter,transform] duration-500 group-hover:grayscale-0 group-hover:scale-105"
             />
           ) : (
             <div
@@ -126,7 +133,9 @@ function MemberCard({
                 <div className="font-display text-lg leading-tight truncate">
                   {member.name}
                 </div>
-                <div className="text-xs opacity-90 truncate">{member.role}</div>
+                <div className="text-[11px] uppercase tracking-[0.08em] font-semibold text-poly-orange truncate">
+                  {member.role}
+                </div>
               </div>
               <ArrowUpRight
                 size={14}
@@ -142,7 +151,7 @@ function MemberCard({
               &ldquo;{member.askMeAbout}&rdquo;
             </p>
           ) : (
-            <p className="text-xs text-ink-400 leading-relaxed">
+            <p className="text-xs text-ink-500 leading-relaxed">
               Read profile →
             </p>
           )}

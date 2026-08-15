@@ -58,11 +58,16 @@ import {
   UserCog,
   UserPlus,
   X,
+  Fingerprint,
+  KeySquare,
+  ShieldAlert,
 } from "lucide-react";
+import { startRegistration, startAuthentication } from "@simplewebauthn/browser";
 import { formatDate, formatTime, relativeTime } from "@/lib/utils";
 import type { AdminRole, SessionPayload } from "@/lib/auth";
 import PhotoUpload from "@/components/photo-upload";
 import StatusPill, { STATUS_OPTIONS, type SuggestionStatus } from "@/components/status-pill";
+import SmartImage from "@/components/smart-image";
 
 type Club = {
   id: string;
@@ -182,6 +187,20 @@ type Newsletter = {
   createdAt: Date | string;
 };
 
+type PasskeySummary = {
+  id: string;
+  deviceLabel: string | null;
+  createdAt: Date | string;
+  lastUsedAt: Date | string | null;
+};
+
+type SiteSetting = {
+  key: string;
+  value: string;
+  updatedAt: Date | string;
+  updatedByName: string | null;
+};
+
 type Capabilities = {
   canManageTeam: boolean;
   canManageClubs: boolean;
@@ -189,9 +208,11 @@ type Capabilities = {
   canRedirect: boolean;
   canManageAccounts: boolean;
   isSiteAdmin: boolean;
+  isDeveloper: boolean;
+  isDeveloperElevated: boolean;
 };
 
-type Tab = "announcements" | "events" | "links" | "photos" | "newsletter" | "clubs" | "team" | "inbox" | "accounts";
+type Tab = "announcements" | "events" | "links" | "photos" | "newsletter" | "clubs" | "team" | "inbox" | "accounts" | "developer";
 
 const SCHOOL_AUDIENCES = [
   { value: "all", label: "Schoolwide" },
@@ -254,6 +275,8 @@ export default function AdminDashboard({
     links: ResourceLink[];
     photos: Photo[];
     newsletters: Newsletter[];
+    passkeys: PasskeySummary[];
+    siteSettings: SiteSetting[];
   };
 }) {
   const router = useRouter();
@@ -357,6 +380,14 @@ export default function AdminDashboard({
             label="Accounts"
           />
         )}
+        {capabilities.isDeveloper && (
+          <TabBtn
+            active={tab === "developer"}
+            onClick={() => setTab("developer")}
+            icon={<Fingerprint size={14} />}
+            label="Developer"
+          />
+        )}
       </div>
 
       <div className={pending ? "opacity-60 pointer-events-none transition-opacity" : ""}>
@@ -422,6 +453,14 @@ export default function AdminDashboard({
             onChange={refresh}
           />
         )}
+        {tab === "developer" && capabilities.isDeveloper && (
+          <DeveloperTab
+            isElevated={capabilities.isDeveloperElevated}
+            passkeys={initial.passkeys}
+            settings={initial.siteSettings}
+            onChange={refresh}
+          />
+        )}
       </div>
     </div>
   );
@@ -444,7 +483,7 @@ function TabBtn({
     <button
       onClick={onClick}
       className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all ${
-        active ? "bg-white text-ink-900 shadow-sm" : "text-ink-600 hover:text-ink-900"
+        active ? "bg-white text-ink-900" : "text-ink-600 hover:text-ink-900"
       }`}
     >
       {icon}
@@ -691,7 +730,7 @@ function AnnouncementsTab({
                   </IconBtn>
                 </div>
               ) : (
-                <span className="text-[10px] uppercase tracking-wider text-ink-400 self-center">
+                <span className="text-[10px] uppercase tracking-wider text-ink-500 self-center">
                   Read-only
                 </span>
               )}
@@ -1017,7 +1056,7 @@ function EventsTab({
                       </IconBtn>
                     </div>
                   ) : (
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400 self-center">
+                    <span className="text-[10px] uppercase tracking-wider text-ink-500 self-center">
                       Read-only
                     </span>
                   )}
@@ -1228,12 +1267,9 @@ function ClubsTab({
               ) : (
                 <div className="flex items-start gap-3">
                   {c.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={c.photoUrl}
-                      alt={c.name}
-                      className="h-14 w-14 rounded-xl object-cover flex-shrink-0"
-                    />
+                    <div className="relative h-14 w-14 rounded-xl overflow-hidden flex-shrink-0">
+                      <SmartImage src={c.photoUrl} alt={c.name} fill sizes="56px" className="object-cover" />
+                    </div>
                   ) : (
                     <div className="h-14 w-14 rounded-xl bg-ink-100 flex items-center justify-center text-ink-500 flex-shrink-0">
                       <Briefcase size={18} />
@@ -1557,8 +1593,9 @@ function TeamTab({
               ) : (
                 <div className="flex items-start gap-3">
                   {m.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.photoUrl} alt={m.name} className="h-12 w-12 rounded-full object-cover flex-shrink-0" />
+                    <div className="relative h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
+                      <SmartImage src={m.photoUrl} alt={m.name} fill sizes="48px" className="object-cover" />
+                    </div>
                   ) : (
                     <div className="h-12 w-12 rounded-full bg-ink-100 text-ink-700 flex items-center justify-center font-display flex-shrink-0">
                       {m.name.split(" ").map((s: string) => s[0]).slice(0, 2).join("")}
@@ -1816,7 +1853,7 @@ function LinksTab({
                       {l.pinned && <Pin size={11} className="text-poly-orange" />}
                     </div>
                     <a href={l.url} target="_blank" rel="noopener noreferrer"
-                      className="text-xs font-mono text-ink-400 hover:text-poly-orange truncate block max-w-xs transition-colors">
+                      className="text-xs font-mono text-ink-500 hover:text-poly-orange truncate block max-w-xs transition-colors">
                       {l.url}
                     </a>
                     {l.description && <p className="text-xs text-ink-500 mt-0.5">{l.description}</p>}
@@ -1956,6 +1993,8 @@ function PhotosTab({
             />
             {previewUrl && (
               <div className="mt-3 relative w-fit">
+                {/* Plain <img>, not next/image: natural aspect ratio unknown until the file
+                    loads (only height is constrained; width follows the photo's own ratio). */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={previewUrl} alt="Preview" className="h-40 rounded-xl object-cover border border-ink-200" />
                 <button
@@ -2014,6 +2053,7 @@ function PhotosTab({
         <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
           {items.map((p) => (
             <div key={p.id} className="break-inside-avoid relative group rounded-2xl overflow-hidden border border-ink-100">
+              {/* Plain <img>, not next/image: masonry grid relies on natural aspect ratio — see app/photos/gallery.tsx */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt={p.caption ?? p.title ?? "Photo"} className="w-full object-cover" />
               <div className="absolute inset-0 bg-poly-navy/0 group-hover:bg-poly-navy/60 transition-colors duration-300 rounded-2xl flex flex-col items-start justify-end p-3 gap-1">
@@ -2179,7 +2219,7 @@ function NewsletterTab({
                   {n.issueLabel && (
                     <span className="chip border-poly-navy/30 bg-poly-navy/8 text-poly-navy">{n.issueLabel}</span>
                   )}
-                  <span className="text-ink-400">{new Date(n.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+                  <span className="text-ink-500">{new Date(n.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
                 </div>
                 <h3 className="font-display text-lg mb-1">{n.title}</h3>
                 {n.description && <p className="text-sm text-ink-600 line-clamp-2">{n.description}</p>}
@@ -2496,7 +2536,7 @@ function AccountsTab({
                     <div className="font-medium flex items-center gap-2">
                       {a.name}
                       {a.id === currentAdminId && (
-                        <span className="text-[10px] uppercase tracking-wider text-ink-400">(you)</span>
+                        <span className="text-[10px] uppercase tracking-wider text-ink-500">(you)</span>
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mt-0.5">
@@ -2524,6 +2564,356 @@ function AccountsTab({
                         <Trash2 size={14} />
                       </IconBtn>
                     )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Developer ---------- */
+
+const KNOWN_SETTING_KEYS = [
+  "footer.tagline",
+  "footer.credits",
+  "footer.contactEmail",
+  "colophon.introParagraph",
+  "colophon.paragraph2",
+  "colophon.paragraph3",
+  "colophon.errataEmail",
+  "color.poly-orange",
+  "color.poly-orangeDark",
+  "color.poly-navy",
+  "color.poly-navyDark",
+  "color.ink-900",
+];
+
+function DeveloperTab({
+  isElevated,
+  passkeys,
+  settings,
+  onChange,
+}: {
+  isElevated: boolean;
+  passkeys: PasskeySummary[];
+  settings: SiteSetting[];
+  onChange: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [deviceLabel, setDeviceLabel] = useState("");
+  const [showAddDevice, setShowAddDevice] = useState(passkeys.length === 0);
+
+  async function registerPasskey() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const optionsRes = await fetch("/api/auth/webauthn/register-options", { method: "POST" });
+      if (!optionsRes.ok) {
+        const d = await optionsRes.json().catch(() => ({}));
+        throw new Error(d.error || "Failed to start registration");
+      }
+      const optionsJSON = await optionsRes.json();
+      const attResp = await startRegistration({ optionsJSON });
+      const verifyRes = await fetch("/api/auth/webauthn/register-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: attResp, deviceLabel: deviceLabel || undefined }),
+      });
+      if (!verifyRes.ok) {
+        const d = await verifyRes.json().catch(() => ({}));
+        throw new Error(d.error || "Registration failed");
+      }
+      setDeviceLabel("");
+      setShowAddDevice(false);
+      onChange();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Registration failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function verifyPasskey() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const optionsRes = await fetch("/api/auth/webauthn/auth-options", { method: "POST" });
+      if (!optionsRes.ok) {
+        const d = await optionsRes.json().catch(() => ({}));
+        throw new Error(d.error || "Failed to start verification");
+      }
+      const optionsJSON = await optionsRes.json();
+      const authResp = await startAuthentication({ optionsJSON });
+      const verifyRes = await fetch("/api/auth/webauthn/auth-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: authResp }),
+      });
+      if (!verifyRes.ok) {
+        const d = await verifyRes.json().catch(() => ({}));
+        throw new Error(d.error || "Verification failed");
+      }
+      onChange();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Verification failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldAlert size={16} className="text-poly-navy" />
+          <h2 className="font-display text-xl">Developer</h2>
+        </div>
+        <p className="text-xs text-ink-500 max-w-lg">
+          Site-owner-only tools. Nothing here is visible to any other admin account.
+        </p>
+      </div>
+
+      {err && <ErrorBox message={err} />}
+
+      {/* Passkeys */}
+      <div>
+        <h3 className="font-display text-lg mb-3 flex items-center gap-2">
+          <Fingerprint size={16} className="text-poly-navy" /> Passkeys
+        </h3>
+
+        {passkeys.length === 0 ? (
+          <div className="card space-y-3 animate-slide-up">
+            <p className="text-sm text-ink-600">
+              No passkey registered yet. Register one now from this device (Face ID, Touch ID, or a hardware key) — it&apos;ll be required as a second factor before any developer action.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                className="input max-w-xs"
+                placeholder="Device label (optional), e.g. MacBook Touch ID"
+                value={deviceLabel}
+                onChange={(e) => setDeviceLabel(e.target.value)}
+              />
+              <button onClick={registerPasskey} disabled={busy} className="btn-accent">
+                {busy ? <Loader2 size={14} className="animate-spin" /> : <Fingerprint size={14} />}
+                Register passkey
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2 mb-3">
+              {passkeys.map((p) => (
+                <div key={p.id} className="card flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm">{p.deviceLabel || "Unlabeled passkey"}</div>
+                    <div className="text-xs text-ink-500">
+                      Added {relativeTime(p.createdAt)}
+                      {p.lastUsedAt && <> · last used {relativeTime(p.lastUsedAt)}</>}
+                    </div>
+                  </div>
+                  <KeySquare size={16} className="text-ink-400 shrink-0" />
+                </div>
+              ))}
+            </div>
+
+            {!isElevated ? (
+              <button onClick={verifyPasskey} disabled={busy} className="btn-primary">
+                {busy ? <Loader2 size={14} className="animate-spin" /> : <Fingerprint size={14} />}
+                Verify with passkey
+              </button>
+            ) : showAddDevice ? (
+              <div className="card space-y-3 animate-slide-up max-w-md">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    className="input max-w-xs"
+                    placeholder="Device label (optional)"
+                    value={deviceLabel}
+                    onChange={(e) => setDeviceLabel(e.target.value)}
+                  />
+                  <button onClick={registerPasskey} disabled={busy} className="btn-accent">
+                    {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                    Add device
+                  </button>
+                  <button onClick={() => setShowAddDevice(false)} className="btn-ghost">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setShowAddDevice(true)} className="btn-ghost">
+                <Plus size={14} /> Add another device
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Site settings */}
+      <div>
+        <h3 className="font-display text-lg mb-1 flex items-center gap-2">
+          <Settings size={16} className="text-poly-navy" /> Site settings
+        </h3>
+        {isElevated ? (
+          <SettingsEditor settings={settings} onChange={onChange} />
+        ) : (
+          <p className="text-sm text-ink-500">Verify with your passkey above to view and edit site settings.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SettingsEditor({
+  settings,
+  onChange,
+}: {
+  settings: SiteSetting[];
+  onChange: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  async function addSetting() {
+    if (!newKey.trim() || !newValue.trim()) return;
+    setBusy(true);
+    setErr(null);
+    const res = await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: newKey.trim(), value: newValue }),
+    });
+    setBusy(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setErr(d.error || "Failed");
+      return;
+    }
+    setOpen(false);
+    setNewKey("");
+    setNewValue("");
+    onChange();
+  }
+
+  async function saveEdit(key: string) {
+    setBusy(true);
+    await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value: editValue }),
+    });
+    setBusy(false);
+    setEditingKey(null);
+    onChange();
+  }
+
+  async function remove(key: string) {
+    if (!confirm(`Delete setting "${key}"? The site will fall back to its hardcoded default.`)) return;
+    await fetch(`/api/admin/settings?key=${encodeURIComponent(key)}`, { method: "DELETE" });
+    onChange();
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-ink-500 max-w-md">
+          Known keys already wired into the site: footer copy (<code className="font-mono">footer.*</code>), colophon prose (<code className="font-mono">colophon.*</code>), and core color tokens (<code className="font-mono">color.*</code> — value must be a hex color like <code className="font-mono">#f26522</code>). Anything else is stored but has no visible effect until a component reads it.
+        </p>
+        <button onClick={() => setOpen(!open)} className="btn-primary shrink-0">
+          <Plus size={14} /> {open ? "Cancel" : "New"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="card mb-4 space-y-3 animate-slide-up">
+          <div>
+            <label className="label">Key</label>
+            <input
+              className="input font-mono"
+              list="known-setting-keys"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
+              placeholder="footer.tagline"
+            />
+            <datalist id="known-setting-keys">
+              {KNOWN_SETTING_KEYS.map((k) => (
+                <option key={k} value={k} />
+              ))}
+            </datalist>
+          </div>
+          <div>
+            <label className="label">Value</label>
+            <textarea
+              className="input resize-none"
+              rows={3}
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+            />
+          </div>
+          {err && <ErrorBox message={err} />}
+          <button onClick={addSetting} disabled={busy} className="btn-accent">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+            Save
+          </button>
+        </div>
+      )}
+
+      {settings.length === 0 ? (
+        <Empty>No overrides set — the site is using its hardcoded defaults everywhere.</Empty>
+      ) : (
+        <div className="space-y-2">
+          {settings.map((s) => (
+            <div key={s.key} className="card">
+              {editingKey === s.key ? (
+                <div className="space-y-3">
+                  <div className="font-mono text-xs text-ink-500">{s.key}</div>
+                  <textarea
+                    className="input resize-none"
+                    rows={3}
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => saveEdit(s.key)} disabled={busy} className="btn-accent">
+                      {busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Save
+                    </button>
+                    <button onClick={() => setEditingKey(null)} className="btn-ghost">
+                      <X size={13} /> Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono text-xs text-ink-500 mb-1">{s.key}</div>
+                    <p className="text-sm text-ink-700 whitespace-pre-wrap break-words">{s.value}</p>
+                    <div className="text-[11px] text-ink-400 mt-1.5">
+                      Updated {relativeTime(s.updatedAt)}
+                      {s.updatedByName && <> by {s.updatedByName}</>}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <IconBtn
+                      onClick={() => {
+                        setEditingKey(s.key);
+                        setEditValue(s.value);
+                      }}
+                      title="Edit"
+                    >
+                      <Edit2 size={14} />
+                    </IconBtn>
+                    <IconBtn onClick={() => remove(s.key)} title="Delete" danger>
+                      <Trash2 size={14} />
+                    </IconBtn>
                   </div>
                 </div>
               )}
@@ -2753,7 +3143,7 @@ function SuggestionRow({
                 maxLength={32}
                 placeholder="Waiting on principal"
               />
-              <div className="mt-1 text-right text-[11px] text-ink-400">
+              <div className="mt-1 text-right text-[11px] text-ink-500">
                 {customLabel.length}/32
               </div>
             </div>
@@ -2768,7 +3158,7 @@ function SuggestionRow({
               maxLength={240}
               placeholder="What happened, or what's next."
             />
-            <div className="mt-1 text-right text-[11px] text-ink-400">
+            <div className="mt-1 text-right text-[11px] text-ink-500">
               {statusNote.length}/240
             </div>
           </div>

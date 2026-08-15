@@ -7,6 +7,7 @@ import BottomTabBar from "./bottom-tab-bar";
 import NewsWire, { type WireItem } from "./news-wire";
 import type { Grade } from "@/lib/grade";
 import type { AdminRole } from "@/lib/auth";
+import type { FooterCopy } from "./footer";
 
 export default function Shell({
   children,
@@ -14,12 +15,14 @@ export default function Shell({
   officerName,
   officerRole,
   wireItems,
+  footer,
 }: {
   children: React.ReactNode;
   grade: Grade | null;
   officerName: string | null;
   officerRole: AdminRole | null;
   wireItems: WireItem[];
+  footer: FooterCopy;
 }) {
   const pathname = usePathname();
   const isWelcome = pathname === "/welcome";
@@ -43,7 +46,7 @@ export default function Shell({
           {children}
         </div>
       </main>
-      <Footer />
+      <Footer copy={footer} />
       <BottomTabBar />
     </>
   );

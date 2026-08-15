@@ -335,7 +335,7 @@ function TeamProfileForm({
             maxLength={140}
             placeholder="The senior–faculty basketball game I'm trying to bring back"
           />
-          <div className="mt-1 flex justify-between text-[11px] text-ink-400">
+          <div className="mt-1 flex justify-between text-[11px] text-ink-500">
             <span>One short sentence — gives students something to walk up and say.</span>
             <span>{form.askMeAbout.length}/140</span>
           </div>
@@ -350,7 +350,7 @@ function TeamProfileForm({
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
             className="input resize-none"
           />
-          <div className="mt-1 text-right text-[11px] text-ink-400">
+          <div className="mt-1 text-right text-[11px] text-ink-500">
             {form.bio.length}/400
           </div>
         </div>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Shell from "@/components/shell";
 import { getGrade } from "@/lib/grade";
@@ -6,6 +7,38 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { WireItem } from "@/components/news-wire";
 import { relativeTime } from "@/lib/utils";
+import { getSiteSettings, setting } from "@/lib/site-settings";
+
+const COLOR_SETTING_PREFIX = "color.";
+// Only a valid token name may follow "color." — guards the generated custom property
+// name below.
+const SAFE_TOKEN_NAME = /^[a-zA-Z0-9_-]+$/;
+
+// tailwind.config.ts reads every color as rgb(var(--color-x) / alpha), so overrides
+// must be "R G B" triplets, not hex — this is also a safety property, not just a
+// format requirement: a hex string can only ever decode to three 0-255 numbers, so
+// there's no way for a value here to break out of the injected <style> block below,
+// even though these are ultimately developer-supplied (passkey-elevated only, but
+// still worth not trusting blindly for something concatenated into raw CSS).
+function hexToRgbTriplet(hex: string): string | null {
+  const m = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!m) return null;
+  const full = m[1].length === 3 ? m[1].split("").map((c) => c + c).join("") : m[1];
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  return `${r} ${g} ${b}`;
+}
+
+function colorOverrideStyle(settings: Record<string, string>): string | null {
+  const declarations = Object.entries(settings)
+    .filter(([key]) => key.startsWith(COLOR_SETTING_PREFIX))
+    .map(([key, value]) => [key.slice(COLOR_SETTING_PREFIX.length), hexToRgbTriplet(value)] as const)
+    .filter((pair): pair is [string, string] => SAFE_TOKEN_NAME.test(pair[0]) && pair[1] !== null)
+    .map(([token, rgb]) => `--color-${token}: ${rgb};`);
+  if (declarations.length === 0) return null;
+  return `:root { ${declarations.join(" ")} }`;
+}
 
 function trimText(s: string, len = 90) {
   const t = s.trim().replace(/\s+/g, " ");
@@ -88,6 +121,20 @@ async function fetchWireItems(): Promise<WireItem[]> {
 
 export const dynamic = "force-dynamic";
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-display",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Poly SGA — Baltimore Polytechnic Institute",
   description:
@@ -106,29 +153,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [grade, session, wireItems] = await Promise.all([
+  const [grade, session, wireItems, settings] = await Promise.all([
     getGrade(),
     getSession(),
     getWireItems(),
+    getSiteSettings(),
   ]);
 
+  const colorOverrides = colorOverrideStyle(settings);
+
   return (
-    <html lang="en">
+    <html lang="en" className={`${plusJakartaSans.variable} ${fraunces.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap"
-          rel="stylesheet"
-        />
+        {colorOverrides && <style dangerouslySetInnerHTML={{ __html: colorOverrides }} />}
       </head>
       <body>
         <Shell
@@ -136,6 +173,15 @@ export default async function RootLayout({
           officerName={session?.name ?? null}
           officerRole={session?.role ?? null}
           wireItems={wireItems}
+          footer={{
+            tagline: setting(
+              settings,
+              "footer.tagline",
+              "Baltimore Polytechnic Institute · Student Government Association. Open by default — every meeting, dollar, and decision in the open."
+            ),
+            credits: setting(settings, "footer.credits", "Timothy Foster"),
+            contactEmail: setting(settings, "footer.contactEmail", "tim.d.foster.jr@gmail.com"),
+          }}
         >
           {children}
         </Shell>

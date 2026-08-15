@@ -33,7 +33,7 @@ export default function AudienceFilter({
           scroll={false}
           className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
             currentView === t.value
-              ? "bg-white text-ink-900 shadow-sm"
+              ? "bg-white text-ink-900"
               : "text-ink-600 hover:text-ink-900"
           }`}
         >

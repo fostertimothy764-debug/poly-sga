@@ -81,7 +81,7 @@ function ContactRow({
       <button
         type="button"
         onClick={onCopy}
-        className="text-[10px] uppercase tracking-[0.12em] text-ink-400 hover:text-poly-navy transition-colors min-w-[3rem] text-left"
+        className="text-[10px] uppercase tracking-[0.12em] text-ink-500 hover:text-poly-navy transition-colors min-w-[3rem] text-left"
         aria-label={`Copy ${label}`}
       >
         {copied ? (

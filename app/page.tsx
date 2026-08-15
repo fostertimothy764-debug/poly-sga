@@ -11,6 +11,7 @@ import {
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import PhotoDesk, { type PhotoDeskItem } from "@/components/photo-desk";
 import LeadImage from "@/components/lead-image";
+import Reveal from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -348,47 +349,48 @@ export default async function Home() {
             </Link>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {secondary.map((a) => {
+            {secondary.map((a, i) => {
               const isNew =
                 Date.now() - new Date(a.createdAt).getTime() <
                 48 * 60 * 60 * 1000;
               const accent = classAccentStyle(a.audience, viewerGrade);
               return (
-                <Link
-                  key={a.id}
-                  href="/announcements"
-                  className="group block border-t border-ink-200 pt-5 transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-px hover:border-ink-400 focus-visible:outline-none focus-visible:-translate-y-px focus-visible:border-poly-navy"
-                  style={accent}
-                >
-                  <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.14em] text-ink-500">
-                    <span>{audienceLabel(a.audience)}</span>
-                    <span className="text-ink-300">·</span>
-                    <span>{relativeTime(a.createdAt)}</span>
-                    {isNew && !a.pinned && (
-                      <span className="font-mono text-poly-green ml-auto">
-                        New
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-display text-xl leading-snug mb-2 group-hover:text-poly-navyDark transition-colors">
-                    {a.title}
-                  </h3>
-                  <p className="text-sm text-ink-600 leading-relaxed line-clamp-3">
-                    {dek(a.body, 140)}
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
-                    {a.authorName && (
-                      <span>
-                        By{" "}
-                        <span className="text-ink-700 font-medium">
-                          {a.authorName}
+                <Reveal key={a.id} delayMs={i * 60}>
+                  <Link
+                    href="/announcements"
+                    className="group block border-t border-ink-200 pt-5 transition-[transform,border-color] duration-200 ease-[cubic-bezier(0.25,1,0.5,1)] hover:-translate-y-px hover:border-ink-400 focus-visible:outline-none focus-visible:-translate-y-px focus-visible:border-poly-navy"
+                    style={accent}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-3 text-[11px] uppercase tracking-[0.14em] text-ink-500">
+                      <span>{audienceLabel(a.audience)}</span>
+                      <span className="text-ink-300">·</span>
+                      <span>{relativeTime(a.createdAt)}</span>
+                      {isNew && !a.pinned && (
+                        <span className="font-mono text-poly-green ml-auto">
+                          New
                         </span>
-                      </span>
-                    )}
-                    {a.authorName && <span className="text-ink-300">·</span>}
-                    <span>{readingTime(a.body)}</span>
-                  </div>
-                </Link>
+                      )}
+                    </div>
+                    <h3 className="font-display text-xl leading-snug mb-2 group-hover:text-poly-navyDark transition-colors">
+                      {a.title}
+                    </h3>
+                    <p className="text-sm text-ink-600 leading-relaxed line-clamp-3">
+                      {dek(a.body, 140)}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
+                      {a.authorName && (
+                        <span>
+                          By{" "}
+                          <span className="text-ink-700 font-medium">
+                            {a.authorName}
+                          </span>
+                        </span>
+                      )}
+                      {a.authorName && <span className="text-ink-300">·</span>}
+                      <span>{readingTime(a.body)}</span>
+                    </div>
+                  </Link>
+                </Reveal>
               );
             })}
           </div>

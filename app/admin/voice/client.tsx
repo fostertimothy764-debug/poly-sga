@@ -127,7 +127,7 @@ export default function VoiceAdmin({ initial }: { initial: AdminVoiceItem[] }) {
             className={cn(
               "relative flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-colors",
               tab === t.value
-                ? "bg-white text-ink-900 shadow-sm"
+                ? "bg-white text-ink-900"
                 : "text-ink-600 hover:text-ink-900"
             )}
           >

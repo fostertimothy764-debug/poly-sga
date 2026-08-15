@@ -265,7 +265,7 @@ export default function MinutesClient({ initial }: { initial: MeetingDTO[] }) {
                   <span className="font-display text-2xl text-poly-navy leading-none mt-1">
                     {new Date(m.date).getDate()}
                   </span>
-                  <span className="text-[10px] text-ink-400 mt-0.5">
+                  <span className="text-[10px] text-ink-500 mt-0.5">
                     {new Date(m.date).getFullYear()}
                   </span>
                 </div>
@@ -446,7 +446,7 @@ export default function MinutesClient({ initial }: { initial: MeetingDTO[] }) {
                   )}
 
                   {m.authorName && (
-                    <p className="text-[11px] text-ink-400 pt-2 border-t border-ink-100">
+                    <p className="text-[11px] text-ink-500 pt-2 border-t border-ink-100">
                       Minutes recorded by {m.authorName}
                     </p>
                   )}

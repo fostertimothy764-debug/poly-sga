@@ -1,6 +1,6 @@
 # Poly SGA — Baltimore Polytechnic Institute
 
-Student Government Association website for Baltimore Polytechnic Institute. Next.js + Prisma + SQLite + Tailwind.
+Student Government Association website for Baltimore Polytechnic Institute. Next.js + Prisma + PostgreSQL (Neon) + Tailwind.
 
 ## Features
 
@@ -21,14 +21,14 @@ Student Government Association website for Baltimore Polytechnic Institute. Next
   - `/accountability` — aggregated view of every action item from every meeting, with per-officer completion rates, overdue highlighting, and filters by officer / status / date / category.
   - `/voice` — anonymous-or-named submissions of concerns, questions, and suggestions. Each gets a **ticket code** (e.g. `V-A3X9B`) for status lookup at `/voice/<TICKET>`. Upvote system, public resolved feed, admin can respond, mark addressed/declined, or hide from public.
 - **Auth** — JWT cookie sessions, bcrypt-hashed passwords, server-side scope enforcement on every API route.
-- **Minimalist UI** — Inter + Fraunces typography, orange/navy Poly accents, subtle motion, mobile-first.
+- **Minimalist UI** — Plus Jakarta Sans + Fraunces typography, orange/navy Poly accents, subtle motion, mobile-first.
 
 ## Quick start
 
 ```bash
 cd sga-website
 npm install
-npm run setup     # creates SQLite DB and seeds demo data
+npm run setup     # pushes the Postgres schema and seeds real officer accounts (no demo content by default)
 npm run dev
 ```
 
@@ -38,25 +38,13 @@ Open http://localhost:3000.
 
 ## Officer logins
 
-| Username | Password | Role | Can do |
-|---|---|---|---|
-| `admin` | `poly2026` | SGA Admin | Everything (site admin / "you") |
-| `maya` | `maya2026` | SGA Admin (President) | Everything + edit Maya's profile |
-| `jordan` | `jordan2026` | SGA Admin (Chief of Staff) | Everything + edit Jordan's profile |
-| `aisha` | `aisha2026` | SGA Officer (VP) | Post schoolwide, edit Aisha's profile only |
-| `devon` | `devon2026` | SGA Officer (Treasurer) | Post schoolwide, edit own profile only |
-| `luke` | `luke2026` | SGA Officer (Secretary) | Post schoolwide, edit own profile only |
-| `sofia` | `sofia2026` | SGA Officer (Comms) | Post schoolwide, edit own profile only |
-| `class27` | `class27` | Class Officer | Post to Class of 2027 only |
-| `class28` | `class28` | Class Officer | Post to Class of 2028 only |
-| `class29` | `class29` | Class Officer | Post to Class of 2029 only |
-| `class30` | `class30` | Class Officer | Post to Class of 2030 only |
-| `robotics_admin` | `robotics` | Club Officer | Post to Robotics only |
-| `debate_admin` | `debate` | Club Officer | Post to Debate only |
+Officer accounts are defined in [`prisma/seed.ts`](prisma/seed.ts): 8 SGA exec roles (President, Chief of Staff, Upper/Lower VP, Secretary, Treasurer, 2 Historians) plus 4 class-officer accounts (`class27`–`class30`). Passwords are **never hardcoded** — `npm run db:seed` generates a fresh random password per account and prints the full username/password list to the console once, on that run only. Save that output somewhere safe; it isn't stored anywhere else.
 
-Each user can change their username and password from `/admin/profile` after signing in.
+The site-admin account's username/password come from `.env` (`ADMIN_USERNAME` / `ADMIN_PASSWORD`) — set your own values there before seeding, there is no default.
 
-The site-admin username/password come from `.env`. Other accounts live in [`prisma/seed.ts`](prisma/seed.ts).
+Each user can change their own username and password any time from `/admin/profile` after signing in.
+
+Set `SEED_SAMPLE_CONTENT=true` when seeding to also create demo clubs/announcements/events/a sample suggestion — useful for a fresh local dev database. Leave it unset (the default) for a clean seed with real officer accounts and no placeholder content — this is what production should always use.
 
 ## How permissions work (server-side)
 
@@ -189,7 +177,7 @@ Whenever you push code to `main`, Vercel redeploys automatically. Schema changes
 - Next.js 14 (App Router) + React 18
 - TypeScript
 - Tailwind CSS
-- Prisma + SQLite (swap to Postgres in `prisma/schema.prisma` for production)
+- Prisma + PostgreSQL (Neon)
 - `jose` (JWT) + `bcryptjs` (password hashing)
 - `lucide-react` icons
 
@@ -197,7 +185,7 @@ Whenever you push code to `main`, Vercel redeploys automatically. Schema changes
 
 - `npm run dev` — start the dev server
 - `npm run build` — production build
-- `npm run setup` — db push + seed (one-shot; resets demo content)
+- `npm run setup` — db push + seed (one-shot; wipes and recreates all accounts/content — see [Officer logins](#officer-logins))
 - `npm run db:seed` — re-run seed
 - `npm run db:studio` — open Prisma Studio to inspect data
 

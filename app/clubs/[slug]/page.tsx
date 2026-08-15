@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatDate, formatTime, relativeTime } from "@/lib/utils";
 import { ArrowLeft, Calendar, Clock, MapPin, MessageSquare, Pin } from "lucide-react";
+import SmartImage from "@/components/smart-image";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +34,12 @@ export default async function ClubPage({ params }: { params: { slug: string } })
       {/* Header / hero */}
       <section className="relative overflow-hidden bg-poly-navy text-white">
         {club.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <SmartImage
             src={club.photoUrl}
             alt={club.name}
-            className="absolute inset-0 h-full w-full object-cover opacity-30"
+            fill
+            sizes="100vw"
+            className="object-cover opacity-30"
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-poly-navyDark via-poly-navy/80 to-poly-navy/50" />

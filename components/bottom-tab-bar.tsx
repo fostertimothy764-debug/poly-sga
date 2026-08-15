@@ -30,7 +30,7 @@ export default function BottomTabBar() {
               href={href}
               className={cn(
                 "flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
-                active ? "text-poly-orange" : "text-ink-400 hover:text-ink-700"
+                active ? "text-poly-orange" : "text-ink-500 hover:text-ink-700"
               )}
               aria-current={active ? "page" : undefined}
             >

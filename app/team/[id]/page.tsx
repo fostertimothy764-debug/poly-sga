@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
 import ContactStrip from "./contact-strip";
+import SmartImage from "@/components/smart-image";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,13 @@ export default async function OfficerProfilePage({
         <div className="lg:sticky lg:top-28 lg:self-start">
           <div className="relative aspect-[4/5] rounded-2xl bg-ink-100 overflow-hidden border border-ink-200">
             {member.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <SmartImage
                 src={member.photoUrl}
                 alt={member.name}
-                className="absolute inset-0 h-full w-full object-cover"
+                fill
+                sizes="(min-width: 1024px) 38vw, 100vw"
+                priority
+                className="object-cover"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center font-display text-7xl bg-poly-navy text-white">

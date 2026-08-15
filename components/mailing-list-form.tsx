@@ -53,8 +53,12 @@ export default function MailingListForm() {
   return (
     <form onSubmit={subscribe} className="flex flex-col sm:flex-row gap-3">
       <div className="relative flex-1">
+        <label htmlFor="mailing-list-email" className="sr-only">
+          Email address
+        </label>
         <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
         <input
+          id="mailing-list-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

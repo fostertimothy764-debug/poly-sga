@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession, isSga } from "@/lib/auth";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const STATUSES = new Set(["pending", "approved", "declined"]);
 
@@ -18,6 +19,10 @@ export async function GET() {
 
 // POST — open to the public (no session required)
 export async function POST(req: NextRequest) {
+  if (!(await checkRateLimit(`initiative-suggestions:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
+    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+  }
+
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 

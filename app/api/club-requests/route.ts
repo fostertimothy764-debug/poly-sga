@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession, isSgaAdmin } from "@/lib/auth";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 // GET — admin only, list all club requests
 export async function GET() {
@@ -16,6 +17,10 @@ export async function GET() {
 
 // POST — public, submit a club request
 export async function POST(req: NextRequest) {
+  if (!(await checkRateLimit(`club-requests:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
+    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+  }
+
   const { clubName, description, contactName, contactInfo } = await req.json();
   if (!clubName?.trim() || !description?.trim()) {
     return NextResponse.json(
@@ -23,12 +28,15 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+  if (clubName.length > 120 || description.length > 2000) {
+    return NextResponse.json({ error: "Club name or description too long" }, { status: 400 });
+  }
   const request = await prisma.clubRequest.create({
     data: {
       clubName: clubName.trim(),
       description: description.trim(),
-      contactName: contactName?.trim() || null,
-      contactInfo: contactInfo?.trim() || null,
+      contactName: typeof contactName === "string" ? contactName.trim().slice(0, 120) || null : null,
+      contactInfo: typeof contactInfo === "string" ? contactInfo.trim().slice(0, 200) || null : null,
     },
   });
   return NextResponse.json(request, { status: 201 });

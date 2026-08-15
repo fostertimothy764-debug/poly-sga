@@ -3,8 +3,24 @@ import { prisma } from "@/lib/db";
 import { getSession, canManageTeam } from "@/lib/auth";
 
 export async function GET() {
+  // Explicit allowlist (not `findMany` with no select) so a future field added to
+  // TeamMember doesn't get silently exposed here just because it exists on the model —
+  // every field below is already intentionally public via the /team pages.
   const items = await prisma.teamMember.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      grade: true,
+      bio: true,
+      photoUrl: true,
+      pronouns: true,
+      askMeAbout: true,
+      schoolEmail: true,
+      instagram: true,
+      order: true,
+    },
   });
   return NextResponse.json(items);
 }

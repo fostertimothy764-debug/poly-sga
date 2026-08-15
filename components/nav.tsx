@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -15,47 +16,33 @@ import {
 import type { Grade } from "@/lib/grade";
 import type { AdminRole } from "@/lib/auth";
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/announcements", label: "Announcements" },
-  { href: "/events", label: "Events" },
-  { href: "/links", label: "Links" },
-  { href: "/clubs", label: "Clubs" },
-  { href: "/photos", label: "Photos" },
-  { href: "/scoop", label: "Scoop" },
-  { href: "/team", label: "Team" },
-  { href: "/suggestions", label: "Ideas" },
+type NavItem = { href: string; label: string; blurb: string };
+
+// Home / Events / Ideas / Clubs / Team live on the mobile bottom tab bar
+// (components/bottom-tab-bar.tsx) — mobile menu groups below only need the rest,
+// so the two nav layers don't duplicate the same destinations.
+const BOTTOM_TAB_HREFS = new Set(["/", "/events", "/suggestions", "/clubs", "/team"]);
+
+const weeklyLinks: NavItem[] = [
+  { href: "/announcements", label: "Announcements", blurb: "The official record" },
+  { href: "/events", label: "Events", blurb: "What's on the calendar" },
+  { href: "/scoop", label: "Scoop", blurb: "The newsletter, issue by issue" },
+  { href: "/photos", label: "Photos", blurb: "The photo desk" },
 ];
 
-const transparencyLinks = [
-  {
-    href: "/minutes",
-    label: "Meeting minutes",
-    blurb: "Every meeting, on the record",
-  },
-  {
-    href: "/initiatives",
-    label: "Initiatives",
-    blurb: "What we're actually working on",
-  },
-  {
-    href: "/budget",
-    label: "Budget",
-    blurb: "Where the money goes",
-  },
-  {
-    href: "/accountability",
-    label: "Accountability",
-    blurb: "Action items, on the clock",
-  },
-  {
-    href: "/voice",
-    label: "Student voice",
-    blurb: "Speak up — anonymously if you want",
-  },
+const involvedLinks: NavItem[] = [
+  { href: "/clubs", label: "Clubs", blurb: "Find your people" },
+  { href: "/suggestions", label: "Ideas", blurb: "Vote on what SGA does next" },
+  { href: "/links", label: "Links", blurb: "Forms, sign-ups, documents" },
 ];
 
-const transparencyHrefs = transparencyLinks.map((l) => l.href);
+const transparencyLinks: NavItem[] = [
+  { href: "/minutes", label: "Meeting minutes", blurb: "Every meeting, on the record" },
+  { href: "/initiatives", label: "Initiatives", blurb: "What we're actually working on" },
+  { href: "/budget", label: "Budget", blurb: "Where the money goes" },
+  { href: "/accountability", label: "Accountability", blurb: "Action items, on the clock" },
+  { href: "/voice", label: "Student voice", blurb: "Speak up — anonymously if you want" },
+];
 
 function gradeShort(g: Grade) {
   if (g === "guest") return "Guest";
@@ -68,6 +55,148 @@ function officerShort(role: AdminRole) {
   if (role === "class") return "Class Officer";
   if (role === "club") return "Club Officer";
   return "Officer";
+}
+
+/** A top-nav item that opens a small menu of related pages, e.g. Transparency. */
+function NavDropdown({
+  label,
+  eyebrow,
+  blurb,
+  items,
+  pathname,
+  align = "left",
+}: {
+  label: string;
+  eyebrow: string;
+  blurb: string;
+  items: NavItem[];
+  pathname: string;
+  align?: "left" | "right";
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const active = items.some((l) => pathname.startsWith(l.href));
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={cn(
+          "relative inline-flex items-center gap-1 px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+          active ? "text-poly-navy font-semibold" : "text-ink-500 hover:text-poly-navy"
+        )}
+      >
+        {active && <span className="absolute inset-0 rounded-full bg-poly-navy/8" />}
+        <span className="relative">{label}</span>
+        <ChevronDown
+          size={13}
+          className={cn("relative transition-transform duration-200", open && "rotate-180")}
+        />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className={cn(
+            "absolute mt-2 w-72 rounded-2xl border border-ink-200 bg-white shadow-overlay overflow-hidden animate-fade-in",
+            align === "right" ? "right-0" : "left-0"
+          )}
+        >
+          <div className="px-4 pt-3 pb-2 border-b border-ink-100">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
+              {eyebrow}
+            </p>
+            <p className="text-[11px] text-ink-500 mt-0.5">{blurb}</p>
+          </div>
+          <ul className="py-1.5">
+            {items.map((l) => {
+              const itemActive = pathname.startsWith(l.href);
+              return (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    role="menuitem"
+                    className={cn(
+                      "flex flex-col gap-0.5 px-4 py-2.5 transition-colors",
+                      itemActive ? "bg-poly-navy/5 text-poly-navy" : "text-ink-800 hover:bg-ink-50"
+                    )}
+                  >
+                    <span className="text-sm font-medium">{l.label}</span>
+                    <span className="text-[11px] text-ink-500 leading-snug">{l.blurb}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A labeled group of links inside the mobile menu, e.g. "The Weekly" or "Transparency". */
+function MobileGroup({
+  eyebrow,
+  items,
+  pathname,
+}: {
+  eyebrow: string;
+  items: NavItem[];
+  pathname: string;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-3 pt-3 border-t border-ink-200">
+      <p className="px-4 pb-2 text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
+        {eyebrow}
+      </p>
+      {items.map((l) => {
+        const active = pathname.startsWith(l.href);
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className={cn(
+              "block px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+              active ? "bg-poly-navy text-white" : "text-ink-700 hover:bg-ink-100"
+            )}
+          >
+            {l.label}
+            <span
+              className={cn(
+                "block text-[11px] mt-0.5 font-normal",
+                active ? "text-white/70" : "text-ink-500"
+              )}
+            >
+              {l.blurb}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function Nav({
@@ -83,11 +212,10 @@ export default function Nav({
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [transparencyOpen, setTransparencyOpen] = useState(false);
-  const transparencyRef = useRef<HTMLDivElement | null>(null);
 
   const isOfficer = !!officerName;
-  const transparencyActive = transparencyHrefs.some((h) => pathname.startsWith(h));
+  const homeActive = pathname === "/";
+  const teamActive = pathname.startsWith("/team");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -98,32 +226,16 @@ export default function Nav({
 
   useEffect(() => {
     setOpen(false);
-    setTransparencyOpen(false);
   }, [pathname]);
-
-  useEffect(() => {
-    if (!transparencyOpen) return;
-    function onClick(e: MouseEvent) {
-      if (!transparencyRef.current?.contains(e.target as Node)) {
-        setTransparencyOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setTransparencyOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [transparencyOpen]);
 
   async function changeGrade() {
     await fetch("/api/grade", { method: "DELETE" });
     router.push("/welcome");
     router.refresh();
   }
+
+  const mobileWeekly = weeklyLinks.filter((l) => !BOTTOM_TAB_HREFS.has(l.href));
+  const mobileInvolved = involvedLinks.filter((l) => !BOTTOM_TAB_HREFS.has(l.href));
 
   return (
     <header
@@ -141,10 +253,11 @@ export default function Nav({
           className="flex items-center gap-3 group mr-8"
           aria-label="Poly SGA home"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="https://cmsv2-assets.apptegy.net/uploads/17625/logo/20148/Polytechnic_logo.png"
             alt="Baltimore Polytechnic Institute"
+            width={36}
+            height={36}
             className="h-9 w-9 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
           />
           <span className="font-display text-xl tracking-tight">
@@ -154,94 +267,54 @@ export default function Nav({
 
         {/* Desktop links */}
         <nav className="hidden md:flex items-center gap-0.5 flex-1">
-          {links.map((l) => {
-            const active =
-              l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={cn(
-                  "relative px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
-                  active
-                    ? "text-poly-navy font-semibold"
-                    : "text-ink-500 hover:text-poly-navy"
-                )}
-              >
-                {active && (
-                  <span className="absolute inset-0 rounded-full bg-poly-navy/8" />
-                )}
-                <span className="relative">{l.label}</span>
-              </Link>
-            );
-          })}
-
-          {/* Transparency dropdown — Minutes / Initiatives / Budget / Accountability / Voice */}
-          <div className="relative" ref={transparencyRef}>
-            <button
-              type="button"
-              onClick={() => setTransparencyOpen((o) => !o)}
-              aria-haspopup="menu"
-              aria-expanded={transparencyOpen}
-              className={cn(
-                "relative inline-flex items-center gap-1 px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
-                transparencyActive
-                  ? "text-poly-navy font-semibold"
-                  : "text-ink-500 hover:text-poly-navy"
-              )}
-            >
-              {transparencyActive && (
-                <span className="absolute inset-0 rounded-full bg-poly-navy/8" />
-              )}
-              <span className="relative">Transparency</span>
-              <ChevronDown
-                size={13}
-                className={cn(
-                  "relative transition-transform duration-200",
-                  transparencyOpen && "rotate-180"
-                )}
-              />
-            </button>
-            {transparencyOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 w-72 rounded-2xl border border-ink-200 bg-white shadow-[0_12px_40px_-12px_rgba(10,35,66,0.18)] overflow-hidden animate-fade-in"
-              >
-                <div className="px-4 pt-3 pb-2 border-b border-ink-100">
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
-                    Transparency suite
-                  </p>
-                  <p className="text-[11px] text-ink-500 mt-0.5">
-                    Every decision, on the record.
-                  </p>
-                </div>
-                <ul className="py-1.5">
-                  {transparencyLinks.map((l) => {
-                    const active = pathname.startsWith(l.href);
-                    return (
-                      <li key={l.href}>
-                        <Link
-                          href={l.href}
-                          role="menuitem"
-                          className={cn(
-                            "flex flex-col gap-0.5 px-4 py-2.5 transition-colors",
-                            active
-                              ? "bg-poly-navy/5 text-poly-navy"
-                              : "text-ink-800 hover:bg-ink-50"
-                          )}
-                        >
-                          <span className="text-sm font-medium">{l.label}</span>
-                          <span className="text-[11px] text-ink-500 leading-snug">
-                            {l.blurb}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+          <Link
+            href="/"
+            className={cn(
+              "relative px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+              homeActive ? "text-poly-navy font-semibold" : "text-ink-500 hover:text-poly-navy"
             )}
-          </div>
+          >
+            {homeActive && <span className="absolute inset-0 rounded-full bg-poly-navy/8" />}
+            <span className="relative">Home</span>
+          </Link>
+
+          <NavDropdown
+            label="The Weekly"
+            eyebrow="The Weekly"
+            blurb="Everything published this week."
+            items={weeklyLinks}
+            pathname={pathname}
+            align="left"
+          />
+
+          <NavDropdown
+            label="Get Involved"
+            eyebrow="Get involved"
+            blurb="Ways to take part."
+            items={involvedLinks}
+            pathname={pathname}
+            align="left"
+          />
+
+          <Link
+            href="/team"
+            className={cn(
+              "relative px-2.5 lg:px-3 py-2 text-sm font-medium rounded-full transition-colors whitespace-nowrap",
+              teamActive ? "text-poly-navy font-semibold" : "text-ink-500 hover:text-poly-navy"
+            )}
+          >
+            {teamActive && <span className="absolute inset-0 rounded-full bg-poly-navy/8" />}
+            <span className="relative">Team</span>
+          </Link>
+
+          <NavDropdown
+            label="Transparency"
+            eyebrow="Transparency suite"
+            blurb="Every decision, on the record."
+            items={transparencyLinks}
+            pathname={pathname}
+            align="right"
+          />
         </nav>
 
         {/* Desktop right side */}
@@ -292,59 +365,14 @@ export default function Nav({
       {open && (
         <div className="md:hidden border-t border-ink-200 bg-ink-50 animate-fade-in">
           <nav className="container-page py-4 flex flex-col gap-1">
-            {links.map((l) => {
-              const active =
-                l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={cn(
-                    "px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                    active
-                      ? "bg-poly-navy text-white"
-                      : "text-ink-700 hover:bg-ink-100"
-                  )}
-                >
-                  {l.label}
-                </Link>
-              );
-            })}
-            <div className="mt-3 pt-3 border-t border-ink-200">
-              <p className="px-4 pb-2 text-[10px] uppercase tracking-[0.16em] text-ink-500 font-mono">
-                Transparency
-              </p>
-              {transparencyLinks.map((l) => {
-                const active = pathname.startsWith(l.href);
-                return (
-                  <Link
-                    key={l.href}
-                    href={l.href}
-                    className={cn(
-                      "block px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                      active
-                        ? "bg-poly-navy text-white"
-                        : "text-ink-700 hover:bg-ink-100"
-                    )}
-                  >
-                    {l.label}
-                    <span
-                      className={cn(
-                        "block text-[11px] mt-0.5 font-normal",
-                        active ? "text-white/70" : "text-ink-500"
-                      )}
-                    >
-                      {l.blurb}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
+            <MobileGroup eyebrow="The Weekly" items={mobileWeekly} pathname={pathname} />
+            <MobileGroup eyebrow="Get involved" items={mobileInvolved} pathname={pathname} />
+            <MobileGroup eyebrow="Transparency" items={transparencyLinks} pathname={pathname} />
             {isOfficer ? (
               <>
                 <Link
                   href="/admin"
-                  className="mt-1 px-4 py-3 rounded-xl text-sm font-medium text-poly-orangeDark bg-poly-orange/10 hover:bg-poly-orange/20"
+                  className="mt-3 pt-3 border-t border-ink-200 px-4 py-3 rounded-xl text-sm font-medium text-poly-orangeDark bg-poly-orange/10 hover:bg-poly-orange/20"
                 >
                   <ShieldCheck size={14} className="inline mr-2" />
                   {officerName!.split(" ")[0]} · {officerShort(officerRole!)}
@@ -360,7 +388,7 @@ export default function Nav({
             ) : grade ? (
               <button
                 onClick={changeGrade}
-                className="mt-1 px-4 py-3 rounded-xl text-left text-sm font-medium text-ink-500 hover:bg-ink-100"
+                className="mt-3 pt-3 border-t border-ink-200 px-4 py-3 text-left text-sm font-medium text-ink-500 hover:bg-ink-100 rounded-xl"
               >
                 <GraduationCap size={14} className="inline mr-2" />
                 {gradeShort(grade)} — change class

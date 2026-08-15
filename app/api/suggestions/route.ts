@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { getSession, canSeeInbox } from "@/lib/auth";
 import { ensureVoterId, getVoterId } from "@/lib/grade";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 const VALID_TARGETS = ["sga", "27", "28", "29", "30", "club"];
 
@@ -15,8 +16,20 @@ export async function GET(req: NextRequest) {
       ? { createdAt: "desc" as const }
       : [{ votes: "desc" as const }, { createdAt: "desc" as const }];
 
-  // Public view only shows non-private suggestions
-  const where = session ? {} : { private: false };
+  // Everyone (including guests) sees the public board — every non-private suggestion,
+  // regardless of target. Officers additionally see private suggestions within their
+  // own inbox scope (sga_admin/sga_member see every private suggestion; class/club
+  // officers only see ones targeted at their own class/club).
+  let where: import("@prisma/client").Prisma.SuggestionWhereInput = { private: false };
+  if (session) {
+    if (session.role === "sga_admin" || session.role === "sga_member") {
+      where = {};
+    } else if (session.role === "class" && session.classYear) {
+      where = { OR: [{ private: false }, { target: session.classYear }] };
+    } else if (session.role === "club" && session.clubId) {
+      where = { OR: [{ private: false }, { target: "club", clubId: session.clubId }] };
+    }
+  }
 
   const items = await prisma.suggestion.findMany({
     where,
@@ -33,25 +46,34 @@ export async function GET(req: NextRequest) {
     : [];
   const votedSet = new Set(myVotes.map((v) => v.suggestionId));
 
-  const data = items.map((s) => ({
-    id: s.id,
-    body: s.body,
-    category: s.category,
-    target: s.target,
-    clubId: s.clubId,
-    club: s.club ? { id: s.club.id, name: s.club.name, slug: s.club.slug } : null,
-    votes: s.votes,
-    createdAt: s.createdAt,
-    voted: votedSet.has(s.id),
-    private: s.private,
-    contact: session ? s.contact : null,
-    read: session ? s.read : undefined,
-  }));
+  const data = items.map((s) => {
+    // contact/read are inbox-management fields — only expose them to sessions that
+    // actually have inbox access to THIS suggestion, not to every authenticated caller.
+    const hasInboxAccess = !!session && canSeeInbox(session, s.target, s.clubId);
+    return {
+      id: s.id,
+      body: s.body,
+      category: s.category,
+      target: s.target,
+      clubId: s.clubId,
+      club: s.club ? { id: s.club.id, name: s.club.name, slug: s.club.slug } : null,
+      votes: s.votes,
+      createdAt: s.createdAt,
+      voted: votedSet.has(s.id),
+      private: s.private,
+      contact: hasInboxAccess ? s.contact : null,
+      read: hasInboxAccess ? s.read : undefined,
+    };
+  });
 
   return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await checkRateLimit(`suggestions:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
+    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+  }
+
   const data = await req.json();
   const { body, category, contact, target, clubId, private: isPrivate } = data || {};
   if (!body || typeof body !== "string" || !body.trim()) {
@@ -59,6 +81,12 @@ export async function POST(req: NextRequest) {
   }
   if (body.length > 2000) {
     return NextResponse.json({ error: "body too long" }, { status: 400 });
+  }
+  if (typeof category === "string" && category.length > 60) {
+    return NextResponse.json({ error: "category too long" }, { status: 400 });
+  }
+  if (typeof contact === "string" && contact.length > 200) {
+    return NextResponse.json({ error: "contact too long" }, { status: 400 });
   }
 
   const finalTarget = VALID_TARGETS.includes(target) ? target : "sga";
@@ -103,6 +131,12 @@ export async function PATCH(req: NextRequest) {
   const { id, read } = await req.json();
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
+  const existing = await prisma.suggestion.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!canSeeInbox(session, existing.target, existing.clubId)) {
+    return NextResponse.json({ error: "Not your inbox" }, { status: 403 });
+  }
+
   const updated = await prisma.suggestion.update({
     where: { id },
     data: { read: !!read },
@@ -117,6 +151,12 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const existing = await prisma.suggestion.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!canSeeInbox(session, existing.target, existing.clubId)) {
+    return NextResponse.json({ error: "Not your inbox" }, { status: 403 });
+  }
 
   await prisma.suggestion.delete({ where: { id } });
   return NextResponse.json({ ok: true });

@@ -29,7 +29,7 @@ export default async function ScoopPage() {
       {session && <AdminModeBanner name={session.name} />}
 
       {issues.length === 0 ? (
-        <div className="card text-center py-20 flex flex-col items-center gap-3 text-ink-400">
+        <div className="card text-center py-20 flex flex-col items-center gap-3 text-ink-500">
           <Newspaper size={36} className="text-ink-300" />
           <p className="text-sm">The first issue is coming soon — stay tuned.</p>
         </div>

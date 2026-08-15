@@ -37,7 +37,7 @@ export default async function PhotosPage() {
       </header>
 
       {photos.length === 0 ? (
-        <div className="card text-center py-20 flex flex-col items-center gap-3 text-ink-400">
+        <div className="card text-center py-20 flex flex-col items-center gap-3 text-ink-500">
           <ImageIcon size={36} className="text-ink-300" />
           <p className="text-sm">Photos coming soon — check back after the next event.</p>
         </div>

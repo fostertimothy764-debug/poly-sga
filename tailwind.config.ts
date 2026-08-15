@@ -1,32 +1,49 @@
 import type { Config } from "tailwindcss";
 
+// Reads an "R G B" triplet from a CSS custom property (defined in app/globals.css's
+// :root, optionally overridden per-request by a developer-set color.<token>
+// SiteSetting — see colorOverrideStyle() in app/layout.tsx) instead of a bare hex
+// value, so Tailwind's opacity-modifier classes (bg-poly-orange/25, etc., used
+// throughout the app) keep working: those need a var Tailwind can slot an alpha
+// value into, which a plain `var(--x, #hex)` string can't provide.
+// Tailwind's shipped Config type predates this recipe and only types color values as
+// strings, but its runtime resolver checks `typeof value === "function"` and calls it
+// with `{ opacityValue }` when it sees one — this cast just satisfies the type without
+// changing the actual (function) value Tailwind receives at build time.
+function withOpacity(variable: string): string {
+  return ((opts: { opacityValue?: string }) =>
+    opts.opacityValue === undefined
+      ? `rgb(var(${variable}))`
+      : `rgb(var(${variable}) / ${opts.opacityValue})`) as unknown as string;
+}
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         ink: {
-          50: "#f8f8f7",
-          100: "#eeede9",
-          200: "#d9d6cf",
-          300: "#bbb6ab",
-          400: "#928c7e",
-          500: "#736e62",
-          600: "#5a554b",
-          700: "#46423a",
-          800: "#2e2c26",
-          900: "#1c1b18",
-          950: "#0f0e0c",
+          50: withOpacity("--color-ink-50"),
+          100: withOpacity("--color-ink-100"),
+          200: withOpacity("--color-ink-200"),
+          300: withOpacity("--color-ink-300"),
+          400: withOpacity("--color-ink-400"),
+          500: withOpacity("--color-ink-500"),
+          600: withOpacity("--color-ink-600"),
+          700: withOpacity("--color-ink-700"),
+          800: withOpacity("--color-ink-800"),
+          900: withOpacity("--color-ink-900"),
+          950: withOpacity("--color-ink-950"),
         },
         poly: {
-          orange: "#f26522",
-          orangeDark: "#d44e0f",
-          orangeSoft: "#FFE9DC",
-          navy: "#0a2342",
-          navyDark: "#061629",
-          navySoft: "#E6EAF2",
-          green: "#3E8E5A",
-          amber: "#C68A1E",
+          orange: withOpacity("--color-poly-orange"),
+          orangeDark: withOpacity("--color-poly-orangeDark"),
+          orangeSoft: withOpacity("--color-poly-orangeSoft"),
+          navy: withOpacity("--color-poly-navy"),
+          navyDark: withOpacity("--color-poly-navyDark"),
+          navySoft: withOpacity("--color-poly-navySoft"),
+          green: withOpacity("--color-poly-green"),
+          amber: withOpacity("--color-poly-amber"),
         },
         class: {
           "27": "#E15A1F",
