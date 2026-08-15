@@ -136,9 +136,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Poly SGA — Baltimore Polytechnic Institute",
+  title: "Poly SGA: Baltimore Polytechnic Institute",
   description:
-    "Student Government Association of Baltimore Polytechnic Institute. Announcements, events, and your voice — all in one place.",
+    "Student Government Association of Baltimore Polytechnic Institute. Announcements, events, and your voice: all in one place.",
   icons: {
     icon: "/favicon.svg",
   },
@@ -177,7 +177,7 @@ export default async function RootLayout({
             tagline: setting(
               settings,
               "footer.tagline",
-              "Baltimore Polytechnic Institute · Student Government Association. Open by default — every meeting, dollar, and decision in the open."
+              "Baltimore Polytechnic Institute · Student Government Association. Open by default: every meeting, dollar, and decision in the open."
             ),
             credits: setting(settings, "footer.credits", "Timothy Foster"),
             contactEmail: setting(settings, "footer.contactEmail", "tim.d.foster.jr@gmail.com"),

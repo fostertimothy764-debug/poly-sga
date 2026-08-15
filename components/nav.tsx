@@ -41,7 +41,7 @@ const transparencyLinks: NavItem[] = [
   { href: "/initiatives", label: "Initiatives", blurb: "What we're actually working on" },
   { href: "/budget", label: "Budget", blurb: "Where the money goes" },
   { href: "/accountability", label: "Accountability", blurb: "Action items, on the clock" },
-  { href: "/voice", label: "Student voice", blurb: "Speak up — anonymously if you want" },
+  { href: "/voice", label: "Student voice", blurb: "Speak up, anonymously if you want" },
 ];
 
 function gradeShort(g: Grade) {
@@ -391,7 +391,7 @@ export default function Nav({
                 className="mt-3 pt-3 border-t border-ink-200 px-4 py-3 text-left text-sm font-medium text-ink-500 hover:bg-ink-100 rounded-xl"
               >
                 <GraduationCap size={14} className="inline mr-2" />
-                {gradeShort(grade)} — change class
+                {gradeShort(grade)} (change class)
               </button>
             ) : null}
           </nav>

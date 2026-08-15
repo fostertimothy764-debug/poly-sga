@@ -135,7 +135,7 @@ export default function InitiativesClient({
               What we&apos;re actually working on.
             </h1>
             <p className="text-ink-600 text-base leading-relaxed">
-              Every active SGA initiative — its owner, its category, where it
+              Every active SGA initiative: its owner, its category, where it
               stands. If you don&apos;t see something you care about, propose it.
             </p>
           </div>

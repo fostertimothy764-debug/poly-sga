@@ -137,7 +137,7 @@ export default function InitiativesAdmin({
       title: sug.title,
       description:
         sug.description +
-        `\n\n— Originally suggested by ${sug.submitterName || "an anonymous student"}${sug.submitterGrade ? ` (Grade ${sug.submitterGrade})` : ""}.`,
+        `\n\nOriginally suggested by ${sug.submitterName || "an anonymous student"}${sug.submitterGrade ? ` (Grade ${sug.submitterGrade})` : ""}.`,
     });
     setTab("board");
   }

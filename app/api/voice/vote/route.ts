@@ -5,7 +5,7 @@ import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(`voice-vote:${clientIp(req)}`, 20, 5 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many votes — slow down." }, { status: 429 });
+    return NextResponse.json({ error: "Too many votes. Slow down." }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);

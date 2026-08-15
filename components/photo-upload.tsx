@@ -80,7 +80,7 @@ export default function PhotoUpload({
       setPreview(dataUrl);
       onUpload(dataUrl);
     } catch {
-      setErr("Could not process image — try another file.");
+      setErr("Could not process image. Try another file.");
     } finally {
       setBusy(false);
     }

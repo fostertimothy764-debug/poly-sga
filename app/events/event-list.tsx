@@ -207,7 +207,7 @@ export default function EventList({
                   <div className="flex flex-col gap-1.5 text-xs text-ink-500">
                     <span className="flex items-center gap-2"><Calendar size={12} /> {formatDate(e.startsAt)}</span>
                     <span className="flex items-center gap-2">
-                      <Clock size={12} /> {formatTime(e.startsAt)}{e.endsAt && ` — ${formatTime(e.endsAt)}`}
+                      <Clock size={12} /> {formatTime(e.startsAt)}{e.endsAt && ` to ${formatTime(e.endsAt)}`}
                     </span>
                     <span className="flex items-center gap-2"><MapPin size={12} /> {e.location}</span>
                   </div>

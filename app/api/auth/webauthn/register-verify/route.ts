@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!(await checkRateLimit(`webauthn:${session.adminId}`, 10, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const existingCount = await prisma.passkey.count({ where: { adminId: session.adminId } });
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const { response, deviceLabel } = await req.json();
   const challenge = getAndClearChallengeCookie();
   if (!challenge || !response) {
-    return NextResponse.json({ error: "Registration expired — try again" }, { status: 400 });
+    return NextResponse.json({ error: "Registration expired. Try again" }, { status: 400 });
   }
 
   let verification;

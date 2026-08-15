@@ -18,7 +18,7 @@ export default function NotFound() {
       </div>
 
       <div className="max-w-2xl">
-        <p className="label text-poly-orange mb-4">404 — Not found</p>
+        <p className="label text-poly-orange mb-4">404: Not found</p>
         <h1 className="h-display text-5xl sm:text-6xl leading-[1.02] mb-6">
           This page isn&apos;t in the paper.
         </h1>

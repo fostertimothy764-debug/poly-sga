@@ -31,7 +31,7 @@ export default async function ScoopPage() {
       {issues.length === 0 ? (
         <div className="card text-center py-20 flex flex-col items-center gap-3 text-ink-500">
           <Newspaper size={36} className="text-ink-300" />
-          <p className="text-sm">The first issue is coming soon — stay tuned.</p>
+          <p className="text-sm">The first issue is coming soon. Stay tuned.</p>
         </div>
       ) : (
         <ScoopList initial={issues} canEdit={canEdit} />

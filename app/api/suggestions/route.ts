@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(`suggestions:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: "Too many submissions. Try again in a few minutes." }, { status: 429 });
   }
 
   const data = await req.json();

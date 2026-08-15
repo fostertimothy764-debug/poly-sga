@@ -11,13 +11,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!(await checkRateLimit(`webauthn:${session.adminId}`, 10, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const { response } = await req.json();
   const challenge = getAndClearChallengeCookie();
   if (!challenge || !response?.id) {
-    return NextResponse.json({ error: "Verification expired — try again" }, { status: 400 });
+    return NextResponse.json({ error: "Verification expired. Try again" }, { status: 400 });
   }
 
   const passkey = await prisma.passkey.findUnique({ where: { credentialId: response.id } });

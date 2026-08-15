@@ -336,7 +336,7 @@ function TeamProfileForm({
             placeholder="The senior–faculty basketball game I'm trying to bring back"
           />
           <div className="mt-1 flex justify-between text-[11px] text-ink-500">
-            <span>One short sentence — gives students something to walk up and say.</span>
+            <span>One short sentence: gives students something to walk up and say.</span>
             <span>{form.askMeAbout.length}/140</span>
           </div>
         </div>

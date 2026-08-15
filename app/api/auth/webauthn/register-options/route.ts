@@ -11,7 +11,7 @@ export async function POST() {
   }
 
   if (!(await checkRateLimit(`webauthn:${session.adminId}`, 10, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many attempts — try again later." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
   }
 
   const existing = await prisma.passkey.findMany({

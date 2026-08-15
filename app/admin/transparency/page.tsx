@@ -82,7 +82,7 @@ export default async function TransparencyHub() {
         </p>
         <h1 className="h-display text-3xl mb-2">Open by default.</h1>
         <p className="text-sm text-ink-600 max-w-2xl leading-relaxed">
-          Manage the public transparency pages from here — meetings, initiatives,
+          Manage the public transparency pages from here: meetings, initiatives,
           budget, and the student voice queue. Public pages read this data live;
           edits land instantly.
         </p>

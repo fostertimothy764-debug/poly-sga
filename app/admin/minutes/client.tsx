@@ -748,7 +748,7 @@ function MeetingForm({
           onChange={(e) => setDecisions(e.target.value)}
           rows={4}
           className="input resize-y font-mono text-sm"
-          placeholder={"One per line — these get highlighted on the public page"}
+          placeholder={"One per line: these get highlighted on the public page"}
         />
         <span className="text-[11px] text-ink-500 mt-1 block">
           Highlighted on the public minutes page.

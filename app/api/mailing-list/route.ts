@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{1,24}$/;
 // POST — subscribe an email to the mailing list
 export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(`mailing-list:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many attempts — try again in a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
   }
 
   const body = await req.json().catch(() => ({}));

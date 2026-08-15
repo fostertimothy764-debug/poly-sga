@@ -99,7 +99,7 @@ export default async function TicketPage({
 
       {!item.responseBody && !item.declineReason && (
         <p className="text-sm text-ink-500 italic">
-          The SGA hasn&apos;t responded yet. Check back here — the status
+          The SGA hasn&apos;t responded yet. Check back here: the status
           updates the moment they post a reply.
         </p>
       )}

@@ -202,7 +202,7 @@ export default function VoiceClient({ initial }: { initial: VoiceItem[] }) {
               Speak up.
             </h1>
             <p className="text-ink-600 text-base leading-relaxed">
-              Drop a concern, a question, or a suggestion — by name or
+              Drop a concern, a question, or a suggestion: by name or
               anonymously. You&apos;ll get a ticket number to track the
               response. Boost what others have said instead of restating it.
             </p>
@@ -503,7 +503,7 @@ function SubmissionForm({ onSubmitted }: { onSubmitted: (ticket: string) => void
     e.preventDefault();
     setError(null);
     if (body.trim().length < 8) {
-      setError("Tell us a little more — at least a sentence.");
+      setError("Tell us a little more: at least a sentence.");
       return;
     }
     setSubmitting(true);
@@ -590,7 +590,7 @@ function SubmissionForm({ onSubmitted }: { onSubmitted: (ticket: string) => void
           onChange={(e) => setBody(e.target.value)}
           rows={5}
           className="input resize-y"
-          placeholder="Be as specific as you can — what's the problem, and what would actually help?"
+          placeholder="Be as specific as you can: what's the problem, and what would actually help?"
           maxLength={4000}
           required
         />

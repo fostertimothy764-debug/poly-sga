@@ -167,7 +167,7 @@ export default async function AdminPage() {
               </Link>
             </div>
             <p className="text-sm text-ink-600 max-w-2xl mb-6">
-              Manage the public transparency pages from one place — meetings,
+              Manage the public transparency pages from one place: meetings,
               initiatives, budget, and the student voice queue.
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

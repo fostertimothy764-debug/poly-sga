@@ -75,7 +75,7 @@ export default async function LinksPage({
 
       {links.length === 0 ? (
         <div className="card text-center text-sm text-ink-500 py-16">
-          No links posted yet — check back soon.
+          No links posted yet. Check back soon.
         </div>
       ) : (
         <div className="space-y-10">
@@ -167,7 +167,7 @@ function LinkCard({
 
       {/* Footer */}
       <div className="mt-auto flex items-center justify-between text-xs text-ink-500">
-        {link.authorName && <span>— {link.authorName}</span>}
+        {link.authorName && <span>({link.authorName})</span>}
         <span className="ml-auto flex items-center gap-1 text-poly-orange opacity-0 group-hover:opacity-100 transition-opacity font-medium">
           Open <ExternalLink size={11} />
         </span>

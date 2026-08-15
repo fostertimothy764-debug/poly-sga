@@ -333,7 +333,7 @@ function Header() {
       </h1>
       <p className="text-ink-600 max-w-2xl text-base leading-relaxed">
         Every promise the SGA has put on the record, aggregated from every
-        meeting. Filter by officer, by status, by due date — and watch the
+        meeting. Filter by officer, by status, by due date, and watch the
         completion rate climb.
       </p>
     </header>
@@ -451,7 +451,7 @@ function EmptyState() {
       </p>
       <p className="text-sm text-ink-500 max-w-md mx-auto leading-relaxed">
         Once the SGA logs its first meeting with action items, you&apos;ll
-        see every promise here — owner, deadline, and status — color-coded
+        see every promise here (owner, deadline, and status) color-coded
         so nothing slips.
       </p>
       <Link href="/minutes" className="mt-5 inline-flex btn-ghost">

@@ -170,7 +170,7 @@ export default function SuggestionsClient({
                 </p>
                 {w.statusUpdatedByName && (
                   <p className="text-[11px] uppercase tracking-[0.14em] text-ink-500 mt-auto">
-                    — {w.statusUpdatedByName}
+                    ({w.statusUpdatedByName})
                   </p>
                 )}
               </li>
@@ -342,7 +342,7 @@ function SuggestionRow({ item, onVote }: { item: Item; onVote: () => void }) {
           <p className="mt-2 text-xs italic text-ink-600 leading-relaxed">
             {item.statusNote}
             {item.statusUpdatedByName && (
-              <span className="not-italic text-ink-500"> — {item.statusUpdatedByName}</span>
+              <span className="not-italic text-ink-500"> ({item.statusUpdatedByName})</span>
             )}
           </p>
         )}
@@ -471,7 +471,7 @@ function SubmitModal({
             <p className="text-sm text-ink-500">
               {wasPrivate
                 ? "Your message landed in the inbox. It won't show up on the public board."
-                : "Your idea is live for everyone to vote on. We added the first upvote — yours."}
+                : "Your idea is live for everyone to vote on. We added the first upvote: yours."}
             </p>
           </div>
         ) : (
@@ -635,7 +635,7 @@ function SubmitModal({
               <label className="label">
                 Contact{" "}
                 <span className="font-normal text-ink-500">
-                  (optional — only officers see this)
+                  (optional: only officers see this)
                 </span>
               </label>
               <input

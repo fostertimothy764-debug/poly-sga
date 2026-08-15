@@ -103,7 +103,7 @@ export default function BudgetClient({
               Where the money goes.
             </h1>
             <p className="text-ink-600 text-base leading-relaxed">
-              Every line item, every dollar — for the current semester and
+              Every line item, every dollar: for the current semester and
               every one before it.
             </p>
           </div>
@@ -609,7 +609,7 @@ function EmptyState() {
       </p>
       <p className="text-sm text-ink-500 max-w-md mx-auto leading-relaxed">
         Once your SGA publishes a semester budget, you&apos;ll see allocation,
-        spend, and remaining balance — broken down line by line.
+        spend, and remaining balance, broken down line by line.
       </p>
     </div>
   );

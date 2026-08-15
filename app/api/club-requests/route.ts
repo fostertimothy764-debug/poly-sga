@@ -18,7 +18,7 @@ export async function GET() {
 // POST — public, submit a club request
 export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(`club-requests:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: "Too many submissions. Try again in a few minutes." }, { status: 429 });
   }
 
   const { clubName, description, contactName, contactInfo } = await req.json();

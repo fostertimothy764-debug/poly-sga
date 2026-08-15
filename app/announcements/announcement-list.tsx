@@ -207,7 +207,7 @@ export default function AnnouncementList({
               <h2 className="font-display text-2xl sm:text-3xl mb-3">{a.title}</h2>
               <RichBody text={a.body} />
               <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
-                {a.authorName && <span>— {a.authorName}</span>}
+                {a.authorName && <span>({a.authorName})</span>}
                 {a.authorName && <span className="text-ink-300">·</span>}
                 <span>{readingTime(a.body)}</span>
               </div>

@@ -95,7 +95,7 @@ export default async function ClubPage({ params }: { params: { slug: string } })
                     {a.body}
                   </p>
                   {a.authorName && (
-                    <p className="mt-3 text-xs text-ink-500">— {a.authorName}</p>
+                    <p className="mt-3 text-xs text-ink-500">({a.authorName})</p>
                   )}
                 </article>
               ))}

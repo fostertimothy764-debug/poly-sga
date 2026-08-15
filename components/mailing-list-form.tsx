@@ -31,7 +31,7 @@ export default function MailingListForm() {
         setEmail("");
       }
     } catch {
-      setErrorMsg("Network error — please try again.");
+      setErrorMsg("Network error. Please try again.");
       setState("error");
     }
   }

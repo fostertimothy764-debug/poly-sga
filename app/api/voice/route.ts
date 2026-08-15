@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!(await checkRateLimit(`voice:${clientIp(req)}`, 5, 10 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many submissions — try again in a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: "Too many submissions. Try again in a few minutes." }, { status: 429 });
   }
 
   const body = await req.json().catch(() => null);
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
   const text = typeof body.body === "string" ? body.body.trim() : "";
   if (!text || text.length < 8) {
     return NextResponse.json(
-      { error: "Tell us a little more — at least a sentence." },
+      { error: "Tell us a little more: at least a sentence." },
       { status: 400 }
     );
   }

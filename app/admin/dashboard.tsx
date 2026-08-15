@@ -2689,7 +2689,7 @@ function DeveloperTab({
         {passkeys.length === 0 ? (
           <div className="card space-y-3 animate-slide-up">
             <p className="text-sm text-ink-600">
-              No passkey registered yet. Register one now from this device (Face ID, Touch ID, or a hardware key) — it&apos;ll be required as a second factor before any developer action.
+              No passkey registered yet. Register one now from this device (Face ID, Touch ID, or a hardware key); it&apos;ll be required as a second factor before any developer action.
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -2826,7 +2826,7 @@ function SettingsEditor({
     <div>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-ink-500 max-w-md">
-          Known keys already wired into the site: footer copy (<code className="font-mono">footer.*</code>), colophon prose (<code className="font-mono">colophon.*</code>), and core color tokens (<code className="font-mono">color.*</code> — value must be a hex color like <code className="font-mono">#f26522</code>). Anything else is stored but has no visible effect until a component reads it.
+          Known keys already wired into the site: footer copy (<code className="font-mono">footer.*</code>), colophon prose (<code className="font-mono">colophon.*</code>), and core color tokens (<code className="font-mono">color.*</code>: value must be a hex color like <code className="font-mono">#f26522</code>). Anything else is stored but has no visible effect until a component reads it.
         </p>
         <button onClick={() => setOpen(!open)} className="btn-primary shrink-0">
           <Plus size={14} /> {open ? "Cancel" : "New"}
@@ -2868,7 +2868,7 @@ function SettingsEditor({
       )}
 
       {settings.length === 0 ? (
-        <Empty>No overrides set — the site is using its hardcoded defaults everywhere.</Empty>
+        <Empty>No overrides set. The site is using its hardcoded defaults everywhere.</Empty>
       ) : (
         <div className="space-y-2">
           {settings.map((s) => (
@@ -3043,7 +3043,7 @@ function SuggestionRow({
       <div className="flex items-start gap-4">
         <div className="flex flex-col items-center text-center min-w-[2.5rem]">
           <div className="text-[10px] uppercase tracking-wider text-ink-500">votes</div>
-          <div className="font-display text-2xl text-ink-900">{s.private ? "—" : s.votes}</div>
+          <div className="font-display text-2xl text-ink-900">{s.private ? "–" : s.votes}</div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-2 text-xs">
@@ -3075,7 +3075,7 @@ function SuggestionRow({
             <p className="mt-2 text-xs italic text-ink-600 leading-relaxed">
               {s.statusNote}
               {s.statusUpdatedByName && (
-                <span className="not-italic text-ink-500"> — {s.statusUpdatedByName}</span>
+                <span className="not-italic text-ink-500"> ({s.statusUpdatedByName})</span>
               )}
             </p>
           )}

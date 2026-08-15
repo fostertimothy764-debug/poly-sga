@@ -88,7 +88,7 @@ export default function ClubRequestForm() {
             If your club already exists at Poly but isn&apos;t listed here, you can ask SGA to add it to the website.
           </p>
           <div className="rounded-xl border border-poly-amber/40 bg-poly-amber/10 px-4 py-3 text-sm text-ink-800">
-            <strong className="text-poly-amber">Note —</strong> this is not a form to start a
+            <strong className="text-poly-amber">Note:</strong> this is not a form to start a
             new club. It only requests that an existing club be added to this
             website&apos;s listing. SGA will review and may follow up with you
             before anything appears.

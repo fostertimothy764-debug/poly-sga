@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
   // per-IP limit additionally stops a horizontal spray across many different
   // usernames from the same source, which the lockout alone wouldn't catch.
   if (!(await checkRateLimit(`login:${clientIp(req)}`, 15, 5 * 60 * 1000))) {
-    return NextResponse.json({ error: "Too many attempts — try again in a few minutes." }, { status: 429 });
+    return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
   }
 
   const { username, password } = await req.json();

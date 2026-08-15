@@ -5,7 +5,7 @@ import { getSiteSettings, setting } from "@/lib/site-settings";
 export const metadata = {
   title: "Colophon · Poly SGA",
   description:
-    "About this site — who built it, what it runs on, and why.",
+    "About this site: who built it, what it runs on, and why.",
 };
 
 export const dynamic = "force-dynamic";

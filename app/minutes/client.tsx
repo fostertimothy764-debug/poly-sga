@@ -161,7 +161,7 @@ export default function MinutesClient({ initial }: { initial: MeetingDTO[] }) {
           Meeting minutes.
         </h1>
         <p className="text-ink-600 max-w-2xl text-base leading-relaxed">
-          Every SGA meeting — who showed up, what we discussed, what we
+          Every SGA meeting: who showed up, what we discussed, what we
           decided, and the action items we walked away with. Search the
           record. Hold us to it.
         </p>
@@ -476,7 +476,7 @@ function EmptyState({
       <p className="text-sm text-ink-500 max-w-md mx-auto leading-relaxed">
         {hasRecords
           ? "Try widening the date range or clearing the search."
-          : "When the SGA meets, minutes will land here within a day. Decisions, action items, and who made them — all on the record."}
+          : "When the SGA meets, minutes will land here within a day. Decisions, action items, and who made them: all on the record."}
       </p>
       {onReset && (
         <button
